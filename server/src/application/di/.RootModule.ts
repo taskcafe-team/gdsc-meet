@@ -5,6 +5,9 @@ import { EnvironmentEnums } from "@core/common/enums/EnvironmentEnums";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { CoreAssert } from "@core/common/util/assert/CoreAssert";
 
+import { AuthModule } from "./AuthModule";
+import { InfrastructureModule } from "./InfrastructureModule";
+
 export const getEnvFilePath = (nodeEnvString: string): string => {
   const envFilePath: { [key in EnvironmentEnums]: string } = {
     [EnvironmentEnums.Development]: "env/local.dev.env",
@@ -29,6 +32,9 @@ export const getEnvFilePath = (nodeEnvString: string): string => {
         : "",
       validate: EnvironmentVariablesConfig.validate,
     }),
+    InfrastructureModule,
+    AuthModule,
   ],
+  exports: [],
 })
 export class RootModule {}
