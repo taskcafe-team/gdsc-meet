@@ -1,7 +1,11 @@
 version: "3.9"
 
 networks:
+  # proxy-network:
+  #   driver: "bridge"
   server-network:
+    driver: "bridge"
+  client-network:
     driver: "bridge"
 
 volumes:
@@ -22,3 +26,23 @@ services:
       - server-network
     volumes:
       - db-data:/var/lib/postgresql/data
+
+  server:
+    container_name: server-nestjs
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db-postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=123456
+      - DB_NAME=postgres
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    restart: always
+    networks:
+      - server-network
+    depends_on:
+      - db
