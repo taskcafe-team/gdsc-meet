@@ -13,8 +13,10 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build
-
 EXPOSE 8080
 
-CMD prisma migrate dev && npm run start:prod
+RUN npx prisma generate
+
+RUN npm run build
+
+CMD npm run start:prod
