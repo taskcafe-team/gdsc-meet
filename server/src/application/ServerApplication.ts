@@ -1,35 +1,31 @@
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { NestExpressApplication } from "@nestjs/platform-express";
+import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { Logger } from "@nestjs/common";
 import helmet from "helmet";
 
 import { RootModule } from "./di/.RootModule";
-import { ConfigService } from "@nestjs/config";
-
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 
 export class ServerApplication {
+  private configService: ConfigService<EnvironmentVariablesConfig, true>;
+  private app: NestExpressApplication;
+
   public async run(): Promise<void> {
-    const app: NestExpressApplication = await NestFactory.create(RootModule);
-    const configService: ConfigService<EnvironmentVariablesConfig> =
-      app.get(ConfigService);
+    this.app = await NestFactory.create(RootModule);
+    this.configService = this.app.get(ConfigService);
 
-    app.use(helmet());
-    this.buildAPIDocumentation(app);
-    this.buildCORS(app);
+    this.app.use(helmet());
+    this.buildAPIDocumentation();
+    this.buildCORS();
 
-    await app.listen(configService.get("API_PORT") || 3000, () => {
-      this.log(app);
-    });
+    await this.app.listen(this.configService.get("API_PORT"), () => this.log());
   }
 
-  private buildAPIDocumentation(app: NestExpressApplication): void {
+  private buildAPIDocumentation(): void {
     const whileList: string[] = ["development"];
-    if (!whileList.includes(process.env.NODE_ENV?.trimEnd() || "")) return;
-
-    const configService: ConfigService<EnvironmentVariablesConfig> =
-      app.get(ConfigService);
+    if (!whileList.includes(this.configService.get("NODE_ENV"))) return;
 
     const title = "IPoster";
     const description = "IPoster API documentation";
@@ -42,32 +38,30 @@ export class ServerApplication {
       .addBearerAuth({
         type: "apiKey",
         in: "header",
-        name: configService.get("API_ACCESS_TOKEN_HEADER"),
+        name: this.configService.get("API_ACCESS_TOKEN_HEADER"),
       })
       .build();
 
-    const document: OpenAPIObject = SwaggerModule.createDocument(app, options);
-    SwaggerModule.setup("documentation", app, document);
+    const document: OpenAPIObject = SwaggerModule.createDocument(
+      this.app,
+      options,
+    );
+    SwaggerModule.setup("documentation", this.app, document);
   }
 
-  private buildCORS(app: NestExpressApplication): void {
-    const configService: ConfigService<EnvironmentVariablesConfig> =
-      app.get(ConfigService);
-    app.enableCors({
-      origin: configService.get("API_CORS_ORIGIN"),
+  private buildCORS(): void {
+    this.app.enableCors({
+      origin: this.configService.get("API_CORS_ORIGIN"),
       credentials: true,
-      methods: configService.get("API_CORS_METHOD"),
+      methods: this.configService.get("API_CORS_METHOD"),
     });
   }
 
-  private log(app: NestExpressApplication): void {
-    const configService: ConfigService<EnvironmentVariablesConfig> =
-      app.get(ConfigService);
-
-    const host = configService.get("API_HOST");
-    const port = configService.get("API_PORT");
+  private log(): void {
+    const host = this.configService.get("API_HOST");
+    const port = this.configService.get("API_PORT");
     const context = ServerApplication.name;
-    Logger.log(`Server started on: ${host}:${port}/documentation`, context);
+    Logger.log(`Server started on: http://${host}:${port}`, context);
   }
 
   public static new(): ServerApplication {

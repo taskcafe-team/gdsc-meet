@@ -1,5 +1,5 @@
 import { Module, Provider } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { APP_FILTER } from "@nestjs/core";
 import { MailerModule } from "@nestjs-modules/mailer";
 
@@ -7,36 +7,45 @@ import { NestHttpExceptionFilter } from "@application/api/http-rest/exception-fi
 
 import { PrismaUnitOfWork } from "@infrastructure/adapter/persistence/prisma/unit-of-work/PrismaUnitOfWork";
 import { PrismaService } from "@infrastructure/adapter/persistence/prisma/PrismaService";
+import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 
-import { CommonDITokens } from "@core/common/DIToken/CommonDITokens";
+import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
+import { PrismaUserRepositoryAdapter } from "@infrastructure/adapter/persistence/prisma/repository/PrismaUserRepositoryAdapter";
 
 const providers: Provider[] = [
+  PrismaService,
+  PrismaUserRepositoryAdapter,
+  {
+    provide: UnitOfWork,
+    useClass: PrismaUnitOfWork,
+  },
   {
     provide: APP_FILTER,
     useClass: NestHttpExceptionFilter,
   },
-  {
-    provide: CommonDITokens.UnitOfWork,
-    useClass: PrismaUnitOfWork,
-  },
-  PrismaService,
 ];
 
 @Module({
   imports: [
     ConfigModule,
-    MailerModule.forRoot({
-      transport: {
-        host: "smtp.ethereal.email",
-        port: 587,
-        auth: {
-          user: "alison30@ethereal.email",
-          pass: "heyMGBAGdkpHKwfzNB",
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (
+        configService: ConfigService<EnvironmentVariablesConfig>,
+      ) => ({
+        transport: {
+          host: configService.get("EMAIL_HOST"),
+          port: configService.get("EMAIL_PORT"),
+          auth: {
+            user: configService.get("EMAIL_AUTH_USER"),
+            pass: configService.get("EMAIL_AUTH_USER_PASSWORD"),
+          },
         },
-      },
+      }),
     }),
   ],
   providers: [...providers],
-  exports: [CommonDITokens.UnitOfWork, PrismaService],
+  exports: [PrismaService, UnitOfWork],
 })
 export class InfrastructureModule {}

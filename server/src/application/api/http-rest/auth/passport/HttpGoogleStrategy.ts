@@ -1,3 +1,4 @@
+import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Strategy, VerifyCallback } from "passport-google-oauth20";
 import { ConfigService } from "@nestjs/config";
@@ -6,17 +7,15 @@ import { Profile } from "passport";
 import { User } from "@core/domain/user/entity/User";
 import { UserRole } from "@core/common/enums/UserEnums";
 import { ProviderNameEnums } from "@core/common/enums/ProviderNameEnums";
-import { IUnitOfWork } from "@core/common/persistence/IUnitOfWork";
+import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { HttpUserPayload } from "../type/HttpAuthTypes";
-import { CommonDITokens } from "@core/common/DIToken/CommonDITokens";
-import { Inject } from "@nestjs/common";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 
+@Injectable()
 export class HttpGoogleStrategy extends PassportStrategy(Strategy, "google") {
   constructor(
     configService: ConfigService<EnvironmentVariablesConfig>,
-    @Inject(CommonDITokens.UnitOfWork)
-    private readonly unitOfWork: IUnitOfWork,
+    private readonly unitOfWork: UnitOfWork,
   ) {
     super({
       clientID: configService.get("GOOGLE_CLIENT_ID"),
@@ -45,6 +44,7 @@ export class HttpGoogleStrategy extends PassportStrategy(Strategy, "google") {
       const userPayload: HttpUserPayload = {
         id: userExit.getId(),
         role: userExit.role,
+        isValid: userExit.isValid,
       };
 
       done(null, userPayload);
@@ -66,6 +66,7 @@ export class HttpGoogleStrategy extends PassportStrategy(Strategy, "google") {
     const userPayload: HttpUserPayload = {
       id: newUser.getId(),
       role: newUser.role,
+      isValid: newUser.isValid,
     };
     done(null, userPayload);
     return userPayload;

@@ -1,9 +1,7 @@
 import { PassportModule } from "@nestjs/passport";
-import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ConfigModule } from "@nestjs/config";
 import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
-
-import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 
 import { AuthController } from "@application/api/http-rest/controller/AuthController";
 import { HttpAuthService } from "@application/api/http-rest/auth/HttpAuthService";
@@ -21,13 +19,7 @@ import { UserModule } from "./UserModule";
     UserModule,
     ConfigModule,
     PassportModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (
-        configService: ConfigService<EnvironmentVariablesConfig>,
-      ) => ({ secret: configService.get("API_ACCESS_TOKEN_SECRET") }),
-    }),
+    JwtModule,
   ],
   providers: [
     HttpAuthService,

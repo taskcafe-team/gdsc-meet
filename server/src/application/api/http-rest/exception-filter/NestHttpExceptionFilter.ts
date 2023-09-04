@@ -8,6 +8,7 @@ import {
   ExceptionFilter,
   HttpException,
   Injectable,
+  InternalServerErrorException,
   Logger,
   UnauthorizedException,
 } from "@nestjs/common";

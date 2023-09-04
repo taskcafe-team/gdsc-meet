@@ -27,9 +27,7 @@ export const getEnvFilePath = (nodeEnvString: string): string => {
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: process.env.NODE_ENV
-        ? getEnvFilePath(process.env.NODE_ENV.trim())
-        : "",
+      envFilePath: "env/local.dev.env",
       validate: EnvironmentVariablesConfig.validate,
     }),
     InfrastructureModule,

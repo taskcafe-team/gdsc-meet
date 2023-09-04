@@ -1,43 +1,42 @@
-import { PrismaClient } from "@prisma/client";
+import { Injectable, Scope } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 
-import { IUnitOfWork } from "@core/common/persistence/IUnitOfWork";
-import { UserRepositoryPort } from "@core/domain/user/port/UserRepositoryPort";
+import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 
 import { PrismaUserRepositoryAdapter } from "../repository/PrismaUserRepositoryAdapter";
+import { PrismaService } from "../PrismaService";
+import { PrismaBaseRepository } from "../repository/PrismaBaseRepository";
 
-export class PrismaUnitOfWork implements IUnitOfWork {
-  private context: PrismaClient;
-  private isInTransaction: boolean;
-
-  private userRepository: PrismaUserRepositoryAdapter;
-
-  constructor(context: PrismaClient = new PrismaClient()) {
-    this.context = context;
-    this.isInTransaction = false;
+@Injectable({ scope: Scope.REQUEST })
+export class PrismaUnitOfWork implements UnitOfWork {
+  private context: Prisma.TransactionClient;
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly userRepository: PrismaUserRepositoryAdapter,
+  ) {
+    this.context = prismaService;
   }
 
-  getUserRepository(): UserRepositoryPort {
-    if (
-      !this.userRepository ||
-      this.userRepository.getContext() !== this.context
-    ) {
-      this.userRepository = new PrismaUserRepositoryAdapter(this.context);
-    }
-
-    return this.userRepository;
+  public async runInTransaction<T>(
+    fn: (context: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
+    return await this.prismaService.$transaction(async (context) => {
+      this.context = context;
+      const res = await fn(this.context);
+      return res;
+    });
   }
 
-  public setContext(context: PrismaClient) {
-    this.context = context;
+  private getRepository<T extends PrismaBaseRepository<any>>(repo: T): T {
+    if (repo.getContext() !== this.context) repo.setContext(this.context);
+    return repo;
   }
 
-  public async start(): Promise<void> {
-    throw new Error("not implemented");
+  public getContext(): Prisma.TransactionClient {
+    return this.context;
   }
-  public async commit(): Promise<void> {
-    throw new Error("not implemented");
-  }
-  public async rollback(): Promise<void> {
-    throw new Error("not implemented");
+
+  public getUserRepository() {
+    return this.getRepository(this.userRepository);
   }
 }

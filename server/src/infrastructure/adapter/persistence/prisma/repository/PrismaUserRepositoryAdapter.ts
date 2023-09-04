@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 import { UserRepositoryPort } from "@core/domain/user/port/UserRepositoryPort";
 import { RepositoryFindOptions } from "@core/common/persistence/RepositoryOptions";
@@ -8,21 +8,20 @@ import { PrismaBaseRepository } from "./PrismaBaseRepository";
 import { PrismaUser } from "../entity/user/PrismaUser";
 import { PrismaUserMapper } from "../entity/user/PrismaUserMapper";
 import { Nullable, Optional } from "@core/common/type/CommonTypes";
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../PrismaService";
 
+@Injectable()
 export class PrismaUserRepositoryAdapter
   extends PrismaBaseRepository<User>
   implements UserRepositoryPort
 {
-  constructor(context: PrismaClient = new PrismaClient()) {
-    super("User", context);
+  constructor(context: PrismaService) {
+    super(Prisma.ModelName.User, context);
   }
 
-  public async deleteUser(userId: string): Promise<void> {
-    this.context.user.delete({
-      where: {
-        id: userId,
-      },
-    });
+  public async deleteUser(id: string): Promise<void> {
+    this.context.user.delete({ where: { id } });
   }
 
   public async findUser(

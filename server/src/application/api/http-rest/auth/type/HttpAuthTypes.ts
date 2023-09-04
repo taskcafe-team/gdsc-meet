@@ -4,6 +4,7 @@ import { Request } from "express";
 export type HttpUserPayload = {
   id: string;
   role: UserRole;
+  isValid: boolean;
 };
 
 export type HttpRequestWithUser = Request & { user: HttpUserPayload };
@@ -15,4 +16,5 @@ export type HttpJwtPayload = {
 export type HttpLoggedInUser = {
   id: string;
   accessToken: string;
+  refreshToken: string;
 };

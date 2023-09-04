@@ -10,11 +10,15 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBody, ApiTags, ApiResponse } from "@nestjs/swagger";
-import { HttpLocalAuthGuard } from "../auth/guard/HttpLocalAuthGuard";
+import { ApiBody, ApiTags, ApiResponse, ApiQuery } from "@nestjs/swagger";
+
 import { CreateUserAdapter } from "@infrastructure/adapter/usecase/user/CreateUserAdapter";
+
 import { UserRole } from "@core/common/enums/UserEnums";
+import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
+
 import { HttpAuthService } from "../auth/HttpAuthService";
+import { HttpLocalAuthGuard } from "../auth/guard/HttpLocalAuthGuard";
 import {
   HttpLoggedInUser,
   HttpRequestWithUser,
@@ -24,8 +28,8 @@ import {
   HttpRestApiModelRegisterBody,
   HttpRestApiModelLogInBody,
   HttpRestApiModelResetPasswordBody,
+  HttpRestApiResponseLoggedInUser,
 } from "./documentation/AuthDocumentation";
-import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 
 @Controller("auth")
 @ApiTags("auth")
@@ -36,11 +40,20 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(HttpLocalAuthGuard)
   @ApiBody({ type: HttpRestApiModelLogInBody })
-  @ApiResponse({ status: HttpStatus.OK, type: HttpRestApiModelLogInBody })
+  @ApiResponse({ status: HttpStatus.OK, type: HttpRestApiResponseLoggedInUser })
   public async loginWithEmail(
     @Req() request: HttpRequestWithUser,
   ): Promise<CoreApiResponse<HttpLoggedInUser>> {
     const result = await this.authService.login(request.user);
+    return CoreApiResponse.success(result);
+  }
+
+  @Get("access-token")
+  @ApiResponse({ status: HttpStatus.OK })
+  public async getAccessToken(
+    @Query("refreshToken") refreshToken: string,
+  ): Promise<CoreApiResponse<{ accessToken: string }>> {
+    const result = await this.authService.getAccessToken(refreshToken);
     return CoreApiResponse.success(result);
   }
 
@@ -76,9 +89,8 @@ export class AuthController {
 
   @Get("email/resend-verification")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(HttpLocalAuthGuard)
   public async resendVerification(
-    @Query() email: string,
+    @Query("email") email: string,
   ): Promise<CoreApiResponse<void>> {
     await this.authService.resendVerification(email);
     return CoreApiResponse.success();
@@ -86,6 +98,7 @@ export class AuthController {
 
   @Get("email/forgot-password")
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiQuery({ name: "email", type: String })
   public async forgotPassword(
     @Query("email") email: string,
   ): Promise<CoreApiResponse<any>> {
@@ -96,6 +109,7 @@ export class AuthController {
   @Post("email/reset-password")
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBody({ type: HttpRestApiModelResetPasswordBody })
+  @ApiQuery({ name: "token", type: String })
   public async resetPassword(
     @Query("token") token: string,
     @Body() body: HttpRestApiModelResetPasswordBody,

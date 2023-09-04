@@ -1,21 +1,18 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { IBaseRepository } from "@core/common/persistence/IBaseRepository";
 
 export abstract class PrismaBaseRepository<TEntity>
   implements IBaseRepository<TEntity>
 {
-  protected context: PrismaClient;
-  protected model: Prisma.ModelName;
+  protected context: Prisma.TransactionClient;
+  protected readonly model: Prisma.ModelName;
 
-  constructor(
-    model: Prisma.ModelName,
-    context: PrismaClient = new PrismaClient(),
-  ) {
+  constructor(model: Prisma.ModelName, context: Prisma.TransactionClient) {
     this.context = context;
     this.model = model;
   }
 
-  public setContext(context: PrismaClient) {
+  public setContext(context: Prisma.TransactionClient) {
     this.context = context;
   }
 

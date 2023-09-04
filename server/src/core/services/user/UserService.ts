@@ -12,58 +12,48 @@ import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 import { GetUserPort } from "../../domain/user/port/GetUserPort";
 import { CreateUserPort } from "../../domain/user/port/CreateUserPort";
 
-import { PrismaService } from "../../../infrastructure/adapter/persistence/prisma/PrismaService";
-import { CoreAssert } from "@core/common/util/assert/CoreAssert";
-import { PrismaUserMapper } from "@infrastructure/adapter/persistence/prisma/entity/user/PrismaUserMapper";
-import { IUnitOfWork } from "@core/common/persistence/IUnitOfWork";
-import { CommonDITokens } from "@core/common/DIToken/CommonDITokens";
+import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 
 @Injectable()
 export class UserService implements UserUsecase {
-  constructor(
-    private readonly prismaService: PrismaService,
-    @Inject(CommonDITokens.UnitOfWork)
-    private readonly unitOfWork: IUnitOfWork,
-  ) {}
+  constructor(private readonly unitOfWork: UnitOfWork) {}
 
   public async getUser(payload: GetUserPort): Promise<UserUsecaseDto> {
     throw new Error("Method not implemented.");
   }
 
   public async createUser(payload: CreateUserPort): Promise<UserUsecaseDto> {
-    return await this.prismaService.$transaction<UserUsecaseDto>(
-      async (prisma) => {
-        this.unitOfWork.setContext(prisma);
+    // return await this.prismaService.$transaction<UserUsecaseDto>(
+    //   async (prisma) => {
+    //     this.unitOfWork.setContext(prisma);
+    //     const userExist = await this.unitOfWork.getUserRepository().findUser({
+    //       email: payload.email,
+    //     });
+    //     CoreAssert.notEmpty(
+    //       !userExist,
+    //       Exception.new({
+    //         code: Code.ENTITY_ALREADY_EXISTS_ERROR,
+    //         overrideMessage: "User already exists.",
+    //       }),
+    //     );
+    //     const user: User = await User.new({
+    //       firstName: payload.firstName,
+    //       lastName: payload.lastName,
+    //       email: payload.email,
+    //       role: payload.role,
+    //       password: payload.password,
+    //       avatar: payload.avatar,
+    //       providerName: payload.providerName,
+    //       providerId: payload.providerId,
+    //     });
+    //     await this.unitOfWork.getUserRepository().addUser(user);
+    //     return UserUsecaseDto.newFromEntity(user);
+    //   },
+    //   {
+    //     isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+    //   },
+    // );
 
-        const userExist = await this.unitOfWork.getUserRepository().findUser({
-          email: payload.email,
-        });
-
-        CoreAssert.notEmpty(
-          !userExist,
-          Exception.new({
-            code: Code.ENTITY_ALREADY_EXISTS_ERROR,
-            overrideMessage: "User already exists.",
-          }),
-        );
-
-        const user: User = await User.new({
-          firstName: payload.firstName,
-          lastName: payload.lastName,
-          email: payload.email,
-          role: payload.role,
-          password: payload.password,
-          avatar: payload.avatar,
-          providerName: payload.providerName,
-          providerId: payload.providerId,
-        });
-
-        await this.unitOfWork.getUserRepository().addUser(user);
-        return UserUsecaseDto.newFromEntity(user);
-      },
-      {
-        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-      },
-    );
+    throw new Error("Not implemented");
   }
 }
