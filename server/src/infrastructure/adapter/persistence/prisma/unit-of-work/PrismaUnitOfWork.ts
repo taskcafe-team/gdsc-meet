@@ -1,4 +1,4 @@
-import { Injectable, Scope } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
@@ -7,7 +7,7 @@ import { PrismaUserRepositoryAdapter } from "../repository/PrismaUserRepositoryA
 import { PrismaService } from "../PrismaService";
 import { PrismaBaseRepository } from "../repository/PrismaBaseRepository";
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class PrismaUnitOfWork implements UnitOfWork {
   private context: Prisma.TransactionClient;
   constructor(
@@ -17,13 +17,13 @@ export class PrismaUnitOfWork implements UnitOfWork {
     this.context = prismaService;
   }
 
-  public async runInTransaction<T>(
-    fn: (context: Prisma.TransactionClient) => Promise<T>,
-  ): Promise<T> {
+  public async runInTransaction<T>(fn: () => Promise<T>): Promise<T> {
     return await this.prismaService.$transaction(async (context) => {
+      const temp = this.context;
       this.context = context;
-      const res = await fn(this.context);
-      return res;
+      const res = fn();
+      this.context = temp;
+      return await res;
     });
   }
 

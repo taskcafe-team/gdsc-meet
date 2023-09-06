@@ -17,9 +17,7 @@ export class HttpRoleAuthGuard implements CanActivate {
     const canActivate: boolean =
       roles.length > 0 ? roles.includes(request.user.role) : true;
 
-    if (!canActivate) {
-      throw Exception.new({ code: Code.ACCESS_DENIED_ERROR });
-    }
+    if (!canActivate) throw Exception.new({ code: Code.ACCESS_DENIED_ERROR });
 
     return canActivate;
   }

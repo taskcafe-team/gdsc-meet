@@ -10,7 +10,6 @@ import { Exception } from "@core/common/exception/Exception";
 import { Code } from "@core/common/code/Code";
 import { Injectable } from "@nestjs/common";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
-import { TokenSecretType } from "@core/common/contants/TokenSecretType";
 
 @Injectable()
 export class HttpJwtStrategy extends PassportStrategy(Strategy, "jwt") {
@@ -23,8 +22,7 @@ export class HttpJwtStrategy extends PassportStrategy(Strategy, "jwt") {
         configService.get("API_ACCESS_TOKEN_HEADER"),
       ),
       ignoreExpiration: false,
-      secretOrKey:
-        configService.get("API_TOKEN_SECRET") + TokenSecretType.AccessToken,
+      secretOrKey: configService.get("API_ACCESS_TOKEN_SECRET"),
     });
   }
 

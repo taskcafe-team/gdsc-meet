@@ -30,7 +30,7 @@ export class HttpGoogleStrategy extends PassportStrategy(Strategy, "google") {
     refreshToken: string,
     profile: Profile,
     done: VerifyCallback,
-  ): Promise<HttpUserPayload> {
+  ) {
     const email = profile.emails ? profile.emails[0].value : "";
     const firstName = profile.name ? profile.name.familyName : "";
     const lastName = profile.name ? profile.name.givenName : "";
@@ -48,7 +48,6 @@ export class HttpGoogleStrategy extends PassportStrategy(Strategy, "google") {
       };
 
       done(null, userPayload);
-      return userPayload;
     }
 
     const newUser: User = await User.new({

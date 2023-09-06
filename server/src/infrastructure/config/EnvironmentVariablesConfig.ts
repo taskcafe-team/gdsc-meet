@@ -6,7 +6,8 @@ export class EnvironmentVariablesConfig {
   // ----- api ----- //
   @IsNotEmpty() API_HOST: string;
   @IsNotEmpty() @IsNumber() API_PORT: number;
-  @IsNotEmpty() API_TOKEN_SECRET: string;
+  @IsNotEmpty() API_REFRESH_TOKEN_SECRET: string;
+  @IsNotEmpty() @IsNumber() API_REFRESH_TOKEN_TTL_IN_MINUTES: number;
   @IsNotEmpty() API_ACCESS_TOKEN_SECRET: string;
   @IsNotEmpty() @IsNumber() API_ACCESS_TOKEN_TTL_IN_MINUTES: number;
   @IsNotEmpty() API_ACCESS_TOKEN_HEADER: string;
@@ -28,7 +29,10 @@ export class EnvironmentVariablesConfig {
   @IsNotEmpty() @IsNumber() EMAIL_PORT: number;
   @IsNotEmpty() EMAIL_AUTH_USER: string;
   @IsNotEmpty() EMAIL_AUTH_USER_PASSWORD: string;
-
+  @IsNotEmpty() EMAIL_VERIFICATION_TOKEN_SECRET: string;
+  @IsNotEmpty()
+  @IsNumber()
+  EMAIL_VERIFICATION_TOKEN_SECRET_TTL_IN_MINUTES: number;
   public static validate(configuration: Record<string, unknown>) {
     const finalConfig = plainToClass(
       EnvironmentVariablesConfig,

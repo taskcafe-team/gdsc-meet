@@ -1,7 +1,7 @@
 import { PassportModule } from "@nestjs/passport";
-import { ConfigModule } from "@nestjs/config";
 import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
 
 import { AuthController } from "@application/api/http-rest/controller/AuthController";
 import { HttpAuthService } from "@application/api/http-rest/auth/HttpAuthService";
@@ -14,14 +14,9 @@ import { UserModule } from "./UserModule";
 
 @Module({
   controllers: [AuthController],
-  imports: [
-    InfrastructureModule,
-    UserModule,
-    ConfigModule,
-    PassportModule,
-    JwtModule,
-  ],
+  imports: [InfrastructureModule, UserModule, PassportModule, JwtModule],
   providers: [
+    ConfigService,
     HttpAuthService,
     HttpJwtStrategy,
     HttpLocalStrategy,

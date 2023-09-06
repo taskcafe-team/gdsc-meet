@@ -10,7 +10,7 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBody, ApiTags, ApiResponse, ApiQuery } from "@nestjs/swagger";
+import { ApiBody, ApiTags, ApiResponse } from "@nestjs/swagger";
 
 import { CreateUserAdapter } from "@infrastructure/adapter/usecase/user/CreateUserAdapter";
 
@@ -28,7 +28,6 @@ import {
   HttpRestApiModelRegisterBody,
   HttpRestApiModelLogInBody,
   HttpRestApiModelResetPasswordBody,
-  HttpRestApiResponseLoggedInUser,
 } from "./documentation/AuthDocumentation";
 
 @Controller("auth")
@@ -39,10 +38,9 @@ export class AuthController {
   @Post("email/login")
   @HttpCode(HttpStatus.OK)
   @UseGuards(HttpLocalAuthGuard)
-  @ApiBody({ type: HttpRestApiModelLogInBody })
-  @ApiResponse({ status: HttpStatus.OK, type: HttpRestApiResponseLoggedInUser })
   public async loginWithEmail(
     @Req() request: HttpRequestWithUser,
+    @Body() body: HttpRestApiModelLogInBody,
   ): Promise<CoreApiResponse<HttpLoggedInUser>> {
     const result = await this.authService.login(request.user);
     return CoreApiResponse.success(result);
@@ -58,7 +56,7 @@ export class AuthController {
   }
 
   @Post("email/register")
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.CREATED)
   @ApiBody({ type: HttpRestApiModelRegisterBody })
   public async registerWithEmail(
     @Body() body: HttpRestApiModelRegisterBody,
@@ -88,7 +86,7 @@ export class AuthController {
   }
 
   @Get("email/resend-verification")
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   public async resendVerification(
     @Query("email") email: string,
   ): Promise<CoreApiResponse<void>> {
@@ -97,8 +95,7 @@ export class AuthController {
   }
 
   @Get("email/forgot-password")
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiQuery({ name: "email", type: String })
+  @HttpCode(HttpStatus.OK)
   public async forgotPassword(
     @Query("email") email: string,
   ): Promise<CoreApiResponse<any>> {
@@ -109,7 +106,6 @@ export class AuthController {
   @Post("email/reset-password")
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBody({ type: HttpRestApiModelResetPasswordBody })
-  @ApiQuery({ name: "token", type: String })
   public async resetPassword(
     @Query("token") token: string,
     @Body() body: HttpRestApiModelResetPasswordBody,
@@ -122,16 +118,15 @@ export class AuthController {
   }
 
   @Get("google/login")
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(HttpGoogleOAuthGuard)
-  public async loginWithGoogleOAuth(): Promise<void> {
+  public async loginWithGoogleOAuth() {
     return;
   }
 
   @Get("google/verify")
   @HttpCode(HttpStatus.OK)
   @UseGuards(HttpGoogleOAuthGuard)
-  @ApiResponse({ status: HttpStatus.OK, type: HttpRestApiModelLogInBody })
   public async verifyLoginGoogle(
     @Req() request: HttpRequestWithUser,
   ): Promise<CoreApiResponse<HttpLoggedInUser>> {

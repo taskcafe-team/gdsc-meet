@@ -31,6 +31,11 @@ export class Code {
     message: "Access denied.",
   };
 
+  public static CONFLICT_ERROR: CodeDescription = {
+    code: 409,
+    message: "Conflict detected.",
+  };
+
   public static INTERNAL_ERROR: CodeDescription = {
     code: 500,
     message: "Internal error.",

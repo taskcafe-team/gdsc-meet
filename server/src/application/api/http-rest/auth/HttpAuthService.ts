@@ -1,7 +1,7 @@
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
-import { Inject, Injectable } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { HttpStatus, Injectable } from "@nestjs/common";
+import { MailerService } from "@nestjs-modules/mailer";
 
 import {
   HttpJwtPayload,
@@ -12,13 +12,11 @@ import {
 import { User } from "@core/domain/user/entity/User";
 import { Nullable } from "@core/common/type/CommonTypes";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
-import { MailerService } from "@nestjs-modules/mailer";
 import { Exception } from "@core/common/exception/Exception";
 import { Code } from "@core/common/code/Code";
 import { CreateUserPort } from "@core/domain/user/port/CreateUserPort";
 import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
-import { TokenSecretType } from "@core/common/contants/TokenSecretType";
 
 @Injectable()
 export class HttpAuthService {
@@ -41,31 +39,25 @@ export class HttpAuthService {
     return { id: user.getId(), role: user.role, isValid: user.isValid };
   }
 
-  private async sendVerificationEmail(user: User): Promise<any> {
+  private async sendVerificationEmail(
+    user: User,
+  ): Promise<{ token: string; expiresIn: number }> {
     if (user.isValid)
       throw Exception.new({
         code: Code.SUCCESS,
-        overrideMessage:
-          "The account has not been provided with an email address.",
+        overrideMessage: "Email has been verified.",
       });
+    if (!user.email) throw Exception.new({ code: Code.BAD_REQUEST_ERROR });
 
-    if (!user.email)
-      throw Exception.new({
-        code: Code.BAD_REQUEST_ERROR,
-        overrideMessage:
-          "The account has not been provided with an email address.",
-      });
+    const payload: HttpJwtPayload = { id: user.getId() };
 
-    const payload: HttpUserPayload = {
-      id: user.getId(),
-      role: user.role,
-      isValid: user.isValid,
-    };
-    const tokenSecret = this.configService.get("API_TOKEN_SECRET");
-    const expiresIn = "5m";
+    const expiresIn = this.configService.get(
+      "EMAIL_VERIFICATION_TOKEN_SECRET_TTL_IN_MINUTES",
+    );
+
     const token = this.jwtService.sign(payload, {
-      expiresIn: "5m",
-      secret: tokenSecret + TokenSecretType.VerificationEmail,
+      secret: this.configService.get("EMAIL_VERIFICATION_TOKEN_SECRET"),
+      expiresIn: `${expiresIn}m`,
     });
 
     const confirmEmailURL = this.configService.get("API_CONFIRM_EMAIL_URL");
@@ -79,19 +71,22 @@ export class HttpAuthService {
       html: `<a href="${url}" target="_blank">Xác Thực</a>`,
     });
 
-    return { expiresIn };
+    return { token, expiresIn };
   }
 
   public async login(user: HttpUserPayload): Promise<HttpLoggedInUser> {
     const payload: HttpJwtPayload = { id: user.id };
 
-    const tokenSecret = this.configService.get("API_TOKEN_SECRET");
     const accessToken: string = this.jwtService.sign(payload, {
-      secret: tokenSecret + TokenSecretType.AccessToken,
+      secret: this.configService.get("API_ACCESS_TOKEN_SECRET"),
+      expiresIn:
+        this.configService.get("API_ACCESS_TOKEN_TTL_IN_MINUTES") + "m",
     });
 
     const refreshToken: string = this.jwtService.sign(payload, {
-      secret: tokenSecret + TokenSecretType.RefreshToken,
+      secret: this.configService.get("API_REFRESH_TOKEN_SECRET"),
+      expiresIn:
+        this.configService.get("API_REFRESH_TOKEN_TTL_IN_MINUTES") + "m",
     });
 
     return {
@@ -102,20 +97,19 @@ export class HttpAuthService {
   }
 
   public async getAccessToken(refreshToken: string) {
-    const tokenSecret = this.configService.get("API_TOKEN_SECRET");
     const httpUser = await this.jwtService.verifyAsync<HttpUserPayload>(
       refreshToken,
-      {
-        secret: tokenSecret + TokenSecretType.AccessToken,
-      },
+      { secret: this.configService.get("API_REFRESH_TOKEN_SECRET") },
     );
 
-    const payload: HttpJwtPayload = { id: httpUser.id };
+    const payload: HttpUserPayload = httpUser;
 
     const accessToken: string = this.jwtService.sign(payload, {
-      secret: tokenSecret + TokenSecretType.AccessToken,
+      secret: this.configService.get("API_ACCESS_TOKEN_SECRET"),
+      expiresIn:
+        this.configService.get("API_ACCESS_TOKEN_TTL_IN_MINUTES") + "m",
     });
-    return { accessToken, refreshToken };
+    return { accessToken };
   }
 
   public async register(payload: CreateUserPort): Promise<UserUsecaseDto> {
@@ -124,19 +118,11 @@ export class HttpAuthService {
 
       const userExist = await userRepo.findUser({ email: payload.email });
 
-      if (userExist) {
-        if (userExist.isValid === true)
-          throw Exception.new({
-            code: Code.ENTITY_ALREADY_EXISTS_ERROR,
-            overrideMessage: "User already exists.",
-          });
-
-        if (userExist.isValid === false)
-          throw Exception.new({
-            code: Code.ENTITY_VALIDATION_ERROR,
-            overrideMessage: "User does not valid email",
-          });
-      }
+      if (userExist)
+        throw Exception.new({
+          code: Code.CONFLICT_ERROR,
+          overrideMessage: "Email is already in use.",
+        });
 
       const newUser: User = await User.new({
         email: payload.email,
@@ -145,7 +131,6 @@ export class HttpAuthService {
       });
 
       await userRepo.addUser(newUser);
-
       const result = UserUsecaseDto.newFromEntity(newUser);
 
       await this.sendVerificationEmail(newUser);
@@ -168,26 +153,25 @@ export class HttpAuthService {
   }
 
   public async confirmEmail(token: string): Promise<void> {
-    const tokenSecret = this.configService.get("API_TOKEN_SECRET");
-    const payload: HttpUserPayload = await this.jwtService.verifyAsync(token, {
-      secret: tokenSecret + TokenSecretType.VerificationEmail,
-    });
+    const secret = this.configService.get("EMAIL_VERIFICATION_TOKEN_SECRET");
+    const payload: HttpUserPayload = await this.jwtService
+      .verifyAsync(token, { secret })
+      .catch((error) => error);
+
     const user = await this.unitOfWork
       .getUserRepository()
       .findUser({ id: payload.id });
 
-    if (!user)
+    if (!user) throw Exception.new({ code: Code.ENTITY_NOT_FOUND_ERROR });
+
+    if (user.isValid)
       throw Exception.new({
-        code: Code.ENTITY_NOT_FOUND_ERROR,
-        overrideMessage: "The user does not exist",
+        code: Code.SUCCESS,
+        overrideMessage: "Email has been verified.",
       });
 
-    if (user.isValid === true) return;
-
-    if (user.isValid === false) {
-      await user.edit({ isValid: true });
-      this.unitOfWork.getUserRepository().updateUser(user);
-    }
+    await user.edit({ isValid: true });
+    await this.unitOfWork.getUserRepository().updateUser(user);
   }
 
   public async forgotPassword(email: string): Promise<any> {
@@ -199,16 +183,15 @@ export class HttpAuthService {
         overrideMessage: "The user does not exist",
       });
 
-    const payload: HttpUserPayload = {
-      id: user.getId(),
-      role: user.role,
-      isValid: user.isValid,
-    };
+    const payload: HttpJwtPayload = { id: user.getId() };
 
-    const tokenSecret = this.configService.get("API_TOKEN_SECRET");
+    const secret = this.configService.get("EMAIL_VERIFICATION_TOKEN_SECRET");
+    const expiresIn = this.configService.get(
+      "EMAIL_VERIFICATION_TOKEN_SECRET_TTL_IN_MINUTES",
+    );
     const token = this.jwtService.sign(payload, {
-      expiresIn: "3m",
-      secret: tokenSecret + TokenSecretType.ForgotPassword,
+      expiresIn: expiresIn + "m",
+      secret,
     });
 
     const resetPasswordURL = this.configService.get("API_RESET_PASSWORD_URL");
@@ -222,27 +205,24 @@ export class HttpAuthService {
       html: `<a href="${url}" target="_blank">Doi mat khau</a>`, // HTML body content
     });
 
-    return { email: email, expiresIn: "3m" };
+    return { email: email, expiresIn: expiresIn * 60 };
   }
 
   public async resetPassword(payload: {
     token: string;
     newPassword: string;
   }): Promise<HttpUserPayload> {
-    const tokenSecret = this.configService.get("API_TOKEN_SECRET");
-    const userPayload: HttpUserPayload = await this.jwtService.verifyAsync(
+    const secret = this.configService.get("EMAIL_VERIFICATION_TOKEN_SECRET");
+
+    const userPayload: HttpJwtPayload = await this.jwtService.verifyAsync(
       payload.token,
-      { secret: tokenSecret + TokenSecretType.ForgotPassword },
+      { secret },
     );
 
     const user = await this.unitOfWork
       .getUserRepository()
       .findUser({ id: userPayload.id });
-    if (!user)
-      throw Exception.new({
-        code: Code.ENTITY_NOT_FOUND_ERROR,
-        overrideMessage: "User does not exists.",
-      });
+    if (!user) throw Exception.new({ code: Code.ENTITY_NOT_FOUND_ERROR });
 
     await user.changePassword(payload.newPassword);
     await this.unitOfWork.getUserRepository().updateUser(user);
