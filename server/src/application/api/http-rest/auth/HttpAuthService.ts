@@ -42,11 +42,7 @@ export class HttpAuthService {
   private async sendVerificationEmail(
     user: User,
   ): Promise<{ token: string; expiresIn: number }> {
-    if (user.isValid)
-      throw Exception.new({
-        code: Code.SUCCESS,
-        overrideMessage: "Email has been verified.",
-      });
+    if (user.isValid) throw Exception.new({ code: Code.BAD_REQUEST_ERROR });
     if (!user.email) throw Exception.new({ code: Code.BAD_REQUEST_ERROR });
 
     const payload: HttpJwtPayload = { id: user.getId() };
@@ -96,7 +92,9 @@ export class HttpAuthService {
     };
   }
 
-  public async getAccessToken(refreshToken: string) {
+  public async getAccessToken(
+    refreshToken: string,
+  ): Promise<{ accessToken: string }> {
     const httpUser = await this.jwtService.verifyAsync<HttpUserPayload>(
       refreshToken,
       { secret: this.configService.get("API_REFRESH_TOKEN_SECRET") },
@@ -138,18 +136,17 @@ export class HttpAuthService {
     });
   }
 
-  public async resendVerification(email: string): Promise<any> {
+  public async resendVerification(
+    email: string,
+  ): Promise<{ expiresIn: number }> {
     const userExist = await this.unitOfWork
       .getUserRepository()
       .findUser({ email: email });
 
-    if (!userExist)
-      throw Exception.new({
-        code: Code.ENTITY_NOT_FOUND_ERROR,
-        overrideMessage: "The user does not exist",
-      });
+    if (!userExist) throw Exception.new({ code: Code.ENTITY_NOT_FOUND_ERROR });
 
-    return await this.sendVerificationEmail(userExist);
+    const resut = await this.sendVerificationEmail(userExist);
+    return { expiresIn: resut.expiresIn };
   }
 
   public async confirmEmail(token: string): Promise<void> {
@@ -177,11 +174,7 @@ export class HttpAuthService {
   public async forgotPassword(email: string): Promise<any> {
     const user = await this.unitOfWork.getUserRepository().findUser({ email });
 
-    if (!user)
-      throw Exception.new({
-        code: Code.ENTITY_NOT_FOUND_ERROR,
-        overrideMessage: "The user does not exist",
-      });
+    if (!user) throw Exception.new({ code: Code.NOT_FOUND_ERROR });
 
     const payload: HttpJwtPayload = { id: user.getId() };
 
@@ -205,7 +198,7 @@ export class HttpAuthService {
       html: `<a href="${url}" target="_blank">Doi mat khau</a>`, // HTML body content
     });
 
-    return { email: email, expiresIn: expiresIn * 60 };
+    return { email: email, expiresIn };
   }
 
   public async resetPassword(payload: {

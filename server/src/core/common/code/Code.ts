@@ -31,6 +31,11 @@ export class Code {
     message: "Access denied.",
   };
 
+  public static NOT_FOUND_ERROR: CodeDescription = {
+    code: 404,
+    message: "Not found.",
+  };
+
   public static CONFLICT_ERROR: CodeDescription = {
     code: 409,
     message: "Conflict detected.",

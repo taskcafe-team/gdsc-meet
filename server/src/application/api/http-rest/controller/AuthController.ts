@@ -46,18 +46,17 @@ export class AuthController {
     return CoreApiResponse.success(result);
   }
 
-  @Get("access-token")
+  @Post("access-token")
   @ApiResponse({ status: HttpStatus.OK })
   public async getAccessToken(
-    @Query("refreshToken") refreshToken: string,
+    @Body() body: { refreshToken: string },
   ): Promise<CoreApiResponse<{ accessToken: string }>> {
-    const result = await this.authService.getAccessToken(refreshToken);
+    const result = await this.authService.getAccessToken(body.refreshToken);
     return CoreApiResponse.success(result);
   }
 
   @Post("email/register")
   @HttpCode(HttpStatus.CREATED)
-  @ApiBody({ type: HttpRestApiModelRegisterBody })
   public async registerWithEmail(
     @Body() body: HttpRestApiModelRegisterBody,
   ): Promise<CoreApiResponse<UserUsecaseDto>> {
@@ -98,22 +97,17 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   public async forgotPassword(
     @Query("email") email: string,
-  ): Promise<CoreApiResponse<any>> {
+  ): Promise<CoreApiResponse<void>> {
     const result = await this.authService.forgotPassword(email);
     return CoreApiResponse.success(result);
   }
 
   @Post("email/reset-password")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiBody({ type: HttpRestApiModelResetPasswordBody })
   public async resetPassword(
-    @Query("token") token: string,
-    @Body() body: HttpRestApiModelResetPasswordBody,
+    @Body() body: { token: string; newPassword: string },
   ): Promise<CoreApiResponse<void>> {
-    await this.authService.resetPassword({
-      token,
-      newPassword: body.newPassword,
-    });
+    await this.authService.resetPassword(body);
     return CoreApiResponse.success();
   }
 

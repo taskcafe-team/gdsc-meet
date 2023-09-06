@@ -7,8 +7,6 @@ export type HttpUserPayload = {
   isValid: boolean;
 };
 
-export type HttpRequestWithUser = Request & { user: HttpUserPayload };
-
 export type HttpJwtPayload = {
   id: string;
 };
@@ -18,3 +16,5 @@ export type HttpLoggedInUser = {
   accessToken: string;
   refreshToken: string;
 };
+
+export type HttpRequestWithUser = Request & { user: HttpUserPayload };
