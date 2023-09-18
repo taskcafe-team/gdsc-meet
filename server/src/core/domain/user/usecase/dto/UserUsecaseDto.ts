@@ -4,26 +4,13 @@ import { Exclude, Expose, plainToClass } from "class-transformer";
 
 @Exclude()
 export class UserUsecaseDto {
-  @Expose()
-  public id: string;
-
-  @Expose()
-  public firstName: string;
-
-  @Expose()
-  public lastName: string;
-
-  @Expose()
-  public email: string;
-
-  @Expose()
-  public role: UserRole;
-
-  @Expose()
-  public isValid: boolean;
-
-  @Expose()
-  public avatar: string;
+  @Expose() public id: string;
+  @Expose() public firstName: string;
+  @Expose() public lastName: string;
+  @Expose() public email: string;
+  @Expose() public role: UserRole;
+  @Expose() public isValid: boolean;
+  @Expose() public avatar: string;
 
   public static newFromEntity(entity: User): UserUsecaseDto {
     return plainToClass(UserUsecaseDto, entity);

@@ -1,21 +1,14 @@
-import { Module, Provider } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 
 import { UserService } from "@core/services/user/UserService";
-import { UserDITokens } from "@core/domain/user/di/UserDITokens";
 
 import { InfrastructureModule } from "./InfrastructureModule";
-
-const persistenceProviders: Provider[] = [
-  {
-    provide: UserDITokens.UserUsecase,
-    useClass: UserService,
-  },
-];
+import { UserController } from "@application/api/http-rest/controller/UserController";
 
 @Module({
+  controllers: [UserController],
   imports: [InfrastructureModule],
-  controllers: [],
-  providers: [...persistenceProviders],
-  exports: [UserDITokens.UserUsecase],
+  providers: [UserService],
+  exports: [UserService],
 })
 export class UserModule {}
