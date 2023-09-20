@@ -29,20 +29,28 @@ import {
   HttpRestApiModelLogInBody,
   HttpRestApiModelResetPasswordBody,
 } from "./documentation/AuthDocumentation";
+import { HttpFacebookAuthGuard } from "../auth/guard/HttpFacebookAuthGuard";
+import { Request } from "express";
 
 @Controller("auth")
-@ApiTags("auth")
+@ApiTags("auth") // dùng để đánh dấu các nhóm API có tên là auth và tư động tạo tại liệu API
 export class AuthController {
   constructor(private readonly authService: HttpAuthService) {}
 
+  // Begin login Basic 
+
   @Post("email/login")
   @HttpCode(HttpStatus.OK)
-  @UseGuards(HttpLocalAuthGuard)
+  //@UseGuards dùng để kiểm tra và quyết định xem một request cho được phép tiếp tực thực thi hay không
+  @UseGuards(HttpLocalAuthGuard) 
+  // Hàm loginWithEmail dùng để đăng nhập với tài khoản và mật khẩu
   public async loginWithEmail(
     @Req() request: HttpRequestWithUser,
     @Body() body: HttpRestApiModelLogInBody,
   ): Promise<CoreApiResponse<HttpLoggedInUser>> {
+    // biến result sẽ lưu lại id,accesstoken, refreshtoken của user 
     const result = await this.authService.login(request.user);
+    //console.log(result.accessToken)
     return CoreApiResponse.success(result);
   }
 
@@ -71,7 +79,7 @@ export class AuthController {
       providerId: null,
     });
     const result = await this.authService.register(adapter);
-
+    console.log(CoreApiResponse.success(result))
     return CoreApiResponse.success(result);
   }
 
@@ -110,7 +118,9 @@ export class AuthController {
     await this.authService.resetPassword(body);
     return CoreApiResponse.success();
   }
+  // End login with Basic 
 
+  // Begin login with Google OAuth2 
   @Get("google/login")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(HttpGoogleOAuthGuard)
@@ -127,4 +137,24 @@ export class AuthController {
     const result = await this.authService.login(request.user);
     return CoreApiResponse.success(result);
   }
+
+// End Login with Google OAuth2
+
+// Begin Login with Facebook OAuth2
+  @Get("facebook/login")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(HttpFacebookAuthGuard)
+  async facebookLogin(): Promise<any> {
+    return;
+  }
+
+  @Get("facebook/redirect")
+  @UseGuards(HttpFacebookAuthGuard)
+  public async redirectLoginFacebook(
+    @Req() request: HttpRequestWithUser,
+  ): Promise<CoreApiResponse<HttpLoggedInUser>> {
+    const result = await this.authService.login(request.user);
+    return CoreApiResponse.success(result);
+  }
+// End Login with Facebook OAuth2
 }

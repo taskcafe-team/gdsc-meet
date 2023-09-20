@@ -11,6 +11,7 @@ import { HttpJwtStrategy } from "@application/api/http-rest/auth/passport/HttpJw
 
 import { InfrastructureModule } from "./InfrastructureModule";
 import { UserModule } from "./UserModule";
+import { HttpFacebookStrategy } from "@application/api/http-rest/auth/passport/HttpFacebookStrategy";
 
 @Module({
   controllers: [AuthController],
@@ -21,6 +22,7 @@ import { UserModule } from "./UserModule";
     HttpJwtStrategy,
     HttpLocalStrategy,
     HttpGoogleStrategy,
+    HttpFacebookStrategy
   ],
 })
 export class AuthModule {}

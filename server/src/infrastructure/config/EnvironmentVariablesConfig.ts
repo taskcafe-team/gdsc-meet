@@ -1,6 +1,7 @@
 import { plainToClass } from "class-transformer";
 import { IsNotEmpty, IsNumber, validateSync, IsBoolean } from "class-validator";
 
+// class này là bao gồm các quy tắc biến môi trường phải tuân thủ
 export class EnvironmentVariablesConfig {
   @IsNotEmpty() NODE_ENV: string;
   // ----- api ----- //
@@ -23,7 +24,10 @@ export class EnvironmentVariablesConfig {
   @IsNotEmpty() GOOGLE_CLIENT_ID: string;
   @IsNotEmpty() GOOGLE_CLIENT_SECRET: string;
   @IsNotEmpty() GOOGLE_CALLBACK_URL: string;
-
+// ---- Facebook API ---- //
+@IsNotEmpty() FACEBOOK_CLIENT_ID: string;
+@IsNotEmpty() FACEBOOK_CLIENT_SECRET: string;
+@IsNotEmpty() FACEBOOK_CALLBACK_URL: string;
   // ---- Email ---- //
   @IsNotEmpty() EMAIL_HOST: string;
   @IsNotEmpty() @IsNumber() EMAIL_PORT: number;
@@ -33,6 +37,9 @@ export class EnvironmentVariablesConfig {
   @IsNotEmpty()
   @IsNumber()
   EMAIL_VERIFICATION_TOKEN_SECRET_TTL_IN_MINUTES: number;
+
+  // Hàm validate dùng để xác thực một đối tượng cấu hình bằng cách chuyển đổi nó thành một đối tượng của
+  // lớp EnvironmentVariablesConfig để kiểm tra xem có phù hợp với các quy tắc được định nghĩa như trên không.
   public static validate(configuration: Record<string, unknown>) {
     const finalConfig = plainToClass(
       EnvironmentVariablesConfig,
@@ -40,8 +47,11 @@ export class EnvironmentVariablesConfig {
       { enableImplicitConversion: true },
     );
 
-    const errors = validateSync(finalConfig, { skipMissingProperties: false });
+    // dùng để kiểm tra xem đối tượng finalConfig có tuân thủ các quy tắc trên không.
+    // Nếu có sẽ trả về mảng các lỗi
+    const errors = validateSync(finalConfig, { skipMissingProperties: false }); 
 
+    // Kiểm tra xem nếu mảng có trên 0 phần tử có nghĩa là có lỗi và ném ra lỗi
     if (errors.length > 0) throw new Error(errors.toString());
 
     return finalConfig;
