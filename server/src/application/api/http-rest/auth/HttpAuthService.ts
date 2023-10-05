@@ -18,6 +18,10 @@ import { CreateUserPort } from "@core/domain/user/port/CreateUserPort";
 import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 
+/*
+ * UnitOfWork đảm bảo tính nhất quán và toàn vẹn của dữ liệu trong một loạt các hoạt động (thao tác đọc và ghi)
+ * trước khi lưu các thay đổi vào cơ sở dữ liệu.
+ */
 @Injectable()
 export class HttpAuthService {
   constructor(
@@ -34,6 +38,7 @@ export class HttpAuthService {
     email: string,
     password: string,
   ): Promise<Nullable<HttpUserPayload>> {
+    //HttpUserPayload được sử dụng để biểu diễn thông tin của người dùng sau khi xác thực thành công.
     const user = await this.unitOfWork.getUserRepository().findUser({ email });
     if (!user || !(await user.comparePassword(password))) return null;
     return { id: user.getId(), role: user.role, isValid: user.isValid };

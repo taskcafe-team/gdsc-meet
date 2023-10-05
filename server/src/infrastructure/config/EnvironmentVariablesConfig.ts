@@ -33,13 +33,18 @@ export class EnvironmentVariablesConfig {
   @IsNotEmpty()
   @IsNumber()
   EMAIL_VERIFICATION_TOKEN_SECRET_TTL_IN_MINUTES: number;
+  //đặt là static để có thể sử dụng nó mà không cần tạo một instance của lớp EnvironmentVariablesConfig.
+  // Phương thức này được sử dụng để kiểm tra và xác nhận tính hợp lệ của các biến môi trường dựa trên cấu hình đã được truyền vào.
   public static validate(configuration: Record<string, unknown>) {
     const finalConfig = plainToClass(
+      //chuyển đổi cấu hình từ dạng plain object (Record<string, unknown>) thành một đối tượng của lớp EnvironmentVariablesConfig.
+      //giúp kiểm tra kiểu và áp dụng các quy tắc kiểm tra.
       EnvironmentVariablesConfig,
       configuration,
       { enableImplicitConversion: true },
     );
 
+    //kiểm tra xem đối tượng cấu hình cuối cùng có tuân thủ các quy tắc đã được đặt ra bởi decorators hay không.
     const errors = validateSync(finalConfig, { skipMissingProperties: false });
 
     if (errors.length > 0) throw new Error(errors.toString());

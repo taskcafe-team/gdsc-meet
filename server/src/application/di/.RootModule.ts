@@ -8,9 +8,11 @@ import { InfrastructureModule } from "./InfrastructureModule";
 
 @Module({
   imports: [
+    //một class được cấp bởi thư viện @nestjs/config dùng để config biến môi trường (env)
+    //thư viện này phải cài chứ không có sẵn khi tạo dự án
     ConfigModule.forRoot({
       envFilePath: "env/local.dev.env",
-      validate: EnvironmentVariablesConfig.validate,
+      validate: EnvironmentVariablesConfig.validate, //truyền hàm validate được viết trong EnvironmentVariablesConfig vào
     }),
     InfrastructureModule,
     AuthModule,

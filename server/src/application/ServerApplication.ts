@@ -9,12 +9,18 @@ import { RootModule } from "./di/.RootModule";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 
 export class ServerApplication {
-  private configService: ConfigService<EnvironmentVariablesConfig, true>;
+  private configService: ConfigService<EnvironmentVariablesConfig, true>; //Config cho biến môi trường, vào EnvironmentVariablesConfig để xem chi tiết
   private app: NestExpressApplication;
 
   public async run(): Promise<void> {
+    //this ở đây đại diện cho ServerApplication
     this.app = await NestFactory.create(RootModule);
+    // tạo một phiên bản ứng dụng Nest.js dựa trên module gốc (RootModule).
+    // RootModule thường là module chính của ứng dụng,
+    //nơi định nghĩa các thiết lập chung cho ứng dụng, bao gồm cả các controllers, providers và configuration.
     this.configService = this.app.get(ConfigService);
+    //get là hàm được cung cấp bởi NestExpressApplication được sử dụng để truy cập các dịch vụ
+    //đã đăng ký trong hệ thống Dependency Injection của Nest.js.
 
     this.app.use(helmet());
     this.buildAPIDocumentation();
@@ -24,7 +30,7 @@ export class ServerApplication {
   }
 
   private buildAPIDocumentation(): void {
-    const whileList: string[] = ["development"];
+    const whileList: string[] = ["development"]; //chỉ chạy documentation trong môi trường development
     if (!whileList.includes(this.configService.get("NODE_ENV"))) return;
 
     const title = "IPoster";
@@ -39,6 +45,8 @@ export class ServerApplication {
         type: "apiKey",
         in: "header",
         name: this.configService.get("API_ACCESS_TOKEN_HEADER"),
+        //get là một phương thức chung được sử dụng để truy xuất các thành phần được quản lý
+        //bởi hệ thống Dependency Injection của NestJS.
       })
       .build();
 
@@ -47,6 +55,9 @@ export class ServerApplication {
       options,
     );
     SwaggerModule.setup("documentation", this.app, document);
+    //tham số đầu tiên là route (/documentation) để mở được document đc xây dựng bởi swagger
+    //tham số thứ 2 là ứng dụng NestJS, được tạo bởi NestFactory.create
+    //(có thể đọc và xử lý HTTP request/response)
   }
 
   private buildCORS(): void {
@@ -62,6 +73,10 @@ export class ServerApplication {
     const port = this.configService.get("API_PORT");
     const context = ServerApplication.name;
     Logger.log(`Server started on: http://${host}:${port}`, context);
+    Logger.log(
+      `You can visit documentation on: http://${host}:${port}/documentation`,
+      context,
+    );
   }
 
   public static new(): ServerApplication {
