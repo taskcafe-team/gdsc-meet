@@ -20,10 +20,6 @@ export class PrismaUserRepositoryAdapter
     super(Prisma.ModelName.User, context);
   }
 
-  public async deleteUser(id: string): Promise<void> {
-    this.context.user.delete({ where: { id } });
-  }
-
   public async findUser(
     by: { id?: string; email?: string },
     options?: RepositoryFindOptions,
@@ -86,7 +82,9 @@ export class PrismaUserRepositoryAdapter
 
     return { id: ormUser.id };
   }
-
+  public async deleteUser(id: string): Promise<void> {
+    await this.context.user.delete({ where: { id } });
+  }
   public async updateUser(user: User): Promise<void> {
     await this.context.user.update({
       where: { id: user.getId() },

@@ -92,6 +92,7 @@ export class UserController {
     @Param("id") id: string,
   ): Promise<CoreApiResponse<void>> {
     const user = await this.userService.deleteUser({ userId: id });
+    console.log(JSON.stringify(user));
     return CoreApiResponse.success(user);
   }
 
