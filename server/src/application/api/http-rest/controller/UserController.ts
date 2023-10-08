@@ -1,13 +1,17 @@
+import { GetUserPort } from "./../../../../core/domain/user/port/GetUserPort";
 import * as path from "path";
 import { createWriteStream } from "fs";
 import { Multer } from "multer";
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Put,
+  Query,
   UploadedFile,
   UseInterceptors,
 } from "@nestjs/common";
@@ -35,7 +39,7 @@ export class UserController {
 
   @Get("me")
   @HttpCode(HttpStatus.OK)
-  @HttpAuth()
+  @HttpAuth() //truyền vào đây những những ai có quyền sử dụng hàm này, ở đây nếu không có gì có nghĩa là mọi role đều có thể sử dụng.
   @ApiBearerAuth()
   public async getMe(
     @HttpUser() httpUser: HttpUserPayload,
@@ -67,5 +71,40 @@ export class UserController {
     writeStream.write(avatarFile.buffer);
     writeStream.end();
     return;
+  }
+
+  @Get("/:id")
+  @HttpCode(HttpStatus.OK)
+  //@HttpAuth()
+  //@ApiBearerAuth()
+  public async getUserById(
+    @Param("id") id: string,
+  ): Promise<CoreApiResponse<UserUsecaseDto>> {
+    const user = await this.userService.getUser({ userId: id });
+    return CoreApiResponse.success(user);
+  }
+
+  @Delete("/:id")
+  @HttpCode(HttpStatus.OK)
+  //@HttpAuth()
+  //@ApiBearerAuth()
+  public async deleteUserById(
+    @Param("id") id: string,
+  ): Promise<CoreApiResponse<void>> {
+    const user = await this.userService.deleteUser({ userId: id });
+    return CoreApiResponse.success(user);
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  //@HttpAuth()
+  //@ApiBearerAuth()
+  public async getUserByEmail(
+    @Query("email") email: string,
+    @Query("skip") skip: number,
+    @Query("take") take: number,
+  ): Promise<CoreApiResponse<UserUsecaseDto>> {
+    const user = await this.userService.getUserByEmail({ userEmail: email });
+    return CoreApiResponse.success(user);
   }
 }

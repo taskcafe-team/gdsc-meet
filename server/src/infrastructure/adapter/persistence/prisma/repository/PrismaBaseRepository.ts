@@ -26,6 +26,17 @@ export abstract class PrismaBaseRepository<TEntity>
     });
   }
 
+  public async getByEmail(email: string): Promise<TEntity | null> {
+    return this.context[this.model].findMany({
+      where: {
+        email: {
+          contains: email,
+          mode: "insensitive",
+        },
+      },
+    });
+  }
+
   public async getAll(): Promise<TEntity[]> {
     return this.context[this.model].findMany();
   }

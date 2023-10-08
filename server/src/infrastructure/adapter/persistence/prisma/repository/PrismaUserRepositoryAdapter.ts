@@ -45,6 +45,26 @@ export class PrismaUserRepositoryAdapter
     return domainEntity;
   }
 
+  public async findUserByEmail(
+    by: { email?: string },
+    options?: RepositoryFindOptions,
+  ): Promise<Optional<User>> {
+    const findOptions: Prisma.UserFindManyArgs = { where: {} };
+    if (by.email) {
+      findOptions.where!.email = {
+        contains: by.email,
+        mode: "insensitive",
+      };
+    }
+    if (!options?.includeRemoved) findOptions.where!.removedAt = null;
+    const user: PrismaUser[] = await this.context.user.findMany(findOptions);
+
+    let domainEntity;
+    if (user) domainEntity = PrismaUserMapper.toDomainEntities(user) as User[];
+
+    return domainEntity;
+  }
+
   public async countUsers(
     by: { id?: string; email?: string },
     options: RepositoryFindOptions = {},

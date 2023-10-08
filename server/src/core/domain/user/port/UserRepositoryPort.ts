@@ -9,6 +9,11 @@ export interface UserRepositoryPort extends IBaseRepository<User> {
     options?: RepositoryFindOptions,
   ): Promise<Optional<User>>;
 
+  findUserByEmail(
+    by: { email?: string },
+    options?: RepositoryFindOptions,
+  ): Promise<Optional<User>>;
+
   countUsers(
     by: { id?: string; email?: string },
     options?: RepositoryFindOptions,
