@@ -1,6 +1,6 @@
 export type RepositoryFindOptions = {
   includeRemoved?: boolean;
-  limit?: number;
+  limit?: number | undefined;
   offset?: number;
 };
 

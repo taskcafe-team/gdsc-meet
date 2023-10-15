@@ -45,19 +45,23 @@ export class PrismaUserRepositoryAdapter
     by: { email?: string },
     options?: RepositoryFindOptions,
   ): Promise<Optional<User>> {
-    const findOptions: Prisma.UserFindManyArgs = { where: {} };
+    console.log(options);
+    const findOptions: Prisma.UserFindManyArgs = {
+      take: options?.limit,
+      skip: options?.offset,
+      where: {},
+    };
     if (by.email) {
       findOptions.where!.email = {
         contains: by.email,
         mode: "insensitive",
       };
     }
+    console.log(findOptions);
     if (!options?.includeRemoved) findOptions.where!.removedAt = null;
     const user: PrismaUser[] = await this.context.user.findMany(findOptions);
-
     let domainEntity;
     if (user) domainEntity = PrismaUserMapper.toDomainEntities(user) as User[];
-
     return domainEntity;
   }
 

@@ -14,6 +14,8 @@ import {
   Query,
   UploadedFile,
   UseInterceptors,
+  UsePipes,
+  ValidationPipe,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
@@ -31,9 +33,12 @@ import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 import { UserService } from "@core/services/user/UserService";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { HttpRestApiModelUpdateUser } from "./documentation/UserDocumentation";
+import { User } from "@core/domain/user/entity/User";
+import { UserQueryParametersDto } from "@core/dto/UserQueryParametersDto";
 
 @Controller("users")
 @ApiTags("users")
+@UsePipes(new ValidationPipe({ transform: true }))
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -73,15 +78,26 @@ export class UserController {
     return;
   }
 
-  @Get("/:id")
+  @Get()
   @HttpCode(HttpStatus.OK)
-  //@HttpAuth()
-  //@ApiBearerAuth()
-  public async getUserById(
-    @Param("id") id: string,
-  ): Promise<CoreApiResponse<UserUsecaseDto>> {
-    const user = await this.userService.getUser({ userId: id });
-    return CoreApiResponse.success(user);
+  public async getUsers(@Query() queryParameters: UserQueryParametersDto) {
+    const { id, email, offset, limit, isValid } = queryParameters;
+    let users;
+
+    // Xây dựng truy vấn dựa trên các tham số truy vấn
+    const query = this.userService.buildUsersQuery({
+      id,
+      email,
+      isValid,
+      offset,
+      limit,
+    });
+
+    // Thực hiện truy vấn dựa trên query
+    users = await query;
+
+    // Trả về kết quả
+    return CoreApiResponse.success(users);
   }
 
   @Delete("/:id")
@@ -96,16 +112,20 @@ export class UserController {
     return CoreApiResponse.success(user);
   }
 
-  @Get()
-  @HttpCode(HttpStatus.OK)
-  //@HttpAuth()
-  //@ApiBearerAuth()
-  public async getUserByEmail(
-    @Query("email") email: string,
-    @Query("skip") skip: number,
-    @Query("take") take: number,
-  ): Promise<CoreApiResponse<UserUsecaseDto>> {
-    const user = await this.userService.getUserByEmail({ userEmail: email });
-    return CoreApiResponse.success(user);
-  }
+  // @Get()
+  // @HttpCode(HttpStatus.OK)
+  // //@HttpAuth()
+  // //@ApiBearerAuth()
+  // public async getUserByEmail(
+  //   @Query("email") email: string,
+  //   @Query() { offset, limit }: UsersPaginationParamsDto,
+  // ): Promise<CoreApiResponse<UserUsecaseDto>> {
+  //   const user = await this.userService.getUserByEmail(
+  //     { userEmail: email },
+  //     offset,
+  //     limit,
+  //   );
+
+  //   return CoreApiResponse.success(user);
+  // }
 }
