@@ -1,6 +1,6 @@
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
-import { HttpStatus, Injectable } from "@nestjs/common";
+import { ConsoleLogger, HttpStatus, Injectable } from "@nestjs/common";
 import { MailerService } from "@nestjs-modules/mailer";
 
 import {
@@ -101,11 +101,12 @@ export class HttpAuthService {
     );
 
     const payload: HttpUserPayload = httpUser;
-
+    console.log(payload)
+    
     const accessToken: string = this.jwtService.sign(payload, {
       secret: this.configService.get("API_ACCESS_TOKEN_SECRET"),
-      expiresIn:
-        this.configService.get("API_ACCESS_TOKEN_TTL_IN_MINUTES") + "m",
+      // expiresIn:
+      //   this.configService.get("API_ACCESS_TOKEN_TTL_IN_MINUTES") + "m",
     });
     return { accessToken };
   }

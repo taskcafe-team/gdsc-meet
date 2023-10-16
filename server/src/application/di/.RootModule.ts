@@ -9,8 +9,8 @@ import { InfrastructureModule } from "./InfrastructureModule";
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: "env/local.dev.env",
-      validate: EnvironmentVariablesConfig.validate,
+      envFilePath: "env/local.dev.env", // dùng để xác định đường dẫn đến đến file môi trường
+      validate: EnvironmentVariablesConfig.validate, // dùng để xác thực các giá trị trong môi trường env/local.dev.env
     }),
     InfrastructureModule,
     AuthModule,
