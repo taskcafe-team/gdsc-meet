@@ -91,11 +91,13 @@ export class MeetingService {
     };
   }
 
-  public async getAccessToken(payload: { friendlyId: string }) {
-    const currentUserId = "29c20509-a050-4a4a-b206-2643edf388d9";
+  public async getAccessToken(payload: {
+    friendlyId: string;
+    currentUserId: string;
+  }) {
     const currentuser = await this.unitOfWork
       .getUserRepository()
-      .findUser({ id: currentUserId });
+      .findUser({ id: payload.currentUserId });
 
     const meeting = await this.getMeeting(payload);
 

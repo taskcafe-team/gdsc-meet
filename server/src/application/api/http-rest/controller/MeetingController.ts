@@ -24,6 +24,8 @@ export class MeetingController {
   }
 
   @Get(":friendlyId")
+  @HttpAuth()
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   public async getMeeting(@Param("friendlyId") friendlyId: string) {
     const adapter = { friendlyId };
@@ -32,21 +34,15 @@ export class MeetingController {
   }
 
   @Get(":friendlyId/access-token")
+  @HttpAuth()
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
-  public async getAccessToken(@Param("friendlyId") friendlyId: string) {
-    const adapter = { friendlyId };
+  public async getAccessToken(
+    @Param("friendlyId") friendlyId: string,
+    @HttpUser() httpUser: HttpUserPayload,
+  ) {
+    const adapter = { friendlyId, currentUserId: httpUser.id };
     const result = await this.meetingService.getAccessToken(adapter);
     return CoreApiResponse.success(result);
   }
-
-  // @Get("")
-  // @HttpAuth(UserRole.USER)
-  // @ApiBearerAuth()
-  // @HttpCode(HttpStatus.OK)
-  // public async getAccessToken(
-  //   @Req() request: HttpRequestWithUser,
-  // ): Promise<any> {
-  //   const user = await request.user;
-  //   return { user };
-  // }
 }
