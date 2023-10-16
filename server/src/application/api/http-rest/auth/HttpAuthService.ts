@@ -10,7 +10,7 @@ import {
 } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 
 import { User } from "@core/domain/user/entity/User";
-import { Nullable } from "@core/common/type/CommonTypes";
+import { Nullable, Optional } from "@core/common/type/CommonTypes";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { Exception } from "@core/common/exception/Exception";
 import { Code } from "@core/common/code/Code";
@@ -29,6 +29,17 @@ export class HttpAuthService {
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService,
   ) {}
+
+  public async getUser(by: {
+    id?: string;
+    email?: string;
+  }): Promise<Optional<User>> {
+    return this.unitOfWork.getUserRepository().findUser(by);
+  }
+
+  public async registerWithGoogle(user: User): Promise<{ id: string }> {
+    return await this.unitOfWork.getUserRepository().addUser(user);
+  }
 
   public async validateUser(
     email: string,
@@ -97,9 +108,10 @@ export class HttpAuthService {
   ): Promise<{ accessToken: string }> {
     const httpUser = await this.jwtService.verifyAsync<HttpUserPayload>(
       refreshToken,
-      { secret: this.configService.get("API_REFRESH_TOKEN_SECRET") },
+      {
+        secret: this.configService.get("API_REFRESH_TOKEN_SECRET"),
+      },
     );
-
     const payload: HttpUserPayload = httpUser;
 
     const accessToken: string = this.jwtService.sign(payload, {

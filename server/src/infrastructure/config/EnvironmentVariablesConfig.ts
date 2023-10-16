@@ -33,6 +33,12 @@ export class EnvironmentVariablesConfig {
   @IsNotEmpty()
   @IsNumber()
   EMAIL_VERIFICATION_TOKEN_SECRET_TTL_IN_MINUTES: number;
+
+  // ---- WebRTC ---- //
+  @IsNotEmpty() WEBRTC_LIVEKIT_API_HOST: string;
+  @IsNotEmpty() WEBRTC_LIVEKIT_CLIENT_ID: string;
+  @IsNotEmpty() WEBRTC_LIVEKIT_CLIENT_SECRET: string;
+
   public static validate(configuration: Record<string, unknown>) {
     const finalConfig = plainToClass(
       EnvironmentVariablesConfig,

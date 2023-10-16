@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, OnModuleInit } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Strategy, VerifyCallback } from "passport-google-oauth20";
 import { ConfigService } from "@nestjs/config";
@@ -7,15 +7,21 @@ import { Profile } from "passport";
 import { User } from "@core/domain/user/entity/User";
 import { UserRole } from "@core/common/enums/UserEnums";
 import { ProviderNameEnums } from "@core/common/enums/ProviderNameEnums";
-import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { HttpUserPayload } from "../type/HttpAuthTypes";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
+import { HttpAuthService } from "../HttpAuthService";
+import { ModuleRef } from "@nestjs/core";
 
 @Injectable()
-export class HttpGoogleStrategy extends PassportStrategy(Strategy, "google") {
+export class HttpGoogleStrategy
+  extends PassportStrategy(Strategy, "google")
+  implements OnModuleInit
+{
+  private authService: HttpAuthService;
+
   constructor(
     configService: ConfigService<EnvironmentVariablesConfig>,
-    private readonly unitOfWork: UnitOfWork,
+    private readonly moduleRef: ModuleRef,
   ) {
     super({
       clientID: configService.get("GOOGLE_CLIENT_ID"),
@@ -23,6 +29,10 @@ export class HttpGoogleStrategy extends PassportStrategy(Strategy, "google") {
       callbackURL: configService.get("GOOGLE_CALLBACK_URL"),
       scope: ["email", "profile"],
     });
+  }
+
+  async onModuleInit() {
+    this.authService = await this.moduleRef.resolve(HttpAuthService);
   }
 
   public async validate(
@@ -36,9 +46,7 @@ export class HttpGoogleStrategy extends PassportStrategy(Strategy, "google") {
     const lastName = profile.name ? profile.name.givenName : "";
     const photo = profile.photos ? profile.photos[0].value : null;
 
-    const userExit = await this.unitOfWork
-      .getUserRepository()
-      .findUser({ email });
+    const userExit = await this.authService.getUser({ email });
 
     if (userExit) {
       const userPayload: HttpUserPayload = {
@@ -61,7 +69,7 @@ export class HttpGoogleStrategy extends PassportStrategy(Strategy, "google") {
       avatar: photo,
     });
 
-    await this.unitOfWork.getUserRepository().addUser(newUser);
+    await this.authService.registerWithGoogle(newUser);
     const userPayload: HttpUserPayload = {
       id: newUser.getId(),
       role: newUser.role,

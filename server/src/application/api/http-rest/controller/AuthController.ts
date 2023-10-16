@@ -9,8 +9,9 @@ import {
   Query,
   Req,
   UseGuards,
+  ValidationPipe,
 } from "@nestjs/common";
-import { ApiBody, ApiTags, ApiResponse } from "@nestjs/swagger";
+import { ApiTags, ApiResponse } from "@nestjs/swagger";
 
 import { CreateUserAdapter } from "@infrastructure/adapter/usecase/user/CreateUserAdapter";
 
@@ -28,6 +29,7 @@ import {
   HttpRestApiModelRegisterBody,
   HttpRestApiModelLogInBody,
   HttpRestApiModelResetPasswordBody,
+  HttpRestApiModelGetAccessTokenBody,
 } from "./documentation/AuthDocumentation";
 
 @Controller("auth")
@@ -49,7 +51,7 @@ export class AuthController {
   @Post("access-token")
   @ApiResponse({ status: HttpStatus.OK })
   public async getAccessToken(
-    @Body() body: { refreshToken: string },
+    @Body(new ValidationPipe()) body: HttpRestApiModelGetAccessTokenBody,
   ): Promise<CoreApiResponse<{ accessToken: string }>> {
     const result = await this.authService.getAccessToken(body.refreshToken);
     return CoreApiResponse.success(result);
@@ -58,7 +60,7 @@ export class AuthController {
   @Post("email/register")
   @HttpCode(HttpStatus.CREATED)
   public async registerWithEmail(
-    @Body() body: HttpRestApiModelRegisterBody,
+    @Body(new ValidationPipe()) body: HttpRestApiModelRegisterBody,
   ): Promise<CoreApiResponse<UserUsecaseDto>> {
     const adapter: CreateUserAdapter = await CreateUserAdapter.new({
       firstName: null,
@@ -105,7 +107,7 @@ export class AuthController {
   @Post("email/reset-password")
   @HttpCode(HttpStatus.NO_CONTENT)
   public async resetPassword(
-    @Body() body: { token: string; newPassword: string },
+    @Body() body: HttpRestApiModelResetPasswordBody,
   ): Promise<CoreApiResponse<void>> {
     await this.authService.resetPassword(body);
     return CoreApiResponse.success();

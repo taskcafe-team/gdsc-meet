@@ -3,21 +3,30 @@ import { HttpUserPayload } from "@application/api/http-rest/auth/type/HttpAuthTy
 import { Code } from "@core/common/code/Code";
 import { Exception } from "@core/common/exception/Exception";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
-import { Injectable } from "@nestjs/common";
+import { Injectable, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { ModuleRef } from "@nestjs/core";
 import { PassportStrategy } from "@nestjs/passport";
 import { Strategy } from "passport-local";
 
 @Injectable()
-export class HttpLocalStrategy extends PassportStrategy(Strategy, "local") {
+export class HttpLocalStrategy
+  extends PassportStrategy(Strategy, "local")
+  implements OnModuleInit
+{
+  private authService: HttpAuthService;
   constructor(
-    private readonly authService: HttpAuthService,
     configService: ConfigService<EnvironmentVariablesConfig>,
+    private readonly moduleRef: ModuleRef,
   ) {
     super({
       usernameField: configService.get("API_LOGIN_USERNAME_FIELD"),
       passwordField: configService.get("API_LOGIN_PASSWORD_FIELD"),
     });
+  }
+
+  async onModuleInit() {
+    this.authService = await this.moduleRef.resolve(HttpAuthService);
   }
 
   public async validate(

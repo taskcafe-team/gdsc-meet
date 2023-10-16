@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { IsJWT } from "class-validator";
 
 export class HttpRestApiModelLogInBody {
   @ApiProperty({ type: "string" }) public email: string;
@@ -15,9 +16,16 @@ export class HttpRestApiModelRegisterBody {
   @ApiProperty({ type: "string" }) public password: string;
 }
 
+export class HttpRestApiModelGetAccessTokenBody {
+  @IsJWT() @ApiProperty({ type: "string" }) public refreshToken: string;
+}
+
 export class HttpRestApiModelResetPasswordBody {
+  @ApiProperty({ type: "string" }) public token: string;
   @ApiProperty({ type: "string" }) public newPassword: string;
 }
+
+// --
 
 export class HttpRestApiResponseLoggedInUser {
   @ApiProperty({ type: HttpRestApiModelLoggedInUser })

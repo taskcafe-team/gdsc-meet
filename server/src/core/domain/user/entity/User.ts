@@ -78,6 +78,10 @@ export class User extends Entity<string> {
     this.removedAt = payload.removedAt || null;
   }
 
+  public fullName(): string {
+    return this.firstName + " " + this.lastName;
+  }
+
   public async hashPassword(): Promise<void> {
     if (this.password === null) return;
     const salt: string = await genSalt();

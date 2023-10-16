@@ -8,7 +8,6 @@ import {
   ExceptionFilter,
   HttpException,
   Injectable,
-  InternalServerErrorException,
   Logger,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -63,6 +62,9 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
         null,
       );
     }
+
+    if (error.name === "TokenExpiredError")
+      errorResponse = CoreApiResponse.error(401, error.message);
 
     return errorResponse;
   }

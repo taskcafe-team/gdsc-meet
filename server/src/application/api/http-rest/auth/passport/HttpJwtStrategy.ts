@@ -8,14 +8,20 @@ import {
 } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 import { Exception } from "@core/common/exception/Exception";
 import { Code } from "@core/common/code/Code";
-import { Injectable } from "@nestjs/common";
-import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
+import { Injectable, OnModuleInit } from "@nestjs/common";
+import { HttpAuthService } from "../HttpAuthService";
+import { ModuleRef } from "@nestjs/core";
 
 @Injectable()
-export class HttpJwtStrategy extends PassportStrategy(Strategy, "jwt") {
+export class HttpJwtStrategy
+  extends PassportStrategy(Strategy, "jwt")
+  implements OnModuleInit
+{
+  private authService: HttpAuthService;
+
   constructor(
     configService: ConfigService<EnvironmentVariablesConfig, true>,
-    private readonly unitOfWork: UnitOfWork,
+    private readonly moduleRef: ModuleRef,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromHeader(
@@ -26,10 +32,12 @@ export class HttpJwtStrategy extends PassportStrategy(Strategy, "jwt") {
     });
   }
 
+  async onModuleInit() {
+    this.authService = await this.moduleRef.resolve(HttpAuthService);
+  }
+
   public async validate(payload: HttpJwtPayload): Promise<HttpUserPayload> {
-    const user = await this.unitOfWork
-      .getUserRepository()
-      .findUser({ id: payload.id });
+    const user = await this.authService.getUser({ id: payload.id });
 
     if (!user) throw Exception.new({ code: Code.UNAUTHORIZED_ERROR });
 

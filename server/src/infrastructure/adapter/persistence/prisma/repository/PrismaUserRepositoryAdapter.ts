@@ -8,15 +8,12 @@ import { PrismaBaseRepository } from "./PrismaBaseRepository";
 import { PrismaUser } from "../entity/user/PrismaUser";
 import { PrismaUserMapper } from "../entity/user/PrismaUserMapper";
 import { Nullable, Optional } from "@core/common/type/CommonTypes";
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../PrismaService";
 
-@Injectable()
 export class PrismaUserRepositoryAdapter
   extends PrismaBaseRepository<User>
   implements UserRepositoryPort
 {
-  constructor(context: PrismaService) {
+  constructor(context: Prisma.TransactionClient) {
     super(Prisma.ModelName.User, context);
   }
 

@@ -5,6 +5,8 @@ import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVa
 
 import { AuthModule } from "./AuthModule";
 import { InfrastructureModule } from "./InfrastructureModule";
+import { MeetingModule } from "./MeetingModule";
+import { UserModule } from "./UserModule";
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { InfrastructureModule } from "./InfrastructureModule";
     }),
     InfrastructureModule,
     AuthModule,
+    UserModule,
+    MeetingModule,
   ],
   providers: [],
   exports: [],
