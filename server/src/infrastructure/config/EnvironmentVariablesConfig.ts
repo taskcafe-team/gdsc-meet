@@ -20,6 +20,11 @@ export class EnvironmentVariablesConfig {
   @IsNotEmpty() API_CONFIRM_EMAIL_URL: string;
   @IsNotEmpty() API_RESET_PASSWORD_URL: string;
   // ---- Google API ---- //
+  @IsNotEmpty() REDIS_HOST: string;
+  @IsNotEmpty() REDIS_PORT: number;
+  @IsNotEmpty() REDIS_AUTH_PASS: string;
+
+  // ---- Google API ---- //
   @IsNotEmpty() GOOGLE_CLIENT_ID: string;
   @IsNotEmpty() GOOGLE_CLIENT_SECRET: string;
   @IsNotEmpty() GOOGLE_CALLBACK_URL: string;

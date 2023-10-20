@@ -2,7 +2,13 @@ import { DocumentBuilder, OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
-import { Logger } from "@nestjs/common";
+import {
+  HttpException,
+  HttpStatus,
+  Logger,
+  ValidationError,
+  ValidationPipe,
+} from "@nestjs/common";
 import helmet from "helmet";
 
 import { RootModule } from "./di/.RootModule";
@@ -17,10 +23,25 @@ export class ServerApplication {
     this.configService = this.app.get(ConfigService);
 
     this.app.use(helmet());
+    this.buildValidatorPipe();
     this.buildAPIDocumentation();
     this.buildCORS();
 
     await this.app.listen(this.configService.get("API_PORT"), () => this.log());
+  }
+
+  private buildValidatorPipe(): void {
+    this.app.useGlobalPipes(
+      new ValidationPipe({
+        exceptionFactory(errors: ValidationError[]) {
+          const message = errors
+            .map((err) => Object.values(err.constraints || ""))
+            .join("\n");
+
+          return new HttpException(message, HttpStatus.BAD_REQUEST);
+        },
+      }),
+    );
   }
 
   private buildAPIDocumentation(): void {
@@ -61,7 +82,10 @@ export class ServerApplication {
     const host = this.configService.get("API_HOST");
     const port = this.configService.get("API_PORT");
     const context = ServerApplication.name;
-    Logger.log(`Server started on: http://${host}:${port}`, context);
+    Logger.log(
+      `Server started on: http://${host}:${port}/documentation`,
+      context,
+    );
   }
 
   public static new(): ServerApplication {

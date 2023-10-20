@@ -12,7 +12,8 @@ import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/MeetingUsecaseDt
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { Optional } from "@core/common/type/CommonTypes";
-import { File } from "buffer";
+import { MeetingStatusEnums } from "@core/common/enums/MeetingEnums";
+import { User } from "@prisma/client";
 
 @Injectable()
 export class MeetingService {
@@ -95,32 +96,62 @@ export class MeetingService {
     friendlyId: string;
     currentUserId: string;
   }) {
-    const currentuser = await this.unitOfWork
-      .getUserRepository()
-      .findUser({ id: payload.currentUserId });
+    return await this.unitOfWork.runInTransaction(async () => {
+      const { friendlyId, currentUserId } = payload;
 
-    const meeting = await this.getMeeting(payload);
+      const currentuser = await this.unitOfWork
+        .getUserRepository()
+        .findUser({ id: currentUserId });
 
-    const participant = await Participant.new({
-      meetingId: "",
-      name: currentuser!.fullName(),
-      role: ParticipantRole.PARTICIPANT,
+      if (!currentuser)
+        throw Exception.new({ code: Code.ENTITY_NOT_FOUND_ERROR });
+
+      const meeting = await this.getMeeting({ friendlyId });
+
+      let participant = await this.unitOfWork
+        .getParticipantRepository()
+        .findParticipant({ userId: currentuser.getId() });
+
+      if (!participant) {
+        participant = await Participant.new({
+          meetingId: meeting.id,
+          name: currentuser.fullName(),
+          role: ParticipantRole.PARTICIPANT,
+        });
+        await this.unitOfWork
+          .getParticipantRepository()
+          .addParticipant(participant);
+      }
+
+      return await this.createAccessToken(meeting, participant);
     });
-
-    const token = await this.webRTCService.createToken({
-      participantIdentity: participant.getId(),
-      participantName: participant.name!,
-      roomName: meeting.friendlyId,
-      roomJoin: true,
-    });
-
-    return token;
   }
 
-  public async createAccessToken(payload: {
-    friendlyId: string;
-    participantId: string;
-  }) {
-    return;
+  private async createAccessToken(
+    meeting: MeetingUsecaseDto,
+    participant: Participant,
+  ) {
+    let status = "";
+    const permission = {
+      roomName: meeting.id,
+      participantIdentity: participant.getId(),
+      participantName: participant.name!,
+    };
+
+    if (meeting.status === MeetingStatusEnums.PUBLIC) {
+      status = "JOIN";
+    } else if (meeting.status === MeetingStatusEnums.PRIVATE) {
+      status = "WAIT";
+    }
+    status = "JOIN";
+    permission.roomName = `${status}:{meeting.id}`;
+
+    const token = await this.webRTCService.createToken(permission);
+    return {
+      permissions: {
+        status,
+      },
+      token,
+    };
   }
 }

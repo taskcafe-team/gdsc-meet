@@ -3,13 +3,13 @@ import { Module, Provider } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { APP_FILTER } from "@nestjs/core";
 import { MailerModule } from "@nestjs-modules/mailer";
+import * as redisStore from "cache-manager-redis-store";
 
 import { NestHttpExceptionFilter } from "@application/api/http-rest/exception-filter/NestHttpExceptionFilter";
 
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { WebRTCModule } from "./Infrastructure/WebRTCModule";
 import { UnitOfWorkModule } from "./Infrastructure/UnitOfWorkModule";
-import { RedisModule } from "@infrastructure/adapter/persistence/redis/RedisModule";
 
 const NestHttpExceptionFilterProvider: Provider = {
   provide: APP_FILTER,
@@ -35,18 +35,23 @@ const NestHttpExceptionFilterProvider: Provider = {
         },
       }),
     }),
-    CacheModule.register({ isGlobal: true }),
+    CacheModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (
+        configService: ConfigService<EnvironmentVariablesConfig>,
+      ) => ({
+        isGlobal: true,
+        store: redisStore,
+        host: configService.get("REDIS_HOST"),
+        port: configService.get("REDIS_PORT"),
+        auth_pass: configService.get("REDIS_AUTH_PASS"),
+      }),
+    }),
     UnitOfWorkModule,
     WebRTCModule,
-    RedisModule,
   ],
   providers: [NestHttpExceptionFilterProvider],
-  exports: [
-    MailerModule,
-    CacheModule,
-    UnitOfWorkModule,
-    WebRTCModule,
-    RedisModule,
-  ],
+  exports: [MailerModule, CacheModule, UnitOfWorkModule, WebRTCModule],
 })
 export class InfrastructureModule {}

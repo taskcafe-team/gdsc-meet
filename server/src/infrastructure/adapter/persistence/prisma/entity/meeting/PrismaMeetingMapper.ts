@@ -1,5 +1,6 @@
 import { Meeting } from "@core/domain/meeting/entity/Meeting";
 import { PrismaMeeting } from "./PrismaMeeting";
+import { MeetingStatusEnums } from "@core/common/enums/MeetingEnums";
 
 export class PrismaMeetingMapper {
   public static toOrmEntity(domain: Meeting): PrismaMeeting {
@@ -14,7 +15,10 @@ export class PrismaMeetingMapper {
   }
 
   public static toDomainEntity(orm: PrismaMeeting): Meeting {
-    const domain: Meeting = new Meeting({ ...orm });
+    const domain: Meeting = new Meeting({
+      ...orm,
+      status: MeetingStatusEnums[orm.status],
+    });
 
     return domain as Meeting;
   }

@@ -28,12 +28,18 @@ export class PrismaUnitOfWork implements UnitOfWork {
     fn: () => Promise<T>,
     options?: TransactionOptions,
   ): Promise<T> {
-    return await this.prisma.$transaction(async (ct) => {
-      this.context = ct;
-      const result = await fn();
-      this.context = this.prisma;
-      return result;
-    }, options);
+    return await this.prisma.$transaction(
+      async (ct) => {
+        this.context = ct;
+        const result = await fn();
+        this.context = this.prisma;
+        return result;
+      },
+      {
+        maxWait: 10000,
+        timeout: 10000,
+      },
+    );
   }
 
   private getRepo<T extends PrismaBaseRepository<any>>(

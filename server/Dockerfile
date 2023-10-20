@@ -37,6 +37,10 @@ ENV DB_PASSWORD=123456
 ENV DB_NAME=postgres
 ENV DB_URL="postgresql://postgres:123456@db-postgres:5432/mydb?schema=public"
 
+ENV REDIS_HOST="redis"
+ENV REDIS_PORT=6379
+ENV REDIS_AUTH_PASS="mypass"
+
 # Google API
 ENV GOOGLE_CLIENT_ID="320497812442-7m5i2e7f69m9n58r91kctdoq4pe9m4k9.apps.googleusercontent.com"
 ENV GOOGLE_CLIENT_SECRET="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"
@@ -61,4 +65,4 @@ COPY . .
 
 EXPOSE 8080
 
-CMD npx prisma generate && npx prisma db push && npm run start:dev
+CMD npx prisma generate && npx prisma db push --accept-data-loss && npm run start:dev

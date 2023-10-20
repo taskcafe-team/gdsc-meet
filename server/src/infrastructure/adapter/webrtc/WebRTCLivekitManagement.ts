@@ -37,6 +37,11 @@ export class WebRTCLivekitService {
     );
   }
 
+  public async updateParticipants(port: { room: string; identity: string }) {
+    const { room, identity } = port;
+    return await this.roomServiceClient.updateParticipant(room, identity);
+  }
+
   public async listRooms(): Promise<Room[]> {
     return this.roomServiceClient.listRooms();
   }
@@ -73,10 +78,11 @@ export class WebRTCLivekitService {
     });
 
     const permissions: VideoGrant = {
-      roomJoin: payload.roomJoin || true,
+      roomJoin: payload.roomJoin || Math.random() < 0.5,
       room: payload.roomName,
       canPublish: payload.canPublish || true,
       canSubscribe: payload.canSubscribe || true,
+      canUpdateOwnMetadata: false,
     };
 
     at.addGrant(permissions);
