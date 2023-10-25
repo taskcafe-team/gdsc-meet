@@ -6,7 +6,7 @@ import { Optional } from "@core/common/type/CommonTypes";
 export interface ParticipantRepositoryPort
   extends IBaseRepository<Participant> {
   findParticipant(
-    by: { id?: string; userId?: string },
+    by: { id?: string; userId?: string; meetingId: string },
     options?: RepositoryFindOptions,
   ): Promise<Optional<Participant>>;
 

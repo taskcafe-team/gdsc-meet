@@ -18,3 +18,6 @@ export type HttpLoggedInUser = {
 };
 
 export type HttpRequestWithUser = Request & { user: HttpUserPayload };
+export type HttpResponseWithOptionalUser = Request & {
+  user?: HttpUserPayload;
+};

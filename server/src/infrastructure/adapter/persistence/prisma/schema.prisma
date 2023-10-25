@@ -76,14 +76,14 @@ model Meeting {
 
 model Participant {
     id        String  @id @default(uuid()) @map("id") @db.Uuid()
+    name      String  @map("name") @db.VarChar(100)
     userId    String? @map("user_id") @db.Uuid()
     meetingId String  @map("meeting_id") @db.Uuid()
 
-    name String?         @map("name") @db.VarChar(100)
     role ParticipantRole @map("role")
 
     user    User?    @relation(fields: [userId], references: [id])
-    meeting Meeting? @relation(fields: [meetingId], references: [id])
+    meeting Meeting? @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
     createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp()
     updatedAt DateTime? @map("updated_at") @db.Timestamp()

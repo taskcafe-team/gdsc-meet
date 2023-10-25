@@ -6,7 +6,7 @@ import { User } from "@core/domain/user/entity/User";
 export type CreateParticipantEntityPayload = {
   userId?: Nullable<string>;
   meetingId: string;
-  name: Nullable<string>;
+  name?: string;
   role?: ParticipantRole;
 
   user?: Nullable<User>;

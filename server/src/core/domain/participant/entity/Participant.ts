@@ -20,7 +20,7 @@ import { Meeting } from "@core/domain/meeting/entity/Meeting";
 
 export class Participant extends Entity<string> {
   @IsString() public meetingId: string;
-  @IsOptional() @IsString() public name: Nullable<string>;
+  @IsOptional() @IsString() public name: string;
   @IsOptional() @IsString() public userId: Nullable<string>;
   @IsEnum(ParticipantRole) public role: ParticipantRole;
 
@@ -36,7 +36,7 @@ export class Participant extends Entity<string> {
 
     this.meetingId = payload.meetingId;
     this.userId = payload.userId || null;
-    this.name = payload.name || null;
+    this.name = payload.name || "";
     this.role = ParticipantRole.PARTICIPANT;
 
     this.user = payload.user || null;

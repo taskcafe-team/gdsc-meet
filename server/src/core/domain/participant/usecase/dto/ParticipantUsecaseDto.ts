@@ -8,12 +8,15 @@ import {
 
 import { Participant } from "../../entity/Participant";
 import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
+import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 
 @Exclude()
 export class ParticipantUsecaseDto {
   @Expose() public id: string;
   @Expose() public name: string;
   @Expose() public userId: string;
+  @Expose() public role: ParticipantRole;
+  @Expose() public meetingId: string;
   @Expose()
   @Type(() => UserUsecaseDto)
   public userInfo: UserUsecaseDto;

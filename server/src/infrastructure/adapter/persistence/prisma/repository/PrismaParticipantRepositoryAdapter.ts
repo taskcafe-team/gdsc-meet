@@ -14,7 +14,7 @@ export class PrismaParticipantRepositoryAdapter extends PrismaBaseRepository<Par
   }
 
   public async findParticipant(
-    by: { id?: string; userId?: string },
+    by: { id?: string; userId?: string; meetingId: string },
     options: RepositoryFindOptions = {},
   ): Promise<Optional<Participant>> {
     const context = this.context.participant;
@@ -22,6 +22,7 @@ export class PrismaParticipantRepositoryAdapter extends PrismaBaseRepository<Par
 
     if (by.id) findOptions.where!.id = by.id;
     if (by.userId) findOptions.where!.userId = by.userId;
+    if (by.userId) findOptions.where!.meetingId = by.meetingId;
 
     const orm: Nullable<PrismaParticipant> = (await context.findFirst(
       findOptions,

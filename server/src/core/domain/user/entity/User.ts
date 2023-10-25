@@ -79,7 +79,9 @@ export class User extends Entity<string> {
   }
 
   public fullName(): string {
-    return this.firstName + " " + this.lastName;
+    const fn = this.firstName || "";
+    const ln = this.lastName || "";
+    return (fn + " " + ln).trim();
   }
 
   public async hashPassword(): Promise<void> {

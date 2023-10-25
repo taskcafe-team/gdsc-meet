@@ -7,7 +7,7 @@ export class PrismaParticipant implements Participant {
   id: string;
   userId: Nullable<string>;
   meetingId: string;
-  name: Nullable<string>;
+  name: string;
   role: ParticipantRole;
 
   user: Nullable<PrismaUser>;

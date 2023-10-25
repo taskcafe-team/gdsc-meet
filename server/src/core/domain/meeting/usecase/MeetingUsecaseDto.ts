@@ -4,8 +4,7 @@ import { Nullable } from "@core/common/type/CommonTypes";
 
 @Exclude()
 export class MeetingUsecaseDto {
-  @Exclude() public id: string;
-  @Expose() public friendlyId: string;
+  @Expose() public id: string;
   @Expose() public startTime: Date;
   @Expose() public endTime: Nullable<Date>;
   @Expose() public title: Nullable<string>;
