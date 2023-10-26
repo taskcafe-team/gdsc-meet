@@ -71,10 +71,13 @@ export class ServerApplication {
   }
 
   private buildCORS(): void {
+    const originsStr: string = this.configService.get("API_CORS_ORIGIN") + "";
+    const methodsStr: string = this.configService.get("API_CORS_METHOD") + "";
+
     this.app.enableCors({
-      origin: this.configService.get("API_CORS_ORIGIN"),
+      origin: originsStr.split(",").map((o) => o.trim()),
+      methods: methodsStr.split(",").map((m) => m.trim()),
       credentials: true,
-      methods: this.configService.get("API_CORS_METHOD"),
     });
   }
 
@@ -82,10 +85,7 @@ export class ServerApplication {
     const host = this.configService.get("API_HOST");
     const port = this.configService.get("API_PORT");
     const context = ServerApplication.name;
-    Logger.log(
-      `Server started on: http://${host}:${port}/documentation`,
-      context,
-    );
+    Logger.log(`Server started on: ${host}:${port}/documentation`, context);
   }
 
   public static new(): ServerApplication {

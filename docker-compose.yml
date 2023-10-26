@@ -1,17 +1,44 @@
 version: "3.9"
-
 networks:
-  # proxy-network:
-  #   driver: "bridge"
-  server-network:
+  proxy-network:
     driver: "bridge"
-  client-network:
+  server-network:
     driver: "bridge"
 
 volumes:
   db-data: {}
+  cache-data: {}
 
 services:
+  reverse-proxy:
+    image: traefik:v2.4
+    container_name: "traefik"
+    command:
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--api.debug=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--log.LEVEL=DEBUG"
+      - "--entryPoints.web.address=:80"
+      - "--entryPoints.websecure.address=:443"
+      - "--entryPoints.webapi.address=:5000" # Redirect to container nestjs
+      - "--entryPoints.livekitapi.address=:7880" # Redirect to container livekit
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=dangnhatminh09032002@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "443:443"
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - proxy-network
+
   db:
     container_name: db-postgres
     image: "postgres:12"
@@ -19,9 +46,9 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=123456
       - POSTGRES_DB=postgres
+    restart: unless-stopped
     ports:
       - "5433:5432"
-    restart: always
     networks:
       - server-network
     volumes:
@@ -32,36 +59,55 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
-      - "8080:8080"
-    restart: always
+      - 5000:5000
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy-network
+      - traefik.http.routers.server.tls=true
+      - traefik.http.routers.server.tls.certresolver=myresolver
+      - traefik.http.routers.server.entrypoints=webapi
+      # - traefik.http.services.server.loadbalancer.server.port=5000
     networks:
+      - proxy-network
       - server-network
     depends_on:
       - db
-      - web-rtc
-      - redis
+      - web_rtc
+      - cache_store
 
-  web-rtc:
+  web_rtc:
     container_name: livekit
-    image: livekit/livekit-server:latest
+    image: livekit/livekit-server:v1.5
     command: --config /etc/livekit.yaml
     restart: unless-stopped
     ports:
-      - 7880:7880
+      - "7880:7880"
+      - "7881:7881"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy-network
+      - traefik.http.routers.web_rtc.tls=true
+      - traefik.http.routers.web_rtc.tls.certresolver=myresolver
+      - traefik.http.routers.web_rtc.entrypoints=livekitapi
+      # - traefik.http.services.web_rtc.loadbalancer.server.port=7880
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
     networks:
+      - proxy-network
       - server-network
+    depends_on:
+      - cache_store
 
-  redis:
+  cache_store:
     container_name: redis
     image: redis:7
-    restart: always
+    restart: unless-stopped
     ports:
       - 6379:6379
-    networks:
-      - server-network
     command: redis-server --save 20 1 --loglevel warning --requirepass mypass
     volumes:
-      - ./redis/data:/data
+      - cache-data:/data
+    networks:
+      - server-network
