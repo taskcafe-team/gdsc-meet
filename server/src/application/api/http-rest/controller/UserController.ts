@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Put,
   Query,
   UploadedFile,
@@ -35,6 +36,7 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { HttpRestApiModelUpdateUser } from "./documentation/UserDocumentation";
 import { User } from "@core/domain/user/entity/User";
 import { UserQueryParametersDto } from "@core/dto/UserQueryParametersDto";
+import { UpdateUserDto } from "@core/dto/UpdateUserDto";
 
 @Controller("users")
 @ApiTags("users")
@@ -100,6 +102,18 @@ export class UserController {
     return CoreApiResponse.success(users);
   }
 
+  @Patch("/:id")
+  @HttpCode(HttpStatus.OK)
+  //@HttpAuth()
+  //@ApiBearerAuth()
+  public async updateUser(
+    @Param("id") id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<CoreApiResponse<void>> {
+    const user = await this.userService.updateUser(id, updateUserDto);
+    return CoreApiResponse.success(user);
+  }
+
   @Delete("/:id")
   @HttpCode(HttpStatus.OK)
   //@HttpAuth()
@@ -111,21 +125,4 @@ export class UserController {
     console.log(JSON.stringify(user));
     return CoreApiResponse.success(user);
   }
-
-  // @Get()
-  // @HttpCode(HttpStatus.OK)
-  // //@HttpAuth()
-  // //@ApiBearerAuth()
-  // public async getUserByEmail(
-  //   @Query("email") email: string,
-  //   @Query() { offset, limit }: UsersPaginationParamsDto,
-  // ): Promise<CoreApiResponse<UserUsecaseDto>> {
-  //   const user = await this.userService.getUserByEmail(
-  //     { userEmail: email },
-  //     offset,
-  //     limit,
-  //   );
-
-  //   return CoreApiResponse.success(user);
-  // }
 }

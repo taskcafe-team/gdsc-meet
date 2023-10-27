@@ -14,6 +14,7 @@ import { Exception } from "@core/common/exception/Exception";
 import { Code } from "@core/common/code/Code";
 import { PrismaService } from "@infrastructure/adapter/persistence/prisma/PrismaService";
 import { UserQueryParametersDto } from "@core/dto/UserQueryParametersDto";
+import { UpdateUserDto } from "@core/dto/UpdateUserDto";
 
 @Injectable()
 export class UserService implements UserUsecase {
@@ -97,17 +98,18 @@ export class UserService implements UserUsecase {
     throw new Error("Not implemented");
   }
 
-  // public async getUserByEmail(
-  //   payload: GetUserWithEmailPort,
-  //   offset?: number,
-  //   limit?: number,
-  // ): Promise<UserUsecaseDto> {
-  //   const user = await this.unitOfWork
-  //     .getUserRepository()
-  //     .findUserByEmail({ email: payload.userEmail }, { limit, offset });
-  //   if (!user) throw Exception.new({ code: Code.NOT_FOUND_ERROR });
-  //   return UserUsecaseDto.newFromEntity(user);
-  // }
+  public async updateUser(
+    id: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<void> {
+    const updateUser = await this.prismaService.user.update({
+      data: updateUserDto,
+      where: {
+        id,
+      },
+    });
+    return updateUser as any;
+  }
 
   public async deleteUser(payload: DeleteUserPort): Promise<void> {
     const user = await this.unitOfWork
