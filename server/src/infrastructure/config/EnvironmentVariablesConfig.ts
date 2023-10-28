@@ -20,14 +20,17 @@ export class EnvironmentVariablesConfig {
 
   @IsNotEmpty() API_CONFIRM_EMAIL_URL: string;
   @IsNotEmpty() API_RESET_PASSWORD_URL: string;
+
   // ---- Google API ---- //
   @IsNotEmpty() GOOGLE_CLIENT_ID: string;
   @IsNotEmpty() GOOGLE_CLIENT_SECRET: string;
   @IsNotEmpty() GOOGLE_CALLBACK_URL: string;
-// ---- Facebook API ---- //
-@IsNotEmpty() FACEBOOK_CLIENT_ID: string;
-@IsNotEmpty() FACEBOOK_CLIENT_SECRET: string;
-@IsNotEmpty() FACEBOOK_CALLBACK_URL: string;
+
+  // ---- Facebook API ---- //
+  @IsNotEmpty() FACEBOOK_CLIENT_ID: string;
+  @IsNotEmpty() FACEBOOK_CLIENT_SECRET: string;
+  @IsNotEmpty() FACEBOOK_CALLBACK_URL: string;
+
   // ---- Email ---- //
   @IsNotEmpty() EMAIL_HOST: string;
   @IsNotEmpty() @IsNumber() EMAIL_PORT: number;
@@ -37,6 +40,15 @@ export class EnvironmentVariablesConfig {
   @IsNotEmpty()
   @IsNumber()
   EMAIL_VERIFICATION_TOKEN_SECRET_TTL_IN_MINUTES: number;
+
+  // ---- Facebook API ---- //
+  @IsNotEmpty() LK_API_KEY: string;
+  @IsNotEmpty() LK_API_SECRET: string;
+
+  // ---- Cloudinary API ---- //
+  @IsNotEmpty() CLOUDINARY_NAME: string;
+  @IsNotEmpty() CLOUDINARY_KEY: string;
+  @IsNotEmpty() CLOUDINARY_SECRET: string;
 
   // Hàm validate dùng để xác thực một đối tượng cấu hình bằng cách chuyển đổi nó thành một đối tượng của
   // lớp EnvironmentVariablesConfig để kiểm tra xem có phù hợp với các quy tắc được định nghĩa như trên không.

@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
-
 import { AuthModule } from "./AuthModule";
 import { InfrastructureModule } from "./InfrastructureModule";
+import { LivekitModule } from "./LivekitModule";
+          
 
 @Module({
   imports: [
@@ -14,6 +14,8 @@ import { InfrastructureModule } from "./InfrastructureModule";
     }),
     InfrastructureModule,
     AuthModule,
+    LivekitModule
+    
   ],
   providers: [],
   exports: [],

@@ -12,17 +12,20 @@ import { HttpJwtStrategy } from "@application/api/http-rest/auth/passport/HttpJw
 import { InfrastructureModule } from "./InfrastructureModule";
 import { UserModule } from "./UserModule";
 import { HttpFacebookStrategy } from "@application/api/http-rest/auth/passport/HttpFacebookStrategy";
+import { GenerateLivekitJWT } from "@infrastructure/adapter/usecase/webrtc/livekit/GenerateLivekitJWT";
+import { LivekitModule } from "./LivekitModule";
 
 @Module({
   controllers: [AuthController],
-  imports: [InfrastructureModule, UserModule, PassportModule, JwtModule],
+  imports: [InfrastructureModule, UserModule, PassportModule, JwtModule, LivekitModule],
   providers: [
     ConfigService,
     HttpAuthService,
     HttpJwtStrategy,
     HttpLocalStrategy,
+    HttpFacebookStrategy,
     HttpGoogleStrategy,
-    HttpFacebookStrategy
+    GenerateLivekitJWT
   ],
 })
 export class AuthModule {}

@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
-import { Strategy, VerifyCallback } from "passport-google-oauth20";
+import { Strategy } from "passport-facebook";
 import { ConfigService } from "@nestjs/config";
 import { Profile } from "passport";
 
@@ -21,7 +21,7 @@ export class HttpFacebookStrategy extends PassportStrategy(Strategy, "facebook")
       clientID: configService.get("FACEBOOK_CLIENT_ID"),
       clientSecret: configService.get("FACEBOOK_CLIENT_SECRET"),
       callbackURL: configService.get("FACEBOOK_CALLBACK_URL"),
-      scope: ["email", "profile"],
+      profileFields: ["id", "displayName", "email", "photos"],
     });
   }
 
@@ -29,11 +29,11 @@ export class HttpFacebookStrategy extends PassportStrategy(Strategy, "facebook")
     accessToken: string,
     refreshToken: string,
     profile: Profile,
-    done: VerifyCallback,
+    done: (err?: string | Error | null, user?: Express.User, info?: any) => void,
   ) {
     const email = profile.emails ? profile.emails[0].value : "";
-    const firstName = profile.name ? profile.name.familyName : "";
-    const lastName = profile.name ? profile.name.givenName : "";
+    const firstName = profile.name ? profile.name.givenName : "";
+    const lastName = profile.name ? profile.name.familyName : "";
     const photo = profile.photos ? profile.photos[0].value : null;
 
     const userExit = await this.unitOfWork

@@ -7,6 +7,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Put,
   UploadedFile,
   UseInterceptors,
@@ -45,7 +46,7 @@ export class UserController {
     });
 
     const result = await this.userService.getUser(adapter);
-    return CoreApiResponse.success(result);
+    return CoreApiResponse.success(result) ;
   }
 
   @Put("me")
@@ -67,5 +68,17 @@ export class UserController {
     writeStream.write(avatarFile.buffer);
     writeStream.end();
     return;
+  }
+
+  @Put(':userId')
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(FileInterceptor("avatar"))
+  async updateUserAvatar (
+    @Param('userId') userId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    console.log("ádasd")
+    const filePath = await this.userService.updateUserAvatar(userId, file);
+    return filePath;
   }
 }

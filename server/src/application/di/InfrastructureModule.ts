@@ -11,6 +11,8 @@ import { PrismaUnitOfWork } from "@infrastructure/adapter/persistence/prisma/uni
 import { PrismaService } from "@infrastructure/adapter/persistence/prisma/PrismaService";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { PrismaUserRepositoryAdapter } from "@infrastructure/adapter/persistence/prisma/repository/PrismaUserRepositoryAdapter";
+import { LivekitController } from "@application/api/http-rest/controller/LivekitController";
+import { FirebaseService } from "@core/services/firebase/FirebaseService";
 
 @Module({
   imports: [
@@ -43,7 +45,9 @@ import { PrismaUserRepositoryAdapter } from "@infrastructure/adapter/persistence
       provide: APP_FILTER,
       useClass: NestHttpExceptionFilter,
     },
+    FirebaseService
   ],
-  exports: [UnitOfWork],
+  exports: [UnitOfWork,FirebaseService],
+
 })
 export class InfrastructureModule {}

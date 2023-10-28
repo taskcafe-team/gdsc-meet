@@ -24,7 +24,7 @@ export class ServerApplication {
     
     // cho phép ta truy cập vào ConfigService đã được cấu hình
     this.configService = this.app.get(ConfigService); 
-    //console.log("configService" + JSON.stringify(this.configService))
+    // console.log("configService" + JSON.stringify(this.configService.get("DB")))
     
     this.app.use(helmet()); // sử dụng một middleware là helmet (một middleware về bảo mật)
     this.buildAPIDocumentation(); // dùng để tải cấu hình tài liệu API cho ứng dụng

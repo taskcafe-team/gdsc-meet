@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from "@nestjs/common";
 import { ApiBody, ApiTags, ApiResponse } from "@nestjs/swagger";
@@ -31,12 +32,18 @@ import {
 } from "./documentation/AuthDocumentation";
 import { HttpFacebookAuthGuard } from "../auth/guard/HttpFacebookAuthGuard";
 import { Request } from "express";
+import { AuthGuard } from "@nestjs/passport";
+import { GenerateLivekitJWT } from "@infrastructure/adapter/usecase/webrtc/livekit/GenerateLivekitJWT";
 
 @Controller("auth")
 @ApiTags("auth") // dùng để đánh dấu các nhóm API có tên là auth và tư động tạo tại liệu API
 export class AuthController {
-  constructor(private readonly authService: HttpAuthService) {}
-
+  constructor(private readonly authService: HttpAuthService,
+    private readonly generateLivekitJWT: GenerateLivekitJWT) {}
+  @Get("getJWT")
+  public async getJWT(){
+      return this.generateLivekitJWT.createToken()
+  }
   // Begin login Basic 
 
   @Post("email/login")
@@ -79,7 +86,7 @@ export class AuthController {
       providerId: null,
     });
     const result = await this.authService.register(adapter);
-    console.log(CoreApiResponse.success(result))
+    //console.log(CoreApiResponse.success(result))
     return CoreApiResponse.success(result);
   }
 
@@ -125,6 +132,7 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(HttpGoogleOAuthGuard)
   public async loginWithGoogleOAuth() {
+    
     return;
   }
 
@@ -141,20 +149,36 @@ export class AuthController {
 // End Login with Google OAuth2
 
 // Begin Login with Facebook OAuth2
-  @Get("facebook/login")
+  // @Get("facebook/login")
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // @UseGuards(HttpFacebookAuthGuard)
+  // public async facebookLogin() {
+  //   return;
+  // }
+
+  @Get("facebook")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(HttpFacebookAuthGuard)
   async facebookLogin(): Promise<any> {
-    return;
+    return HttpStatus.OK;
   }
 
-  @Get("facebook/redirect")
+  // @Get("facebook/callback")
+  // @UseGuards(HttpFacebookAuthGuard)
+  // async facebookLoginRedirect(@Req() req: Request): Promise<any> {
+  //   return req.user;
+  // }
+  @Get("facebook/callback")
   @UseGuards(HttpFacebookAuthGuard)
   public async redirectLoginFacebook(
     @Req() request: HttpRequestWithUser,
   ): Promise<CoreApiResponse<HttpLoggedInUser>> {
     const result = await this.authService.login(request.user);
+    
     return CoreApiResponse.success(result);
   }
-// End Login with Facebook OAuth2
+  
 }
+
+// End Login with Facebook OAuth2
+
