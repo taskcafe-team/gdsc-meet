@@ -45,7 +45,7 @@ export class UserController {
     });
 
     const result = await this.userService.getUser(adapter);
-    return CoreApiResponse.success(result);
+    return CoreApiResponse.success<UserUsecaseDto>(result);
   }
 
   @Put("me")

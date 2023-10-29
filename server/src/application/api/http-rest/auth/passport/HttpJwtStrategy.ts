@@ -7,7 +7,7 @@ import {
   HttpUserPayload,
 } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 import { Exception } from "@core/common/exception/Exception";
-import { Code } from "@core/common/code/Code";
+import Code from "@core/common/constants/Code";
 import { Injectable, OnModuleInit } from "@nestjs/common";
 import { HttpAuthService } from "../HttpAuthService";
 import { ModuleRef } from "@nestjs/core";
@@ -39,7 +39,7 @@ export class HttpJwtStrategy
   public async validate(payload: HttpJwtPayload): Promise<HttpUserPayload> {
     const user = await this.authService.getUser({ id: payload.id });
 
-    if (!user) throw Exception.new({ code: Code.UNAUTHORIZED_ERROR });
+    if (!user) throw Exception.newFromCode(Code.UNAUTHORIZED_ERROR);
 
     return { id: user.getId(), role: user.role, isValid: user.isValid };
   }

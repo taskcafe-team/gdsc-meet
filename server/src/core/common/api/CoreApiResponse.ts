@@ -1,37 +1,66 @@
-import { Code } from "@core/common/code/Code";
-import { Nullable } from "@core/common/type/CommonTypes";
+import Code from "../constants/Code";
+import { Exception } from "../exception/Exception";
 
-export class CoreApiResponse<TData> {
-  public readonly code: number;
-  public readonly message: string;
-  public readonly timestamp: number;
-  public readonly data: Nullable<TData>;
+export interface ApiResponseError {
+  code: string;
+  message: string;
+}
 
-  private constructor(code: number, message: string, data?: TData) {
-    this.code = code;
+class ResponseMetadata {
+  public status: number;
+  public message: string;
+  public success: boolean;
+  public error?: Exception;
+
+  constructor(
+    status: number,
+    message: string,
+    success?: boolean,
+    error?: Exception,
+  ) {
+    this.status = status;
     this.message = message;
-    this.data = data || null;
-    this.timestamp = Date.now();
+    this.success = success === undefined || success === null ? true : success;
+    this.error = error;
+  }
+}
+
+export interface ApiResponse<T> {
+  metadata: ResponseMetadata; // http response meta
+  data: T | null;
+  timestamp: number;
+}
+
+export class CoreApiResponse<T> implements ApiResponse<T> {
+  public readonly metadata: ResponseMetadata;
+  public readonly data: T | null;
+  public readonly timestamp: number;
+
+  constructor(
+    status: number,
+    data: T | null,
+    message: string,
+    success: boolean,
+    error?: Exception,
+    timestamp?: number,
+  ) {
+    this.metadata = new ResponseMetadata(status, message, success, error);
+    this.data = data;
+    this.timestamp = timestamp || Date.now();
   }
 
-  public static success<TData>(
-    data?: TData,
-    message?: string,
-  ): CoreApiResponse<TData> {
-    const resultCode: number = Code.SUCCESS.code;
-    const resultMessage: string = message || Code.SUCCESS.message;
-
-    return new CoreApiResponse(resultCode, resultMessage, data);
+  public static success<T>(data: T | null = null, status?: number) {
+    const _status = status !== undefined ? status : Code.SUCCESS.code;
+    return new CoreApiResponse<T>(_status, data, Code.SUCCESS.message, true);
   }
 
-  public static error<TData>(
-    code?: number,
-    message?: string,
-    data?: TData,
-  ): CoreApiResponse<TData> {
-    const resultCode: number = code || Code.INTERNAL_ERROR.code;
-    const resultMessage: string = message || Code.INTERNAL_ERROR.message;
-
-    return new CoreApiResponse(resultCode, resultMessage, data);
+  public static error(error?: Exception, status?: number) {
+    const _status = status !== undefined ? status : Code.INTERNAL_ERROR.code;
+    return new CoreApiResponse(
+      _status,
+      error?.data,
+      error?.message || Code.INTERNAL_ERROR.message,
+      true,
+    );
   }
 }

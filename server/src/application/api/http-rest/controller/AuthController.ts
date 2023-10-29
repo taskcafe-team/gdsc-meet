@@ -82,17 +82,15 @@ export class AuthController {
   public async confirmEmail(
     @Query("token") token: string,
   ): Promise<CoreApiResponse<void>> {
-    await this.authService.confirmEmail(token);
-    return CoreApiResponse.success();
+    return CoreApiResponse.success(await this.authService.confirmEmail(token));
   }
 
   @Get("email/resend-verification")
   @HttpCode(HttpStatus.OK)
   public async resendVerification(
     @Query("email") email: string,
-  ): Promise<CoreApiResponse<void>> {
-    await this.authService.resendVerification(email);
-    return CoreApiResponse.success();
+  ): Promise<void> {
+    const result = await this.authService.resendVerification(email);
   }
 
   @Get("email/forgot-password")

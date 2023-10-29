@@ -1,4 +1,4 @@
-import { Code } from "@core/common/code/Code";
+import Code from "@core/common/constants/Code";
 import { Exception } from "@core/common/exception/Exception";
 import { Optional } from "@core/common/type/CommonTypes";
 import {
@@ -11,10 +11,7 @@ export class UseCaseValidatableAdapter {
     const details: Optional<ClassValidationDetails> =
       await ClassValidator.validate(this);
     if (details) {
-      throw Exception.new({
-        code: Code.USE_CASE_PORT_VALIDATION_ERROR,
-        data: details,
-      });
+      throw Exception.newFromCode(Code.USE_CASE_PORT_VALIDATION_ERROR, details);
     }
   }
 }

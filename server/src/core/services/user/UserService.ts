@@ -7,7 +7,7 @@ import { CreateUserPort } from "../../domain/user/port/CreateUserPort";
 
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { Exception } from "@core/common/exception/Exception";
-import { Code } from "@core/common/code/Code";
+import Code from "@core/common/constants/Code";
 
 @Injectable()
 export class UserService implements UserUsecase {
@@ -18,7 +18,7 @@ export class UserService implements UserUsecase {
       .getUserRepository()
       .findUser({ id: payload.userId });
 
-    if (!user) throw Exception.new({ code: Code.NOT_FOUND_ERROR });
+    if (!user) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
     return UserUsecaseDto.newFromEntity(user);
   }
 

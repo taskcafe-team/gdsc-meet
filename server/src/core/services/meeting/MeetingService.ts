@@ -6,7 +6,7 @@ import { JwtService } from "@nestjs/jwt";
 import { Meeting } from "@core/domain/meeting/entity/Meeting";
 import { WebRTCLivekitService } from "@infrastructure/adapter/webrtc/WebRTCLivekitManagement";
 import { Exception } from "@core/common/exception/Exception";
-import { Code } from "@core/common/code/Code";
+import Code from "@core/common/constants/Code";
 import { Participant } from "@core/domain/participant/entity/Participant";
 import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
@@ -65,8 +65,7 @@ export class MeetingService {
         .getUserRepository()
         .findUser({ id: userId });
 
-      if (!currentuser)
-        throw Exception.new({ code: Code.ENTITY_VALIDATION_ERROR });
+      if (!currentuser) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
 
       const meeting = await Meeting.new(payload);
       const friendlyId = Meeting.generatorFriendlyId();
@@ -101,7 +100,7 @@ export class MeetingService {
   }): Promise<MeetingUsecaseDto & { friendlyId: string }> {
     const { friendlyId } = payload;
     const meeting = await this.getMeetingInCache({ friendlyId });
-    if (!meeting) throw Exception.new({ code: Code.NOT_FOUND_ERROR });
+    if (!meeting) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
     return {
       ...meeting,
       friendlyId: friendlyId,
@@ -114,12 +113,11 @@ export class MeetingService {
       const currentUser = await this.unitOfWork
         .getUserRepository()
         .findUser({ id: userId });
-      if (!currentUser)
-        throw Exception.new({ code: Code.ENTITY_NOT_FOUND_ERROR });
+      if (!currentUser) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
 
       const { friendlyId } = payload;
       const meetingDTO = await this.getMeetingInCache({ friendlyId });
-      if (!meetingDTO) throw Exception.new({ code: Code.NOT_FOUND_ERROR });
+      if (!meetingDTO) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
 
       let participant = await this.unitOfWork
         .getParticipantRepository()
@@ -143,14 +141,14 @@ export class MeetingService {
   public async resJoinMeeting({ friendlyId, participantId }) {
     return await this.unitOfWork.runInTransaction(async () => {
       const meetingDTO = await this.getMeetingInCache({ friendlyId });
-      if (!meetingDTO) throw Exception.new({ code: Code.NOT_FOUND_ERROR });
+      if (!meetingDTO) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
 
       const p = await this.webRTCService
         .getRoomServiceClient()
         .getParticipant(meetingDTO.id, participantId)
         .catch(() => null);
 
-      if (!p) throw Exception.new({ code: Code.NOT_FOUND_ERROR });
+      if (!p) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
 
       const participantDTO = JSON.parse(p.metadata) as ParticipantUsecaseDto;
       const pExit = await this.unitOfWork
@@ -187,21 +185,21 @@ export class MeetingService {
 
   public async getParticipant({ friendlyId, participantId }) {
     const meeting = await this.getMeetingInCache({ friendlyId });
-    if (!meeting) throw Exception.new({ code: Code.NOT_FOUND_ERROR });
+    if (!meeting) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
 
     const p = await this.webRTCService
       .getRoomServiceClient()
       .getParticipant(meeting.id, participantId)
       .catch(() => null);
 
-    if (!p) throw Exception.new({ code: Code.NOT_FOUND_ERROR });
+    if (!p) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
 
     return JSON.parse(p.metadata) as ParticipantUsecaseDto;
   }
 
   public async getParticipants({ friendlyId }) {
     const meeting = await this.getMeetingInCache({ friendlyId });
-    if (!meeting) throw Exception.new({ code: Code.NOT_FOUND_ERROR });
+    if (!meeting) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
 
     const lp = await this.webRTCService
       .getRoomServiceClient()

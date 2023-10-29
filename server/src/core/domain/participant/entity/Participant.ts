@@ -14,7 +14,7 @@ import { User } from "@core/domain/user/entity/User";
 import { CreateParticipantEntityPayload } from "./type/CreateParticipantEntityPayload";
 import { EditParticipantEntityPayload } from "./type/EditParticipantEntityPayload";
 import { Exception } from "@core/common/exception/Exception";
-import { Code } from "@core/common/code/Code";
+import Code from "@core/common/constants/Code";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { Meeting } from "@core/domain/meeting/entity/Meeting";
 
@@ -75,10 +75,10 @@ export class Participant extends Entity<string> {
 
   public async validate(): Promise<void> {
     if (!this.name && !this.userId)
-      throw Exception.new({
-        code: Code.ENTITY_VALIDATION_ERROR,
-        overrideMessage: "At least one of name or userId must exist.",
-      });
+      throw Exception.new(
+        Code.ENTITY_VALIDATION_ERROR.code.toString(),
+        "At least one of name or userId must exist.",
+      );
 
     await super.validate();
   }

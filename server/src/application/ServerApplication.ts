@@ -22,10 +22,10 @@ export class ServerApplication {
     this.app = await NestFactory.create(RootModule);
     this.configService = this.app.get(ConfigService);
 
+    this.buildCORS();
     this.app.use(helmet());
     this.buildValidatorPipe();
     this.buildAPIDocumentation();
-    this.buildCORS();
 
     await this.app.listen(this.configService.get("API_PORT"), () => this.log());
   }
@@ -73,6 +73,9 @@ export class ServerApplication {
   private buildCORS(): void {
     const originsStr: string = this.configService.get("API_CORS_ORIGIN") + "";
     const methodsStr: string = this.configService.get("API_CORS_METHOD") + "";
+
+    const originsArr = originsStr.split(",").map((o) => o.trim());
+    const methodsArr = methodsStr.split(",").map((m) => m.trim());
 
     this.app.enableCors({
       origin: originsStr.split(",").map((o) => o.trim()),

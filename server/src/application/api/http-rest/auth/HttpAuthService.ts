@@ -13,7 +13,7 @@ import { User } from "@core/domain/user/entity/User";
 import { Nullable, Optional } from "@core/common/type/CommonTypes";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { Exception } from "@core/common/exception/Exception";
-import { Code } from "@core/common/code/Code";
+import Code from "@core/common/constants/Code";
 import { CreateUserPort } from "@core/domain/user/port/CreateUserPort";
 import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
@@ -53,8 +53,8 @@ export class HttpAuthService {
   private async sendVerificationEmail(
     user: User,
   ): Promise<{ token: string; expiresIn: number }> {
-    if (user.isValid) throw Exception.new({ code: Code.BAD_REQUEST_ERROR });
-    if (!user.email) throw Exception.new({ code: Code.BAD_REQUEST_ERROR });
+    if (user.isValid) throw Exception.newFromCode(Code.BAD_REQUEST_ERROR);
+    if (!user.email) throw Exception.newFromCode(Code.BAD_REQUEST_ERROR);
 
     const payload: HttpJwtPayload = { id: user.getId() };
 
@@ -129,10 +129,10 @@ export class HttpAuthService {
       const userExist = await userRepo.findUser({ email: payload.email });
 
       if (userExist)
-        throw Exception.new({
-          code: Code.CONFLICT_ERROR,
-          overrideMessage: "Email is already in use.",
-        });
+        throw Exception.new(
+          Code.CONFLICT_ERROR.code.toString(),
+          "Email is already in use.",
+        );
 
       const newUser: User = await User.new({
         email: payload.email,
@@ -155,7 +155,7 @@ export class HttpAuthService {
       .getUserRepository()
       .findUser({ email: email });
 
-    if (!userExist) throw Exception.new({ code: Code.ENTITY_NOT_FOUND_ERROR });
+    if (!userExist) throw Exception.newFromCode(Code.ENTITY_NOT_FOUND_ERROR);
 
     const resut = await this.sendVerificationEmail(userExist);
     return { expiresIn: resut.expiresIn };
@@ -171,13 +171,13 @@ export class HttpAuthService {
       .getUserRepository()
       .findUser({ id: payload.id });
 
-    if (!user) throw Exception.new({ code: Code.ENTITY_NOT_FOUND_ERROR });
+    if (!user) throw Exception.newFromCode(Code.ENTITY_NOT_FOUND_ERROR);
 
     if (user.isValid)
-      throw Exception.new({
-        code: Code.SUCCESS,
-        overrideMessage: "Email has been verified.",
-      });
+      throw Exception.new(
+        Code.SUCCESS.code.toString(),
+        "Email has been verified.",
+      );
 
     await user.edit({ isValid: true });
     await this.unitOfWork.getUserRepository().updateUser(user);
@@ -186,7 +186,7 @@ export class HttpAuthService {
   public async forgotPassword(email: string): Promise<any> {
     const user = await this.unitOfWork.getUserRepository().findUser({ email });
 
-    if (!user) throw Exception.new({ code: Code.NOT_FOUND_ERROR });
+    if (!user) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
 
     const payload: HttpJwtPayload = { id: user.getId() };
 
@@ -227,7 +227,7 @@ export class HttpAuthService {
     const user = await this.unitOfWork
       .getUserRepository()
       .findUser({ id: userPayload.id });
-    if (!user) throw Exception.new({ code: Code.ENTITY_NOT_FOUND_ERROR });
+    if (!user) throw Exception.newFromCode(Code.ENTITY_NOT_FOUND_ERROR);
 
     await user.changePassword(payload.newPassword);
     await this.unitOfWork.getUserRepository().updateUser(user);

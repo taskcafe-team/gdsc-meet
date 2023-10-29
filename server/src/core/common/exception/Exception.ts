@@ -1,35 +1,35 @@
-import { CodeDescription } from "@core/common/code/Code";
+import { CodeDescription } from "@core/common/constants/Code";
 import { Optional } from "@core/common/type/CommonTypes";
 
-export type CreateExceptionPayload<TData> = {
+export type CreateExceptionPayload<T> = {
   code: CodeDescription;
   overrideMessage?: string;
-  data?: TData;
+  data?: T;
 };
 
-export class Exception<TData> extends Error {
-  public readonly code: number;
+export class Exception<T = unknown> extends Error {
+  public readonly code: string;
+  public readonly data: Optional<T>;
+  public readonly message: string;
 
-  public readonly data: Optional<TData>;
-
-  private constructor(
-    codeDescription: CodeDescription,
-    overrideMessage?: string,
-    data?: TData,
-  ) {
+  private constructor(code: string, message?: string, data?: T) {
     super();
-
     this.name = this.constructor.name;
-    this.code = codeDescription.code;
+    this.code = code;
     this.data = data;
-    this.message = overrideMessage || codeDescription.message;
-
+    if (message) this.message = message;
     Error.captureStackTrace(this, this.constructor);
   }
 
-  public static new<TData>(
-    payload: CreateExceptionPayload<TData>,
-  ): Exception<TData> {
-    return new Exception(payload.code, payload.overrideMessage, payload.data);
+  public static new<T>(code: string, message?: string, data?: T): Exception<T> {
+    return new Exception(code, message, data);
+  }
+
+  public static newFromCode<T>(
+    codeDescription: CodeDescription,
+    data?: T,
+  ): Exception<T> {
+    const strCode = codeDescription.code;
+    return new Exception(`${strCode}`, codeDescription.message, data);
   }
 }

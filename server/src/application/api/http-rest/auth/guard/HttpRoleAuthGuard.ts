@@ -1,5 +1,5 @@
 import { HttpRequestWithUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
-import { Code } from "@core/common/code/Code";
+import Code from "@core/common/constants/Code";
 import { UserRole } from "@core/common/enums/UserEnums";
 import { Exception } from "@core/common/exception/Exception";
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
@@ -17,7 +17,7 @@ export class HttpRoleAuthGuard implements CanActivate {
     const canActivate: boolean =
       roles.length > 0 ? roles.includes(request.user.role) : true;
 
-    if (!canActivate) throw Exception.new({ code: Code.ACCESS_DENIED_ERROR });
+    if (!canActivate) throw Exception.newFromCode(Code.ACCESS_DENIED_ERROR);
 
     return canActivate;
   }

@@ -1,5 +1,5 @@
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
-import { Code } from "@core/common/code/Code";
+import Code from "@core/common/constants/Code";
 import { Exception } from "@core/common/exception/Exception";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import {
@@ -9,7 +9,6 @@ import {
   HttpException,
   Injectable,
   Logger,
-  UnauthorizedException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Request, Response } from "express";
@@ -24,10 +23,7 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
   public catch(error: Error, host: ArgumentsHost): void {
     const request: Request = host.switchToHttp().getRequest();
     const response: Response = host.switchToHttp().getResponse<Response>();
-    let errorResponse: CoreApiResponse<unknown> = CoreApiResponse.error(
-      Code.INTERNAL_ERROR.code,
-      error.message,
-    );
+    let errorResponse = CoreApiResponse.error();
 
     errorResponse = this.handleNestError(error, errorResponse);
     errorResponse = this.handleCoreException(error, errorResponse);
@@ -36,7 +32,7 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
       const message: string =
         `Method: ${request.method}; ` +
         `Path: ${request.path}; ` +
-        `Error: ${errorResponse.message}`;
+        `Error: ${errorResponse.metadata.error?.message}`;
 
       Logger.error(message);
     }
@@ -49,22 +45,10 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
     errorResponse: CoreApiResponse<unknown>,
   ): CoreApiResponse<unknown> {
     if (error instanceof HttpException) {
-      errorResponse = CoreApiResponse.error(
-        error.getStatus(),
-        error.message,
-        null,
-      );
+      errorResponse.metadata.status = error.getStatus();
+      errorResponse.metadata.success = false;
+      errorResponse.metadata.message = error.message;
     }
-    if (error instanceof UnauthorizedException) {
-      errorResponse = CoreApiResponse.error(
-        Code.UNAUTHORIZED_ERROR.code,
-        Code.UNAUTHORIZED_ERROR.message,
-        null,
-      );
-    }
-
-    if (error.name === "TokenExpiredError")
-      errorResponse = CoreApiResponse.error(401, error.message);
 
     return errorResponse;
   }
@@ -74,12 +58,14 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
     errorResponse: CoreApiResponse<unknown>,
   ): CoreApiResponse<unknown> {
     if (error instanceof Exception) {
-      errorResponse = CoreApiResponse.error(
-        error.code,
-        error.message,
-        error.data,
-      );
+      errorResponse.metadata.error = error;
+
+      if (typeof error.code === "number")
+        errorResponse.metadata.status = error.code;
     }
+
+    // if (error.name === "TokenExpiredError")
+    // errorResponse = CoreApiResponse.error(Code.JWT_EXPIRED);
 
     return errorResponse;
   }

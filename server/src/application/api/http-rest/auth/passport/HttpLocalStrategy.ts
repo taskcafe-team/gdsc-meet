@@ -1,9 +1,13 @@
 import { HttpAuthService } from "@application/api/http-rest/auth/HttpAuthService";
 import { HttpUserPayload } from "@application/api/http-rest/auth/type/HttpAuthTypes";
-import { Code } from "@core/common/code/Code";
+import Code from "@core/common/constants/Code";
 import { Exception } from "@core/common/exception/Exception";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
-import { Injectable, OnModuleInit } from "@nestjs/common";
+import {
+  Injectable,
+  OnModuleInit,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { ModuleRef } from "@nestjs/core";
 import { PassportStrategy } from "@nestjs/passport";
@@ -34,7 +38,7 @@ export class HttpLocalStrategy
     password: string,
   ): Promise<HttpUserPayload> {
     const user = await this.authService.validateUser(email, password);
-    if (!user) throw Exception.new({ code: Code.WRONG_CREDENTIALS_ERROR });
+    if (!user) throw new UnauthorizedException();
 
     return user;
   }
