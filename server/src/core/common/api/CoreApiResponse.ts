@@ -1,27 +1,26 @@
-import Code from "../constants/Code";
-import { Exception } from "../exception/Exception";
+import Code, { CodeDescription } from "../constants/Code";
 
-export interface ApiResponseError {
-  code: string;
-  message: string;
-}
+export type ApiResponseError = CodeDescription;
 
 class ResponseMetadata {
   public status: number;
   public message: string;
   public success: boolean;
-  public error?: Exception;
+  public error?: ApiResponseError;
 
   constructor(
     status: number,
     message: string,
     success?: boolean,
-    error?: Exception,
+    error?: ApiResponseError,
   ) {
     this.status = status;
     this.message = message;
     this.success = success === undefined || success === null ? true : success;
-    this.error = error;
+    if (error && this.error) {
+      this.error.code = error.code;
+      this.error.message = error.message;
+    }
   }
 }
 
@@ -31,36 +30,32 @@ export interface ApiResponse<T> {
   timestamp: number;
 }
 
-export class CoreApiResponse<T> implements ApiResponse<T> {
+export class CoreApiResponse<T = unknown> implements ApiResponse<T> {
   public readonly metadata: ResponseMetadata;
-  public readonly data: T | null;
+  public readonly data: T;
   public readonly timestamp: number;
 
   constructor(
     status: number,
-    data: T | null,
     message: string,
     success: boolean,
-    error?: Exception,
+    data?: T,
+    error?: ApiResponseError,
     timestamp?: number,
   ) {
     this.metadata = new ResponseMetadata(status, message, success, error);
-    this.data = data;
+    if (data) this.data = data;
     this.timestamp = timestamp || Date.now();
   }
 
-  public static success<T>(data: T | null = null, status?: number) {
+  public static success<T>(data?: T, status?: number) {
     const _status = status !== undefined ? status : Code.SUCCESS.code;
-    return new CoreApiResponse<T>(_status, data, Code.SUCCESS.message, true);
+    return new CoreApiResponse<T>(_status, Code.SUCCESS.message, true, data);
   }
 
-  public static error(error?: Exception, status?: number) {
+  public static error<T>(error?: ApiResponseError, status?: number, data?: T) {
     const _status = status !== undefined ? status : Code.INTERNAL_ERROR.code;
-    return new CoreApiResponse(
-      _status,
-      error?.data,
-      error?.message || Code.INTERNAL_ERROR.message,
-      true,
-    );
+    const _err = error?.message || Code.INTERNAL_ERROR.message;
+    return new CoreApiResponse<T>(_status, _err, false, data);
   }
 }

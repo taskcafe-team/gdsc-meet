@@ -58,10 +58,13 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
     errorResponse: CoreApiResponse<unknown>,
   ): CoreApiResponse<unknown> {
     if (error instanceof Exception) {
-      errorResponse.metadata.error = error;
+      const { code, message } = error;
+      errorResponse.metadata.error = { code, message };
 
       if (typeof error.code === "number")
         errorResponse.metadata.status = error.code;
+    } else if (error.name === "TokenExpiredError") {
+      errorResponse = CoreApiResponse.error(Code.JWT_EXPIRED);
     }
 
     // if (error.name === "TokenExpiredError")

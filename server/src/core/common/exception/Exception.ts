@@ -1,13 +1,7 @@
 import { CodeDescription } from "@core/common/constants/Code";
 import { Optional } from "@core/common/type/CommonTypes";
 
-export type CreateExceptionPayload<T> = {
-  code: CodeDescription;
-  overrideMessage?: string;
-  data?: T;
-};
-
-export class Exception<T = unknown> extends Error {
+export class Exception<T> extends Error implements CodeDescription {
   public readonly code: string;
   public readonly data: Optional<T>;
   public readonly message: string;
