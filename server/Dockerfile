@@ -67,8 +67,8 @@ RUN npm install
 
 COPY . .
 
-# RUN npm run build
+RUN npm run build
 
 EXPOSE 5000
 
-CMD npx prisma generate && npx prisma db push --accept-data-loss && npm run start:dev
+CMD npx prisma generate && npx prisma db push --accept-data-loss && npm run start:prod
