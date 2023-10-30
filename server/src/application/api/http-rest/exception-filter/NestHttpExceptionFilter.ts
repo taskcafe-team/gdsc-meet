@@ -1,5 +1,5 @@
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
-import Code from "@core/common/constants/Code";
+import Code, { OverwriteStatus } from "@core/common/constants/Code";
 import { Exception } from "@core/common/exception/Exception";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import {
@@ -61,14 +61,21 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
       const { code, message } = error;
       errorResponse.metadata.error = { code, message };
 
+      if (error.data && "overwriteStatus" in error.data) {
+        const { overwriteStatus } = error.data as OverwriteStatus;
+        if (overwriteStatus) {
+          const { code, message } = overwriteStatus;
+          if (code && message) {
+            errorResponse.metadata;
+            errorResponse.metadata.message = overwriteStatus.message;
+          }
+        }
+      }
       if (typeof error.code === "number")
         errorResponse.metadata.status = error.code;
     } else if (error.name === "TokenExpiredError") {
       errorResponse = CoreApiResponse.error(Code.JWT_EXPIRED);
     }
-
-    // if (error.name === "TokenExpiredError")
-    // errorResponse = CoreApiResponse.error(Code.JWT_EXPIRED);
 
     return errorResponse;
   }

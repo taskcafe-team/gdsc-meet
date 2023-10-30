@@ -3,6 +3,10 @@ export interface CodeDescription<T = string | number> {
   message: string;
 }
 
+export interface OverwriteStatus {
+  overwriteStatus: CodeDescription<number>;
+}
+
 export default class Code {
   public static SUCCESS: CodeDescription<number> = {
     code: 200,

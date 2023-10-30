@@ -15,8 +15,22 @@ export class Exception<T> extends Error implements CodeDescription {
     Error.captureStackTrace(this, this.constructor);
   }
 
-  public static new<T>(code: string, message?: string, data?: T): Exception<T> {
-    return new Exception(code, message, data);
+  public static new<T>(
+    code: string | CodeDescription,
+    message?: string,
+    data?: T,
+  ): Exception<T> {
+    if (typeof code === "string") return new Exception(code, message, data);
+
+    if (typeof code === "object" && code !== null) {
+      const codeDescription = code as CodeDescription;
+      return new Exception(
+        codeDescription.code.toString(),
+        codeDescription.message,
+        data,
+      );
+    }
+    throw new Error("Invalid input for 'code'");
   }
 
   public static newFromCode<T>(
