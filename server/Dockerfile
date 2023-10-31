@@ -20,7 +20,7 @@ ENV API_SESSION_NAME=uid
 ENV API_SESSION_SECRET=adsfadsf
 ENV API_COOKIE_HTTPONLY=true
 ENV API_COOKIE_SECURE=true
-ENV API_CORS_ORIGIN="*"
+ENV API_CORS_ORIGIN="http://localhost:3000,https://localhost:3000"
 ENV API_CORS_METHOD="GET,HEAD,PUT,PATCH,POST,DELETE"
 ENV API_LOGIN_USERNAME_FIELD=email
 ENV API_LOGIN_PASSWORD_FIELD=password
@@ -62,13 +62,9 @@ ENV WEBRTC_LIVEKIT_CLIENT_SECRET="BRxks3fY7udezPVhloXyzSk7fVeUlenFzo0a9miKrGbE"
 #------------------------------------------#
 
 COPY package*.json ./
-
 RUN npm install
 
 COPY . .
 
-RUN npm run build
-
 EXPOSE 5000
-
-CMD npx prisma generate && npx prisma db push --accept-data-loss && npm run start:prod
+CMD npx prisma generate && npx prisma db push --accept-data-loss && npm run build && npm run start:prod
