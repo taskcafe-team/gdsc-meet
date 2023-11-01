@@ -11,7 +11,7 @@ import {
   UseGuards,
   ValidationPipe,
 } from "@nestjs/common";
-import { ApiTags, ApiResponse } from "@nestjs/swagger";
+import { ApiTags, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
 
 import { CreateUserAdapter } from "@infrastructure/adapter/usecase/user/CreateUserAdapter";
 
@@ -31,11 +31,20 @@ import {
   HttpRestApiModelResetPasswordBody,
   HttpRestApiModelGetAccessTokenBody,
 } from "./documentation/AuthDocumentation";
+import { HttpAuth } from "../auth/decorator/HttpAuth";
 
 @Controller("auth")
 @ApiTags("auth")
 export class AuthController {
   constructor(private readonly authService: HttpAuthService) {}
+
+  @Post("verify/access-token")
+  @HttpAuth()
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  public async verifyAccessToken() {
+    //
+  }
 
   @Post("email/login")
   @HttpCode(HttpStatus.OK)
