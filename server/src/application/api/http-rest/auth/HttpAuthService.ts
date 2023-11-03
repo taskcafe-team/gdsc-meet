@@ -1,6 +1,11 @@
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
-import { HttpStatus, Injectable } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { MailerService } from "@nestjs-modules/mailer";
 
 import {
@@ -29,6 +34,46 @@ export class HttpAuthService {
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService,
   ) {}
+  public async createToken(
+    payload: HttpUserPayload,
+  ): Promise<HttpLoggedInUser> {
+    const accessToken: string = this.jwtService.sign(payload, {
+      secret: this.configService.get("API_ACCESS_TOKEN_SECRET"),
+      expiresIn:
+        this.configService.get("API_ACCESS_TOKEN_TTL_IN_MINUTES") + "m",
+    });
+
+    const refreshToken: string = this.jwtService.sign(payload, {
+      secret: this.configService.get("API_REFRESH_TOKEN_SECRET"),
+      expiresIn:
+        this.configService.get("API_REFRESH_TOKEN_TTL_IN_MINUTES") + "m",
+    });
+
+    return {
+      id: payload.id,
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  public async getAccessToken(
+    refreshToken: string,
+  ): Promise<{ accessToken: string }> {
+    const httpUser = await this.jwtService.verifyAsync<HttpUserPayload>(
+      refreshToken,
+      {
+        secret: this.configService.get("API_REFRESH_TOKEN_SECRET"),
+      },
+    );
+    const payload: HttpUserPayload = httpUser;
+
+    const accessToken: string = this.jwtService.sign(payload, {
+      secret: this.configService.get("API_ACCESS_TOKEN_SECRET"),
+      expiresIn:
+        this.configService.get("API_ACCESS_TOKEN_TTL_IN_MINUTES") + "m",
+    });
+    return { accessToken };
+  }
 
   public async getUser(by: {
     id?: string;
@@ -41,13 +86,41 @@ export class HttpAuthService {
     return await this.unitOfWork.getUserRepository().addUser(user);
   }
 
-  public async validateUser(
+  public async register(payload: CreateUserPort): Promise<UserUsecaseDto> {
+    return await this.unitOfWork.runInTransaction(async () => {
+      const userRepo = this.unitOfWork.getUserRepository();
+
+      const userExist = await userRepo.findUser({ email: payload.email });
+
+      if (userExist) throw new ConflictException("Email is already in use.");
+
+      const newUser: User = await User.new({
+        email: payload.email,
+        role: payload.role,
+        password: payload.password,
+      });
+
+      await userRepo.addUser(newUser);
+      const result = UserUsecaseDto.newFromEntity(newUser);
+
+      await this.sendVerificationEmail(newUser);
+      return result;
+    });
+  }
+
+  public async login(
     email: string,
     password: string,
-  ): Promise<Nullable<HttpUserPayload>> {
+  ): Promise<HttpLoggedInUser> {
     const user = await this.unitOfWork.getUserRepository().findUser({ email });
-    if (!user || !(await user.comparePassword(password))) return null;
-    return { id: user.getId(), role: user.role, isValid: user.isValid };
+    if (!user || !(await user.comparePassword(password)))
+      throw new UnauthorizedException("Email or password is invalid");
+
+    return this.createToken({
+      id: user.getId(),
+      role: user.role,
+      isValid: user.isValid,
+    });
   }
 
   private async sendVerificationEmail(
@@ -81,73 +154,6 @@ export class HttpAuthService {
     return { token, expiresIn };
   }
 
-  public async login(user: HttpUserPayload): Promise<HttpLoggedInUser> {
-    const payload: HttpJwtPayload = { id: user.id };
-
-    const accessToken: string = this.jwtService.sign(payload, {
-      secret: this.configService.get("API_ACCESS_TOKEN_SECRET"),
-      expiresIn:
-        this.configService.get("API_ACCESS_TOKEN_TTL_IN_MINUTES") + "m",
-    });
-
-    const refreshToken: string = this.jwtService.sign(payload, {
-      secret: this.configService.get("API_REFRESH_TOKEN_SECRET"),
-      expiresIn:
-        this.configService.get("API_REFRESH_TOKEN_TTL_IN_MINUTES") + "m",
-    });
-
-    return {
-      id: user.id,
-      accessToken,
-      refreshToken,
-    };
-  }
-
-  public async getAccessToken(
-    refreshToken: string,
-  ): Promise<{ accessToken: string }> {
-    const httpUser = await this.jwtService.verifyAsync<HttpUserPayload>(
-      refreshToken,
-      {
-        secret: this.configService.get("API_REFRESH_TOKEN_SECRET"),
-      },
-    );
-    const payload: HttpUserPayload = httpUser;
-
-    const accessToken: string = this.jwtService.sign(payload, {
-      secret: this.configService.get("API_ACCESS_TOKEN_SECRET"),
-      expiresIn:
-        this.configService.get("API_ACCESS_TOKEN_TTL_IN_MINUTES") + "m",
-    });
-    return { accessToken };
-  }
-
-  public async register(payload: CreateUserPort): Promise<UserUsecaseDto> {
-    return await this.unitOfWork.runInTransaction(async () => {
-      const userRepo = this.unitOfWork.getUserRepository();
-
-      const userExist = await userRepo.findUser({ email: payload.email });
-
-      if (userExist)
-        throw Exception.new(
-          Code.CONFLICT_ERROR.code.toString(),
-          "Email is already in use.",
-        );
-
-      const newUser: User = await User.new({
-        email: payload.email,
-        role: payload.role,
-        password: payload.password,
-      });
-
-      await userRepo.addUser(newUser);
-      const result = UserUsecaseDto.newFromEntity(newUser);
-
-      await this.sendVerificationEmail(newUser);
-      return result;
-    });
-  }
-
   public async resendVerification(
     email: string,
   ): Promise<{ expiresIn: number }> {
@@ -173,11 +179,7 @@ export class HttpAuthService {
 
     if (!user) throw Exception.newFromCode(Code.ENTITY_NOT_FOUND_ERROR);
 
-    if (user.isValid)
-      throw Exception.new(
-        Code.SUCCESS.code.toString(),
-        "Email has been verified.",
-      );
+    if (user.isValid) return;
 
     await user.edit({ isValid: true });
     await this.unitOfWork.getUserRepository().updateUser(user);
@@ -185,8 +187,7 @@ export class HttpAuthService {
 
   public async forgotPassword(email: string): Promise<any> {
     const user = await this.unitOfWork.getUserRepository().findUser({ email });
-
-    if (!user) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
+    if (!user) throw new NotFoundException("Email does not exist");
 
     const payload: HttpJwtPayload = { id: user.getId() };
 

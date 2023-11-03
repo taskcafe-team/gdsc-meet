@@ -7,7 +7,6 @@ import {
   HttpStatus,
   Post,
   Query,
-  Req,
   UseGuards,
   ValidationPipe,
 } from "@nestjs/common";
@@ -19,11 +18,7 @@ import { UserRole } from "@core/common/enums/UserEnums";
 import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 
 import { HttpAuthService } from "../auth/HttpAuthService";
-import { HttpLocalAuthGuard } from "../auth/guard/HttpLocalAuthGuard";
-import {
-  HttpLoggedInUser,
-  HttpRequestWithUser,
-} from "../auth/type/HttpAuthTypes";
+import { HttpLoggedInUser, HttpUserPayload } from "../auth/type/HttpAuthTypes";
 import { HttpGoogleOAuthGuard } from "../auth/guard/HttpGoogleOAuthGuard";
 import {
   HttpRestApiModelRegisterBody,
@@ -32,37 +27,19 @@ import {
   HttpRestApiModelGetAccessTokenBody,
 } from "./documentation/AuthDocumentation";
 import { HttpAuth } from "../auth/decorator/HttpAuth";
+import { HttpUser } from "../auth/decorator/HttpUser";
 
 @Controller("auth")
 @ApiTags("auth")
 export class AuthController {
   constructor(private readonly authService: HttpAuthService) {}
 
-  @Post("verify/access-token")
-  @HttpAuth()
-  @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
-  public async verifyAccessToken() {
-    //
-  }
-
   @Post("email/login")
   @HttpCode(HttpStatus.OK)
-  @UseGuards(HttpLocalAuthGuard)
   public async loginWithEmail(
-    @Req() request: HttpRequestWithUser,
     @Body() body: HttpRestApiModelLogInBody,
   ): Promise<CoreApiResponse<HttpLoggedInUser>> {
-    const result = await this.authService.login(request.user);
-    return CoreApiResponse.success(result);
-  }
-
-  @Post("access-token")
-  @ApiResponse({ status: HttpStatus.OK })
-  public async getAccessToken(
-    @Body(new ValidationPipe()) body: HttpRestApiModelGetAccessTokenBody,
-  ): Promise<CoreApiResponse<{ accessToken: string }>> {
-    const result = await this.authService.getAccessToken(body.refreshToken);
+    const result = await this.authService.login(body.email, body.password);
     return CoreApiResponse.success(result);
   }
 
@@ -83,6 +60,23 @@ export class AuthController {
     });
     const result = await this.authService.register(adapter);
 
+    return CoreApiResponse.success(result);
+  }
+
+  @Post("verify/access-token")
+  @HttpAuth()
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  public async verifyAccessToken() {
+    //
+  }
+
+  @Post("access-token")
+  @ApiResponse({ status: HttpStatus.OK })
+  public async getAccessToken(
+    @Body(new ValidationPipe()) body: HttpRestApiModelGetAccessTokenBody,
+  ): Promise<CoreApiResponse<{ accessToken: string }>> {
+    const result = await this.authService.getAccessToken(body.refreshToken);
     return CoreApiResponse.success(result);
   }
 
@@ -131,9 +125,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(HttpGoogleOAuthGuard)
   public async verifyLoginGoogle(
-    @Req() request: HttpRequestWithUser,
+    @HttpUser() user: HttpUserPayload,
   ): Promise<CoreApiResponse<HttpLoggedInUser>> {
-    const result = await this.authService.login(request.user);
+    const result = await this.authService.createToken(user);
     return CoreApiResponse.success(result);
   }
 }

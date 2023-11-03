@@ -37,9 +37,9 @@ export class HttpLocalStrategy
     email: string,
     password: string,
   ): Promise<HttpUserPayload> {
-    const user = await this.authService.validateUser(email, password);
-    if (!user) throw new UnauthorizedException();
-
-    return user;
+    const user = await this.authService.getUser({ email });
+    if (!user || !(await user.comparePassword(password)))
+      throw new UnauthorizedException("Email or password is invalid");
+    return { id: user.getId(), role: user.role, isValid: user.isValid };
   }
 }
