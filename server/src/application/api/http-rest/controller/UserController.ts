@@ -80,7 +80,7 @@ export class UserController {
       const avatarFile = file;
       if (!existsSync(avatarStoragePath))
         throw new Error("Avatar storage path not found");
-      const uniqueFileName = `${Date.now()}.${avatarFile.originalname}`;
+      const uniqueFileName = `${Date.now()}.${file.mimetype}`;
       const uploadPath = path.join(avatarStoragePath, uniqueFileName);
       const writeStream = createWriteStream(uploadPath);
       await writeStream.write(avatarFile.buffer);
@@ -91,19 +91,21 @@ export class UserController {
     return await this.userService.updateMe(adapter);
   }
 
-  @Post("avatar")
-  @ApiBody({ type: HttpRestApiModelGetAvatar })
+  @Get("avatar/:fileName")
   public async getAvatar(
-    @Body() body: HttpRestApiModelGetAvatar,
+    @Param("fileName") fileName: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const fileName = body.fileName;
-    const filePath = path.join(avatarStoragePath, fileName);
-    const stream = await createReadStream(filePath);
-    res.set({
-      "Content-Disposition": `inline; filename="${fileName}"`,
-      // "Content-Type": fileMime,
-    });
-    return new StreamableFile(stream);
+    try {
+      const filePath = path.join(avatarStoragePath, fileName);
+      const stream = await createReadStream(filePath);
+      res.set({
+        "Content-Disposition": `inline; filename="${fileName}"`,
+        "Content-Type": "image/jpeg",
+      });
+      return new StreamableFile(stream);
+    } catch (error) {
+      console.log(error);
+    }
   }
 }

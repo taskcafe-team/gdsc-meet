@@ -23,7 +23,7 @@ export class ServerApplication {
     this.configService = this.app.get(ConfigService);
 
     this.buildCORS();
-    this.app.use(helmet());
+    this.app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
     this.buildValidatorPipe();
     this.buildAPIDocumentation();
 
