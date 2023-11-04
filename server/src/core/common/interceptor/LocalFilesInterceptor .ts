@@ -1,14 +1,18 @@
+import * as path from "path";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { Injectable, mixin, NestInterceptor, Type } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { MulterOptions } from "@nestjs/platform-express/multer/interfaces/multer-options.interface";
-import { diskStorage } from "multer";
+import { diskStorage, DiskStorageOptions } from "multer";
+import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
+import { fileStoragePath } from "@infrastructure/adapter/persistence/data/path";
 
 interface LocalFilesInterceptorOptions {
   fieldName: string;
   path?: string;
   fileFilter?: MulterOptions["fileFilter"];
   limits?: MulterOptions["limits"];
+  filename?: DiskStorageOptions["filename"];
 }
 
 function LocalFilesInterceptor(
@@ -17,23 +21,19 @@ function LocalFilesInterceptor(
   @Injectable()
   class Interceptor implements NestInterceptor {
     fileInterceptor: NestInterceptor;
-    constructor(configService: ConfigService) {
-      const filesDestination = configService.get("UPLOADED_FILES_DESTINATION");
-
-      const destination = `${filesDestination}${options.path}`;
-
+    constructor(
+      private configService: ConfigService<EnvironmentVariablesConfig, true>,
+    ) {
+      const destination = path.join(fileStoragePath, options.path || "");
+      const filename = options.filename;
       const multerOptions: MulterOptions = {
-        storage: diskStorage({
-          destination,
-        }),
+        storage: diskStorage({ destination, filename }),
         fileFilter: options.fileFilter,
         limits: options.limits,
       };
 
-      this.fileInterceptor = new (FileInterceptor(
-        options.fieldName,
-        multerOptions,
-      ))();
+      const fileIc = FileInterceptor(options.fieldName, multerOptions);
+      this.fileInterceptor = new fileIc();
     }
 
     intercept(...args: Parameters<NestInterceptor["intercept"]>) {

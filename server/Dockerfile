@@ -59,6 +59,10 @@ ENV WEBRTC_LIVEKIT_API_HOST="http://livekit:7880"
 ENV WEBRTC_LIVEKIT_CLIENT_ID="APIk645U8MckJHy"
 ENV WEBRTC_LIVEKIT_CLIENT_SECRET="BRxks3fY7udezPVhloXyzSk7fVeUlenFzo0a9miKrGbE"
 
+# Media file
+ENV FILE_STORAGE_BASE_PATH="none"
+ENV FILE_STORAGE_ENDPOINT="none"
+ENV FILE_STORAGE_AVATAR_ENDPOINT="https://gdsc-meet.us.to:5000/users/avatar/"
 #------------------------------------------#
 
 COPY package*.json ./

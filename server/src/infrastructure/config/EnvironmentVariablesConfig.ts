@@ -44,6 +44,11 @@ export class EnvironmentVariablesConfig {
   @IsNotEmpty() WEBRTC_LIVEKIT_CLIENT_ID: string;
   @IsNotEmpty() WEBRTC_LIVEKIT_CLIENT_SECRET: string;
 
+  // ---- Media File ---- //
+  @IsNotEmpty() FILE_STORAGE_BASE_PATH: string; // vị tri lưu file trên local
+  @IsNotEmpty() FILE_STORAGE_ENDPOINT: string; // đường dẫn truy cập file qua https?
+  @IsNotEmpty() FILE_STORAGE_AVATAR_ENDPOINT: string; // đường dẫn truy cập avatar qua https?
+
   public static validate(configuration: Record<string, unknown>) {
     const finalConfig = plainToClass(
       EnvironmentVariablesConfig,

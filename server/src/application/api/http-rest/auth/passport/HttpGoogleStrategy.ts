@@ -47,7 +47,6 @@ export class HttpGoogleStrategy
     const photo = profile.photos ? profile.photos[0].value : null;
 
     const userExit = await this.authService.getUser({ email });
-
     if (userExit) {
       const userPayload: HttpUserPayload = {
         id: userExit.getId(),
