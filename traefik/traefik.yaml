@@ -18,6 +18,20 @@ providers:
     fileName: /etc/traefik/traefik.yaml
     watch: true
 
+# listen on 80/443, and redirect all 80 to 443 via 301
+entryPoints:
+  web:
+    address: :80
+    # comment out these lins if you don't want to redirect everything
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: :443
+
 tls:
   certificates:
     - certFile: /config/gdscmeet.crt
