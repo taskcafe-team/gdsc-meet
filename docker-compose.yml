@@ -22,9 +22,9 @@ services:
       - 7880:7880
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /traefik/dynamic.yml:/config/dynamic.yml
-      - /traefik/private.key:/config/private.key
-      - /traefik/certificate.crt:/config/certificate.crt
+      - /traefik/traefik.yaml:/etc/traefik/traefik.yaml
+      - /traefik/gdscmeet.key:/config/gdscmeet.key
+      - /traefik/gdscmeet.crt:/config/gdscmeet.crt
     networks:
       - proxy-network
     command:

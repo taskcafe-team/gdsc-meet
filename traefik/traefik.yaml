@@ -1,0 +1,24 @@
+global:
+  checkNewVersion: true
+
+log:
+  level: WARN
+
+api:
+  insecure: true
+  dashboard: true
+
+ping: {}
+
+providers:
+  docker:
+    exposedByDefault: false
+    watch: true
+  file:
+    fileName: /etc/traefik/traefik.yaml
+    watch: true
+
+tls:
+  certificates:
+    - certFile: /config/gdscmeet.crt
+      keyFile: /config/gdscmeet.key
