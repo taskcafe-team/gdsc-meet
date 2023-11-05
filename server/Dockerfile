@@ -44,7 +44,7 @@ ENV REDIS_AUTH_PASS="mypass"
 # Google API
 ENV GOOGLE_CLIENT_ID="320497812442-7m5i2e7f69m9n58r91kctdoq4pe9m4k9.apps.googleusercontent.com"
 ENV GOOGLE_CLIENT_SECRET="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"
-ENV GOOGLE_CALLBACK_URL="http://localhost:5000/auth/google/verify"
+ENV GOOGLE_CALLBACK_URL="http://localhost:3000/auth/login"
 
 # Email
 ENV EMAIL_HOST="smtp.ethereal.email"
@@ -62,7 +62,7 @@ ENV WEBRTC_LIVEKIT_CLIENT_SECRET="BRxks3fY7udezPVhloXyzSk7fVeUlenFzo0a9miKrGbE"
 # Media file
 ENV FILE_STORAGE_BASE_PATH="none"
 ENV FILE_STORAGE_ENDPOINT="none"
-ENV FILE_STORAGE_AVATAR_ENDPOINT="https://gdsc-meet.us.to:5000/users/avatar/"
+ENV FILE_STORAGE_AVATAR_ENDPOINT="https://gdsc-meet.me-dangnhatminh.id.vn:5000/users/avatar/"
 #------------------------------------------#
 
 COPY package*.json ./
