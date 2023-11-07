@@ -62,7 +62,7 @@ ENV WEBRTC_LIVEKIT_CLIENT_SECRET="BRxks3fY7udezPVhloXyzSk7fVeUlenFzo0a9miKrGbE"
 # Media file
 ENV FILE_STORAGE_BASE_PATH="none"
 ENV FILE_STORAGE_ENDPOINT="none"
-ENV FILE_STORAGE_AVATAR_ENDPOINT="https://gdsc-meet.me-dangnhatminh.id.vn:5000/users/avatar/"
+ENV FILE_STORAGE_AVATAR_ENDPOINT="https://www.gdscmeet.live:5000/users/avatar/"
 #------------------------------------------#
 
 COPY package*.json ./
