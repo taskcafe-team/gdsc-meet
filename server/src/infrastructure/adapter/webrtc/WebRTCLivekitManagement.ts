@@ -118,8 +118,9 @@ export class WebRTCLivekitService {
     if (data !== undefined) at.metadata = data;
 
     const permissions: VideoGrant = {
-      ...payload,
+      room: payload.roomName,
       canUpdateOwnMetadata: false,
+      ...payload,
     };
 
     at.addGrant(permissions);
