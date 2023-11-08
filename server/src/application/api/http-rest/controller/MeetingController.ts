@@ -2,18 +2,24 @@ import { MeetingService } from "@core/services/meeting/MeetingService";
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  ParseArrayPipe,
   Patch,
   Post,
+  Query,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
 
 import { HttpAuth } from "../auth/decorator/HttpAuth";
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
-import { HttpRestApiModelCreateMeetingBody } from "./documentation/MeetingDocumentation";
+import {
+  HttpRestApiModelCreateMeetingBody,
+  HttpRestApiModelDeleteMeetingsBody,
+} from "./documentation/MeetingDocumentation";
 import { ParticipantUsecaseDto } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDto";
 import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
 
@@ -36,6 +42,29 @@ export class MeetingController {
       status: body.status,
     };
     const result = await this.meetingService.createMeeting(adapter);
+    return CoreApiResponse.success(result);
+  }
+
+  @Get("")
+  @HttpAuth()
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  public async getMyMeetings() {
+    const result = await this.meetingService.getMyMeetings();
+    return CoreApiResponse.success(result);
+  }
+
+  @Delete("")
+  @HttpAuth()
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  public async deleteMeetings(
+    @Query("ids", new ParseArrayPipe({ items: String, separator: "," }))
+    ids: string[],
+  ) {
+    const result = await this.meetingService.deleteMeetings({
+      meetingIds: ids,
+    });
     return CoreApiResponse.success(result);
   }
 
@@ -81,6 +110,12 @@ export class MeetingController {
     const result = await this.meetingService.getParticipant(adapter);
 
     return CoreApiResponse.success(result);
+  }
+
+  @Patch(":friendlyId/participant/req-join-meeting")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  public async requestJoinMeeting(@Query("token") token: string) {
+    return await this.meetingService.requestJoinMeeting({ token });
   }
 
   @Patch(":friendlyId/participant/:participantId")

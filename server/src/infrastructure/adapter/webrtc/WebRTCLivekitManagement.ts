@@ -1,16 +1,17 @@
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { JwtService } from "@nestjs/jwt";
 import {
   AccessToken,
   DataPacket_Kind,
   Room,
   RoomServiceClient,
-  TrackSource,
+  SendDataOptions,
+  TokenVerifier,
   VideoGrant,
-  WebhookReceiver,
 } from "livekit-server-sdk";
+import { SendMessagePayload } from "./Types";
+import { CreateAccessTokenPort } from "@core/domain/meeting/port/CreateAccessTokenPort";
 
 @Injectable()
 export class WebRTCLivekitService {
@@ -19,15 +20,11 @@ export class WebRTCLivekitService {
   private readonly livekitClientSecret: string;
 
   private readonly roomServiceClient: RoomServiceClient;
-  private readonly webhookReceiver: WebhookReceiver;
 
   private readonly emptyTimeout: number = 100;
   private readonly maxParticipants: number = 100;
 
-  constructor(
-    configService: ConfigService<EnvironmentVariablesConfig, true>,
-    private readonly jwtService: JwtService,
-  ) {
+  constructor(configService: ConfigService<EnvironmentVariablesConfig, true>) {
     this.livekitHost = configService.get("WEBRTC_LIVEKIT_API_HOST");
     this.livekitClientId = configService.get("WEBRTC_LIVEKIT_CLIENT_ID");
     this.livekitClientSecret = configService.get(
@@ -39,45 +36,15 @@ export class WebRTCLivekitService {
       this.livekitClientId,
       this.livekitClientSecret,
     );
-    this.webhookReceiver = new WebhookReceiver(
-      this.livekitClientId,
-      this.livekitClientSecret,
-    );
   }
 
-  public async sendData(roomId: string, participantId: string, data?: string) {
-    const p = await this.roomServiceClient
-      .getParticipant(roomId, participantId)
-      .catch(() => null);
-
-    if (!p) return;
-
-    const encoder = new TextEncoder();
-    const dataEncode = encoder.encode(data);
-
-    await this.roomServiceClient.sendData(
-      roomId,
-      dataEncode,
-      DataPacket_Kind.RELIABLE,
-      [p.sid],
-    );
-  }
-
-  public getRoomServiceClient() {
+  public get _roomServiceClient() {
     return this.roomServiceClient;
   }
 
   public async updateParticipants(port: { room: string; identity: string }) {
     const { room, identity } = port;
     return await this.roomServiceClient.updateParticipant(room, identity);
-  }
-
-  public async listRooms(): Promise<Room[]> {
-    return this.roomServiceClient.listRooms();
-  }
-
-  public async deleteRoom(port: { name: string }): Promise<void> {
-    await this.roomServiceClient.deleteRoom(port.name);
   }
 
   public async createRoom(port: {
@@ -94,37 +61,73 @@ export class WebRTCLivekitService {
     return room;
   }
 
-  public async createToken(
-    payload: {
-      roomName: string;
-      participantIdentity: string;
-      participantName: string;
-      roomJoin?: boolean;
-      canPublish?: boolean;
-      canSubscribe?: boolean;
-      roomList?: boolean;
-      roomCreate?: boolean;
-      canPublishSources?: TrackSource[];
-      canPublishData?: boolean;
-      hidden?: boolean;
-    },
-    data?: string,
-  ): Promise<string> {
+  public async getParticipant(meetingId, participantId) {
+    return this._roomServiceClient.getParticipant(meetingId, participantId);
+  }
+
+  public createToken<T>(port: CreateAccessTokenPort, metadata?: T): string {
     const at = new AccessToken(this.livekitClientId, this.livekitClientSecret, {
-      identity: payload.participantIdentity,
-      name: payload.participantName,
+      identity: port.participantId,
+      name: port.participantName,
     });
 
-    if (data !== undefined) at.metadata = data;
+    if (metadata) at.metadata = JSON.stringify(metadata);
 
     const permissions: VideoGrant = {
-      room: payload.roomName,
-      canUpdateOwnMetadata: false,
-      ...payload,
+      room: port.meetingId,
+      roomJoin: port.roomJoin || undefined,
+      canPublish: port.canPublish || undefined,
+      canSubscribe: port.canSubscribe || undefined,
+      roomList: port.roomList || undefined,
+      roomCreate: port.roomCreate || undefined,
+      canPublishData: port.canPublishData || undefined,
+      hidden: port.hidden || undefined,
     };
 
     at.addGrant(permissions);
-
     return at.toJwt();
+  }
+
+  public verifyToken<T>(token: string) {
+    try {
+      const jwtVerify = new TokenVerifier(
+        this.livekitClientId,
+        this.livekitClientSecret,
+      );
+
+      const claimGrants = jwtVerify.verify(token);
+
+      const result = {
+        meetingId: claimGrants.name,
+        videoGrant: claimGrants.video,
+        metadata: claimGrants.metadata
+          ? (JSON.parse(claimGrants.metadata) as T)
+          : undefined,
+      };
+      return result;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  public async sendMessage<T>(message: SendMessagePayload<T>) {
+    const { meetingId, participantIds } = message.sendto;
+    let data: Uint8Array = new Uint8Array();
+
+    if (message.payload) {
+      const encoder = new TextEncoder();
+      data = encoder.encode(JSON.stringify(message.payload));
+    }
+
+    const sendDataOptions: SendDataOptions = {
+      destinationIdentities: participantIds,
+    };
+
+    return await this.roomServiceClient.sendData(
+      meetingId,
+      data,
+      DataPacket_Kind.RELIABLE,
+      sendDataOptions,
+    );
   }
 }

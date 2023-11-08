@@ -37,7 +37,7 @@ export class Participant extends Entity<string> {
     this.meetingId = payload.meetingId;
     this.userId = payload.userId || null;
     this.name = payload.name || "";
-    this.role = ParticipantRole.PARTICIPANT;
+    this.role = payload.role || ParticipantRole.PARTICIPANT;
 
     this.user = payload.user || null;
     this.meeting = payload.meeting || null;

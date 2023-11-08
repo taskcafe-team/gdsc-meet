@@ -2,6 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 
 import { MeetingStatusEnums } from "@core/common/enums/MeetingEnums";
 import { IsDate, IsEnum, IsOptional, IsString } from "class-validator";
+import { Transform, TransformFnParams } from "class-transformer";
 
 export class HttpRestApiModelCreateMeetingBody {
   @IsString()
@@ -31,4 +32,13 @@ export class HttpRestApiModelCreateMeetingBody {
   })
   @IsEnum(MeetingStatusEnums)
   public status: MeetingStatusEnums;
+}
+
+export class HttpRestApiModelDeleteMeetingsBody {
+  @Transform((params: TransformFnParams) => {
+    return {
+      ids: params.value.split(","),
+    };
+  })
+  public ids: string[];
 }
