@@ -23,8 +23,8 @@ import {
 import { ParticipantUsecaseDto } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDto";
 import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
 
-@Controller("meeting")
-@ApiTags("meeting")
+@Controller("meetings")
+@ApiTags("meetings")
 export class MeetingController {
   constructor(private readonly meetingService: MeetingService) {}
 
@@ -68,63 +68,63 @@ export class MeetingController {
     return CoreApiResponse.success(result);
   }
 
-  @Get(":friendlyId")
+  @Get(":meetingId")
   @HttpAuth()
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   public async getMeeting(
-    @Param("friendlyId") friendlyId: string,
-  ): Promise<CoreApiResponse<MeetingUsecaseDto & { friendlyId: string }>> {
-    const adapter = { friendlyId };
+    @Param("meetingId") meetingId: string,
+  ): Promise<CoreApiResponse<MeetingUsecaseDto>> {
+    const adapter = { meetingId };
     const result = await this.meetingService.getMeeting(adapter);
     return CoreApiResponse.success(result);
   }
 
-  @Get(":friendlyId/access-token")
+  @Get(":meetingId/access-token")
   @HttpAuth()
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
-  public async getAccessToken(@Param("friendlyId") friendlyId: string) {
-    const adapter = { friendlyId };
+  public async getAccessToken(@Param("meetingId") meetingId: string) {
+    const adapter = { meetingId };
     const result = await this.meetingService.getAccessToken(adapter);
     return CoreApiResponse.success(result);
   }
 
-  @Get(":friendlyId/participant")
+  @Get(":meetingId/participant")
   @HttpCode(HttpStatus.OK)
   public async getParticipants(
-    @Param("friendlyId") friendlyId: string,
+    @Param("meetingId") meetingId: string,
   ): Promise<CoreApiResponse<ParticipantUsecaseDto[]>> {
-    const adapter = { friendlyId };
+    const adapter = { meetingId };
     const result = await this.meetingService.getParticipants(adapter);
     return CoreApiResponse.success(result);
   }
 
-  @Get(":friendlyId/participant/:participantId")
+  @Get(":meetingId/participant/:participantId")
   @HttpCode(HttpStatus.OK)
   public async getParticipant(
-    @Param("friendlyId") friendlyId: string,
+    @Param("meetingId") meetingId: string,
     @Param("participantId") participantId: string,
   ): Promise<CoreApiResponse<ParticipantUsecaseDto>> {
-    const adapter = { friendlyId, participantId };
+    const adapter = { meetingId, participantId };
     const result = await this.meetingService.getParticipant(adapter);
 
     return CoreApiResponse.success(result);
   }
 
-  @Patch(":friendlyId/participant/req-join-meeting")
+  @Patch(":meetingId/participant/req-join-meeting")
   @HttpCode(HttpStatus.NO_CONTENT)
   public async requestJoinMeeting(@Query("token") token: string) {
     return await this.meetingService.requestJoinMeeting({ token });
   }
 
-  @Patch(":friendlyId/participant/:participantId")
+  @Patch(":meetingId/participant/:participantId")
   @HttpCode(HttpStatus.NO_CONTENT)
   public async resJoinRoom(
-    @Param("friendlyId") friendlyId: string,
+    @Param("meetingId") meetingId: string,
     @Param("participantId") participantId: string,
   ) {
-    const adapter = { friendlyId, participantId };
+    const adapter = { meetingId, participantId };
     const result = await this.meetingService.resJoinMeeting(adapter);
 
     return CoreApiResponse.success(result);

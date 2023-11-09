@@ -34,28 +34,28 @@ export class MeetingService {
   constructor(
     @Inject(REQUEST)
     private readonly requestWithOptionalUser: HttpResponseWithOptionalUser,
-    @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
+    // @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     private readonly webRTCService: WebRTCLivekitService,
     private jwtService: JwtService,
     private readonly unitOfWork: UnitOfWork,
   ) {}
 
-  private async getMeetingInCache(payload: {
-    friendlyId: string;
-  }): Promise<Optional<MeetingUsecaseDto>> {
-    const { friendlyId } = payload;
-    const meeting = await this.cacheService.get(`meeting:${friendlyId}`);
-    return meeting as Optional<MeetingUsecaseDto>;
-  }
+  // private async getMeetingInCache(payload: {
+  //   friendlyId: string;
+  // }): Promise<Optional<MeetingUsecaseDto>> {
+  //   const { friendlyId } = payload;
+  //   const meeting = await this.cacheService.get(`meeting:${friendlyId}`);
+  //   return meeting as Optional<MeetingUsecaseDto>;
+  // }
 
-  private async setMeetingInCache(payload: {
-    key: string;
-    data: MeetingUsecaseDto;
-    ttl_minutes: number;
-  }) {
-    const { key, data, ttl_minutes } = payload;
-    this.cacheService.set(`meeting:${key}`, data, ttl_minutes * 60000);
-  }
+  // private async setMeetingInCache(payload: {
+  //   key: string;
+  //   data: MeetingUsecaseDto;
+  //   ttl_minutes: number;
+  // }) {
+  //   const { key, data, ttl_minutes } = payload;
+  //   this.cacheService.set(`meeting:${key}`, data, ttl_minutes * 60000);
+  // }
 
   public async createMeeting(payload: {
     title?: string;
@@ -63,7 +63,7 @@ export class MeetingService {
     startDate?: Date;
     endDate?: Date;
     status?: MeetingStatusEnums;
-  }): Promise<MeetingUsecaseDto & { friendlyId: string }> {
+  }): Promise<MeetingUsecaseDto> {
     return await this.unitOfWork.runInTransaction(async () => {
       const userId = this.requestWithOptionalUser.user?.id;
 
@@ -74,7 +74,6 @@ export class MeetingService {
       if (!currentuser) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
 
       const meeting = await Meeting.new(payload);
-      const friendlyId = Meeting.generatorFriendlyId();
 
       const participant = await Participant.new({
         meetingId: meeting.getId(),
@@ -88,16 +87,7 @@ export class MeetingService {
         .getParticipantRepository()
         .addParticipant(participant);
 
-      await this.setMeetingInCache({
-        key: friendlyId,
-        data: MeetingUsecaseDto.newFromEntity(meeting),
-        ttl_minutes: 120,
-      });
-
-      return {
-        ...MeetingUsecaseDto.newFromEntity(meeting),
-        friendlyId: friendlyId,
-      };
+      return MeetingUsecaseDto.newFromEntity(meeting);
     });
   }
 
@@ -137,42 +127,39 @@ export class MeetingService {
   }
 
   public async getMeeting(payload: {
-    friendlyId: string;
-  }): Promise<MeetingUsecaseDto & { friendlyId: string }> {
-    const { friendlyId } = payload;
-    const meeting = await this.getMeetingInCache({ friendlyId });
+    meetingId: string;
+  }): Promise<MeetingUsecaseDto> {
+    const { meetingId } = payload;
+    const meeting = await this.unitOfWork
+      .getMeetingRepository()
+      .findMeeting({ id: meetingId });
     if (!meeting) throw new NotFoundException("Meeting not found!");
-    return {
-      friendlyId: friendlyId,
-      ...meeting,
-    };
+    return MeetingUsecaseDto.newFromEntity(meeting);
   }
 
-  public async getAccessToken(payload: { friendlyId: string }) {
+  public async getAccessToken(payload: { meetingId: string }) {
     return await this.unitOfWork.runInTransaction(async () => {
+      const { meetingId } = payload;
       // Get Current User
       const currentUser = await this.unitOfWork
         .getUserRepository()
         .findUser({ id: this.requestWithOptionalUser.user?.id });
       if (!currentUser) throw new NotFoundException("User not found!");
 
-      // Get MeetingDto by friendlyId in Cache
-      const meetingDTO = await this.getMeetingInCache({
-        friendlyId: payload.friendlyId,
-      });
-      if (!meetingDTO) throw new NotFoundException("Meeting not found!");
+      // Get meeting by friendlyId in Cache
+      const meeting = await this.getMeeting({ meetingId });
 
       // Get or create participant
       let participant = await this.unitOfWork
         .getParticipantRepository()
         .findParticipant({
           userId: currentUser.getId(),
-          meetingId: meetingDTO.id,
+          meetingId: meeting.id,
         });
 
       if (!participant) {
         participant = await Participant.new({
-          meetingId: meetingDTO.id,
+          meetingId: meeting.id,
           name: currentUser.fullName(),
           role: ParticipantRole.PARTICIPANT,
           userId: currentUser.getId(),
@@ -181,7 +168,7 @@ export class MeetingService {
       const participantDTO = ParticipantUsecaseDto.newFromEntity(participant);
 
       // create token
-      return await this.createAccessToken(meetingDTO, participantDTO);
+      return await this.createAccessToken(meeting, participantDTO);
     });
   }
 
@@ -229,15 +216,13 @@ export class MeetingService {
     });
   }
 
-  public async resJoinMeeting({ friendlyId, participantId }) {
+  public async resJoinMeeting({ meetingId, participantId }) {
     return await this.unitOfWork.runInTransaction(async () => {
-      const meetingDTO = await this.getMeetingInCache({ friendlyId });
-      if (!meetingDTO) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
+      const meetingDTO = await this.getMeeting({ meetingId });
 
       const p = await this.webRTCService._roomServiceClient
         .getParticipant(meetingDTO.id, participantId)
         .catch(() => null);
-
       if (!p) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
 
       const participantDTO = JSON.parse(p.metadata) as ParticipantUsecaseDto;
@@ -276,9 +261,8 @@ export class MeetingService {
     });
   }
 
-  public async getParticipant({ friendlyId, participantId }) {
-    const meeting = await this.getMeetingInCache({ friendlyId });
-    if (!meeting) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
+  public async getParticipant({ meetingId, participantId }) {
+    const meeting = await this.getMeeting({ meetingId });
 
     const p = await this.webRTCService._roomServiceClient
       .getParticipant(meeting.id, participantId)
@@ -289,14 +273,11 @@ export class MeetingService {
     return JSON.parse(p.metadata) as ParticipantUsecaseDto;
   }
 
-  public async getParticipants({ friendlyId }) {
-    const meeting = await this.getMeetingInCache({ friendlyId });
-    if (!meeting) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
-
+  public async getParticipants({ meetingId }) {
+    const meeting = await this.getMeeting({ meetingId });
     const lp = await this.webRTCService._roomServiceClient.listParticipants(
       meeting.id,
     );
-
     return lp.map<ParticipantUsecaseDto>(({ metadata }) =>
       JSON.parse(metadata),
     );

@@ -112,12 +112,16 @@ export class UserController {
     @Param("fileName") fileName: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const filePath = path.join(fileStoragePath, "avatars", fileName);
-    const stream = await createReadStream(filePath);
-    res.set({
-      "Content-Disposition": `inline; filename="${fileName}"`,
-      "Content-Type": mime.lookup(filePath) || "text/plain",
-    });
-    return new StreamableFile(stream);
+    try {
+      const filePath = path.join(fileStoragePath, "avatars", fileName);
+      const stream = await createReadStream(filePath);
+      res.set({
+        "Content-Disposition": `inline; filename="${fileName}"`,
+        "Content-Type": mime.lookup(filePath) || "text/plain",
+      });
+      return new StreamableFile(stream);
+    } catch (error) {
+      return null;
+    }
   }
 }
