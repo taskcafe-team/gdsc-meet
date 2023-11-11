@@ -10,8 +10,9 @@ import {
   TokenVerifier,
   VideoGrant,
 } from "livekit-server-sdk";
-import { SendMessagePayload } from "./Types";
 import { CreateAccessTokenPort } from "@core/domain/meeting/port/CreateAccessTokenPort";
+import { SendDataMessagePort } from "./Types";
+import { ParticipantMetadataDTO } from "@core/domain/participant/usecase/dto/ParticipantMetadataDTO";
 
 @Injectable()
 export class WebRTCLivekitService {
@@ -88,7 +89,7 @@ export class WebRTCLivekitService {
     return at.toJwt();
   }
 
-  public verifyToken<T>(token: string) {
+  public verifyToken(token: string) {
     try {
       const jwtVerify = new TokenVerifier(
         this.livekitClientId,
@@ -101,7 +102,7 @@ export class WebRTCLivekitService {
         meetingId: claimGrants.name,
         videoGrant: claimGrants.video,
         metadata: claimGrants.metadata
-          ? (JSON.parse(claimGrants.metadata) as T)
+          ? (JSON.parse(claimGrants.metadata) as ParticipantMetadataDTO)
           : undefined,
       };
       return result;
@@ -110,14 +111,11 @@ export class WebRTCLivekitService {
     }
   }
 
-  public async sendMessage<T>(message: SendMessagePayload<T>) {
-    const { meetingId, participantIds } = message.sendto;
-    let data: Uint8Array = new Uint8Array();
+  public async sendDataMessage(port: SendDataMessagePort) {
+    const { meetingId, participantIds } = port.sendto;
 
-    if (message.payload) {
-      const encoder = new TextEncoder();
-      data = encoder.encode(JSON.stringify(message.payload));
-    }
+    const encoder = new TextEncoder();
+    const action = encoder.encode(JSON.stringify(port.action));
 
     const sendDataOptions: SendDataOptions = {
       destinationIdentities: participantIds,
@@ -125,7 +123,7 @@ export class WebRTCLivekitService {
 
     return await this.roomServiceClient.sendData(
       meetingId,
-      data,
+      action,
       DataPacket_Kind.RELIABLE,
       sendDataOptions,
     );

@@ -8,20 +8,15 @@ import {
   HttpStatus,
   Param,
   ParseArrayPipe,
-  Patch,
   Post,
   Query,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
 
-import { HttpAuth } from "../auth/decorator/HttpAuth";
+import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
-import {
-  HttpRestApiModelCreateMeetingBody,
-  HttpRestApiModelDeleteMeetingsBody,
-} from "./documentation/MeetingDocumentation";
-import { ParticipantUsecaseDto } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDto";
-import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
+import { HttpRestApiModelCreateMeetingBody } from "./documentation/MeetingDocumentation";
+import { MeetingUsecaseDTO } from "@core/domain/meeting/usecase/MeetingUsecaseDTO";
 
 @Controller("meetings")
 @ApiTags("meetings")
@@ -29,7 +24,7 @@ export class MeetingController {
   constructor(private readonly meetingService: MeetingService) {}
 
   @Post("")
-  @HttpAuth()
+  @HttpUserAuth()
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @ApiBody({ type: HttpRestApiModelCreateMeetingBody })
@@ -46,7 +41,7 @@ export class MeetingController {
   }
 
   @Get("")
-  @HttpAuth()
+  @HttpUserAuth()
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   public async getMyMeetings() {
@@ -55,7 +50,7 @@ export class MeetingController {
   }
 
   @Delete("")
-  @HttpAuth()
+  @HttpUserAuth()
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   public async deleteMeetings(
@@ -69,64 +64,24 @@ export class MeetingController {
   }
 
   @Get(":meetingId")
-  @HttpAuth()
+  @HttpUserAuth()
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   public async getMeeting(
     @Param("meetingId") meetingId: string,
-  ): Promise<CoreApiResponse<MeetingUsecaseDto>> {
+  ): Promise<CoreApiResponse<MeetingUsecaseDTO>> {
     const adapter = { meetingId };
     const result = await this.meetingService.getMeeting(adapter);
     return CoreApiResponse.success(result);
   }
 
   @Get(":meetingId/access-token")
-  @HttpAuth()
+  @HttpUserAuth()
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   public async getAccessToken(@Param("meetingId") meetingId: string) {
     const adapter = { meetingId };
     const result = await this.meetingService.getAccessToken(adapter);
-    return CoreApiResponse.success(result);
-  }
-
-  @Get(":meetingId/participant")
-  @HttpCode(HttpStatus.OK)
-  public async getParticipants(
-    @Param("meetingId") meetingId: string,
-  ): Promise<CoreApiResponse<ParticipantUsecaseDto[]>> {
-    const adapter = { meetingId };
-    const result = await this.meetingService.getParticipants(adapter);
-    return CoreApiResponse.success(result);
-  }
-
-  @Get(":meetingId/participant/:participantId")
-  @HttpCode(HttpStatus.OK)
-  public async getParticipant(
-    @Param("meetingId") meetingId: string,
-    @Param("participantId") participantId: string,
-  ): Promise<CoreApiResponse<ParticipantUsecaseDto>> {
-    const adapter = { meetingId, participantId };
-    const result = await this.meetingService.getParticipant(adapter);
-
-    return CoreApiResponse.success(result);
-  }
-
-  @Patch(":meetingId/participant/req-join-meeting")
-  @HttpCode(HttpStatus.NO_CONTENT)
-  public async requestJoinMeeting(@Query("token") token: string) {
-    return await this.meetingService.requestJoinMeeting({ token });
-  }
-
-  @Patch(":meetingId/participant/:participantId")
-  @HttpCode(HttpStatus.NO_CONTENT)
-  public async resJoinRoom(
-    @Param("meetingId") meetingId: string,
-    @Param("participantId") participantId: string,
-  ) {
-    const adapter = { meetingId, participantId };
-    const result = await this.meetingService.resJoinMeeting(adapter);
-
     return CoreApiResponse.success(result);
   }
 }

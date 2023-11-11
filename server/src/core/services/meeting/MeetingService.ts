@@ -1,32 +1,23 @@
-import { CACHE_MANAGER } from "@nestjs/cache-manager";
-import { Cache } from "cache-manager";
 import {
   BadRequestException,
   Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  UnauthorizedException,
 } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
+import { REQUEST } from "@nestjs/core";
 
 import { Meeting } from "@core/domain/meeting/entity/Meeting";
 import { WebRTCLivekitService } from "@infrastructure/adapter/webrtc/WebRTCLivekitManagement";
 import { Exception } from "@core/common/exception/Exception";
 import Code from "@core/common/constants/Code";
 import { Participant } from "@core/domain/participant/entity/Participant";
-import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
+import { MeetingUsecaseDTO } from "@core/domain/meeting/usecase/MeetingUsecaseDTO";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
-import { Optional } from "@core/common/type/CommonTypes";
 import { MeetingStatusEnums } from "@core/common/enums/MeetingEnums";
-import { ParticipantUsecaseDto } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDto";
-import { REQUEST } from "@nestjs/core";
+import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDTO";
 import { HttpResponseWithOptionalUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
-import {
-  SendDataMessageDTO,
-  SendDataMessageMeetingAction,
-} from "@infrastructure/adapter/webrtc/Types";
 import { CreateAccessTokenPort } from "@core/domain/meeting/port/CreateAccessTokenPort";
 
 @Injectable()
@@ -34,28 +25,9 @@ export class MeetingService {
   constructor(
     @Inject(REQUEST)
     private readonly requestWithOptionalUser: HttpResponseWithOptionalUser,
-    // @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     private readonly webRTCService: WebRTCLivekitService,
-    private jwtService: JwtService,
     private readonly unitOfWork: UnitOfWork,
   ) {}
-
-  // private async getMeetingInCache(payload: {
-  //   friendlyId: string;
-  // }): Promise<Optional<MeetingUsecaseDto>> {
-  //   const { friendlyId } = payload;
-  //   const meeting = await this.cacheService.get(`meeting:${friendlyId}`);
-  //   return meeting as Optional<MeetingUsecaseDto>;
-  // }
-
-  // private async setMeetingInCache(payload: {
-  //   key: string;
-  //   data: MeetingUsecaseDto;
-  //   ttl_minutes: number;
-  // }) {
-  //   const { key, data, ttl_minutes } = payload;
-  //   this.cacheService.set(`meeting:${key}`, data, ttl_minutes * 60000);
-  // }
 
   public async createMeeting(payload: {
     title?: string;
@@ -63,7 +35,7 @@ export class MeetingService {
     startDate?: Date;
     endDate?: Date;
     status?: MeetingStatusEnums;
-  }): Promise<MeetingUsecaseDto> {
+  }): Promise<MeetingUsecaseDTO> {
     return await this.unitOfWork.runInTransaction(async () => {
       const userId = this.requestWithOptionalUser.user?.id;
 
@@ -87,7 +59,7 @@ export class MeetingService {
         .getParticipantRepository()
         .addParticipant(participant);
 
-      return MeetingUsecaseDto.newFromEntity(meeting);
+      return MeetingUsecaseDTO.newFromEntity(meeting);
     });
   }
 
@@ -128,13 +100,13 @@ export class MeetingService {
 
   public async getMeeting(payload: {
     meetingId: string;
-  }): Promise<MeetingUsecaseDto> {
+  }): Promise<MeetingUsecaseDTO> {
     const { meetingId } = payload;
     const meeting = await this.unitOfWork
       .getMeetingRepository()
       .findMeeting({ id: meetingId });
     if (!meeting) throw new NotFoundException("Meeting not found!");
-    return MeetingUsecaseDto.newFromEntity(meeting);
+    return MeetingUsecaseDTO.newFromEntity(meeting);
   }
 
   public async getAccessToken(payload: { meetingId: string }) {
@@ -165,128 +137,17 @@ export class MeetingService {
           userId: currentUser.getId(),
         });
       }
-      const participantDTO = ParticipantUsecaseDto.newFromEntity(participant);
+      const participantDTO = ParticipantUsecaseDTO.newFromEntity(participant);
 
       // create token
       return await this.createAccessToken(meeting, participantDTO);
     });
   }
 
-  public async requestJoinMeeting(payload: { token: string }) {
-    // Verify meeting token created from webrtc
-    const verifyToken = this.webRTCService.verifyToken<ParticipantUsecaseDto>(
-      payload.token,
-    );
-    if (!verifyToken) throw new UnauthorizedException("Token invalid!");
-    if (!verifyToken.metadata)
-      throw new InternalServerErrorException("request join meeting error");
-    const participantDTO = verifyToken.metadata;
-
-    // Check meet is start
-
-    // Get host is online
-    const hostDomain = await this.unitOfWork
-      .getParticipantRepository()
-      .findParticipant({
-        meetingId: participantDTO.meetingId,
-        role: ParticipantRole.HOST,
-      });
-    if (!hostDomain) throw new NotFoundException("Host is not online!");
-    const id = hostDomain.getId();
-    const hostIsOnline = await this.webRTCService
-      .getParticipant(hostDomain.meetingId, hostDomain.getId())
-      .catch(() => undefined);
-    if (!hostIsOnline) throw new NotFoundException("Host is not online!");
-
-    // Send message request join meeting to host
-    const sendMessagePayload: SendDataMessageDTO = {
-      action: SendDataMessageMeetingAction.request_join,
-      data: {
-        participantId: participantDTO.id,
-        participantName: participantDTO.name,
-      },
-    };
-
-    await this.webRTCService.sendMessage({
-      sendto: {
-        meetingId: hostDomain.meetingId,
-        participantIds: [hostDomain.getId()],
-      },
-      payload: sendMessagePayload,
-    });
-  }
-
-  public async resJoinMeeting({ meetingId, participantId }) {
-    return await this.unitOfWork.runInTransaction(async () => {
-      const meetingDTO = await this.getMeeting({ meetingId });
-
-      const p = await this.webRTCService._roomServiceClient
-        .getParticipant(meetingDTO.id, participantId)
-        .catch(() => null);
-      if (!p) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
-
-      const participantDTO = JSON.parse(p.metadata) as ParticipantUsecaseDto;
-      const pExit = await this.unitOfWork
-        .getParticipantRepository()
-        .findParticipant({
-          id: participantDTO.id,
-          meetingId: participantDTO.meetingId,
-        });
-
-      if (pExit) return;
-
-      const pEntity = await Participant.new({
-        id: participantDTO.id,
-        meetingId: meetingDTO.id,
-        name: participantDTO.name,
-        role: participantDTO.role,
-        userId: participantDTO.userId,
-      });
-
-      await this.unitOfWork.getParticipantRepository().addParticipant(pEntity);
-
-      await this.webRTCService._roomServiceClient.updateParticipant(
-        meetingDTO.id,
-        participantDTO.id,
-        undefined,
-        {
-          canPublish: true,
-          canSubscribe: true,
-          canPublishData: true,
-          hidden: false,
-        },
-      );
-
-      return null;
-    });
-  }
-
-  public async getParticipant({ meetingId, participantId }) {
-    const meeting = await this.getMeeting({ meetingId });
-
-    const p = await this.webRTCService._roomServiceClient
-      .getParticipant(meeting.id, participantId)
-      .catch(() => null);
-
-    if (!p) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
-
-    return JSON.parse(p.metadata) as ParticipantUsecaseDto;
-  }
-
-  public async getParticipants({ meetingId }) {
-    const meeting = await this.getMeeting({ meetingId });
-    const lp = await this.webRTCService._roomServiceClient.listParticipants(
-      meeting.id,
-    );
-    return lp.map<ParticipantUsecaseDto>(({ metadata }) =>
-      JSON.parse(metadata),
-    );
-  }
-
   // private methods
   private async createAccessToken(
-    meeting: MeetingUsecaseDto,
-    participant: ParticipantUsecaseDto,
+    meeting: MeetingUsecaseDTO,
+    participant: ParticipantUsecaseDTO,
   ) {
     let status = "JOIN";
     const createAccessTokenPayload: CreateAccessTokenPort = {
@@ -316,7 +177,7 @@ export class MeetingService {
       }
     }
 
-    const token = await this.webRTCService.createToken<ParticipantUsecaseDto>(
+    const token = await this.webRTCService.createToken<ParticipantUsecaseDTO>(
       createAccessTokenPayload,
       participant,
     );

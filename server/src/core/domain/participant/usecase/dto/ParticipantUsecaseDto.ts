@@ -1,33 +1,27 @@
-import {
-  Exclude,
-  Expose,
-  Transform,
-  Type,
-  plainToClass,
-} from "class-transformer";
+import { Exclude, Expose, Type, plainToClass } from "class-transformer";
 
 import { Participant } from "../../entity/Participant";
-import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
+import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 
 @Exclude()
-export class ParticipantUsecaseDto {
+export class ParticipantUsecaseDTO {
   @Expose() public id: string;
   @Expose() public name: string;
   @Expose() public userId: string;
   @Expose() public role: ParticipantRole;
   @Expose() public meetingId: string;
   @Expose()
-  @Type(() => UserUsecaseDto)
-  public userInfo: UserUsecaseDto;
+  @Type(() => UserUsecaseDTO)
+  public userInfo: UserUsecaseDTO;
 
-  public static newFromEntity(entity: Participant): ParticipantUsecaseDto {
-    return plainToClass(ParticipantUsecaseDto, entity);
+  public static newFromEntity(entity: Participant): ParticipantUsecaseDTO {
+    return plainToClass(ParticipantUsecaseDTO, entity);
   }
 
   public static newListFromEntitys(
     listEntitys: Participant[],
-  ): ParticipantUsecaseDto[] {
+  ): ParticipantUsecaseDTO[] {
     return listEntitys.map((entity) => this.newFromEntity(entity));
   }
 }

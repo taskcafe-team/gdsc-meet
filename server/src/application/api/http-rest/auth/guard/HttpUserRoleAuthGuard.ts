@@ -6,7 +6,7 @@ import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 
 @Injectable()
-export class HttpRoleAuthGuard implements CanActivate {
+export class HttpUserRoleAuthGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {

@@ -36,9 +36,7 @@ export class HttpRestApiModelCreateMeetingBody {
 
 export class HttpRestApiModelDeleteMeetingsBody {
   @Transform((params: TransformFnParams) => {
-    return {
-      ids: params.value.split(","),
-    };
+    return { ids: params.value.split(",") };
   })
   public ids: string[];
 }

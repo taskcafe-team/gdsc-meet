@@ -31,7 +31,7 @@ export class PrismaParticipantRepositoryAdapter
     const context = this.context.participant;
     const findOptions: Prisma.ParticipantFindManyArgs = {
       where: {},
-      include: { meeting: true },
+      include: { meeting: true, user: true },
     };
 
     if (by.id) findOptions.where!.id = by.id;
@@ -50,24 +50,15 @@ export class PrismaParticipantRepositoryAdapter
     return domain;
   }
 
-  public async findFirstParticipants(args: Prisma.ParticipantFindFirstArgs) {
-    const context = this.context.participant;
-    const orm: Nullable<PrismaParticipant> = (await context.findFirst(
-      args,
-    )) as PrismaParticipant;
-
-    let domain: Optional<Participant>;
-    if (orm) domain = PrismaParticipantMapper.toDomainEntity(orm);
-
-    return domain;
-  }
-
   public async findParticipant(
     by: FindFirstParticipantBy,
     options?: RepositoryFindOptions,
   ): Promise<Optional<Participant>> {
     const context = this.context.participant;
-    const findOptions: Prisma.ParticipantFindFirstArgs = { where: {} };
+    const findOptions: Prisma.ParticipantFindFirstArgs = {
+      where: {},
+      include: { meeting: true, user: true },
+    };
 
     if ("id" in by) findOptions.where!.id = by.id;
     if ("userId" in by && "meetingId" in by) {

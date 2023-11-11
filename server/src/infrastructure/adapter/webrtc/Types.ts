@@ -1,31 +1,22 @@
-import { SendDataOptions, TrackSource } from "livekit-server-sdk";
-
-export enum SendDataMessageMeetingAction {
-  request_join = "meeting:request_join",
-  leave = "meeting:leave",
-  message = "meeting:message",
-  error = "meeting:error",
-}
-
-export type SendDataMessageAction = SendDataMessageMeetingAction;
-
-export interface SendMessagesStatus {
-  code: string;
-  message: string;
-}
-
-export interface SendDataMessageDTO<T = any> {
-  action: SendDataMessageAction;
-  // status?: SendMessagesStatus;
-  data?: T;
-}
+import { SendDataOptions } from "livekit-server-sdk";
+import { createSendDataMessageAction } from "./Actions";
 
 export interface SendtoOptions {
   meetingId: string;
   participantIds: SendDataOptions["destinationIdentities"];
 }
 
-export interface SendMessagePayload<T = unknown> {
+export interface SendDataMessagePort {
   sendto: SendtoOptions;
-  payload: SendDataMessageDTO<T>;
+  action: ReturnType<typeof createSendDataMessageAction>;
+}
+
+// ----- DTOs ----- //
+export interface ParticipantRequestJoinDTO {
+  participantId: string;
+}
+
+export interface ParticipantSendMessageDTO {
+  sendby: string;
+  message: string;
 }

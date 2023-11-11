@@ -15,7 +15,7 @@ import { ApiTags, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
 import { CreateUserAdapter } from "@infrastructure/adapter/usecase/user/CreateUserAdapter";
 
 import { UserRole } from "@core/common/enums/UserEnums";
-import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
+import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
 
 import { HttpAuthService } from "../auth/HttpAuthService";
 import { HttpLoggedInUser, HttpUserPayload } from "../auth/type/HttpAuthTypes";
@@ -26,8 +26,8 @@ import {
   HttpRestApiModelResetPasswordBody,
   HttpRestApiModelGetAccessTokenBody,
 } from "./documentation/AuthDocumentation";
-import { HttpAuth } from "../auth/decorator/HttpAuth";
 import { HttpUser } from "../auth/decorator/HttpUser";
+import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
 
 @Controller("auth")
 @ApiTags("auth")
@@ -47,7 +47,7 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   public async registerWithEmail(
     @Body(new ValidationPipe()) body: HttpRestApiModelRegisterBody,
-  ): Promise<CoreApiResponse<UserUsecaseDto>> {
+  ): Promise<CoreApiResponse<UserUsecaseDTO>> {
     const adapter: CreateUserAdapter = await CreateUserAdapter.new({
       firstName: null,
       lastName: null,
@@ -64,7 +64,7 @@ export class AuthController {
   }
 
   @Post("verify/access-token")
-  @HttpAuth()
+  @HttpUserAuth()
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   public async verifyAccessToken() {

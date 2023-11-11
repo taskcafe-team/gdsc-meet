@@ -7,6 +7,7 @@ import { AuthModule } from "./AuthModule";
 import { InfrastructureModule } from "./InfrastructureModule";
 import { MeetingModule } from "./MeetingModule";
 import { UserModule } from "./UserModule";
+import { ParticipantModule } from "./ParticipantModule";
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UserModule } from "./UserModule";
     AuthModule,
     UserModule,
     MeetingModule,
+    ParticipantModule,
   ],
   providers: [],
   exports: [],

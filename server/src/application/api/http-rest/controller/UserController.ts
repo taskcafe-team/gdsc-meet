@@ -15,14 +15,13 @@ import {
   UploadedFile,
   UseInterceptors,
 } from "@nestjs/common";
-import { Multer, diskStorage } from "multer";
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from "@nestjs/swagger";
-import { HttpAuth } from "../auth/decorator/HttpAuth";
+import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
 import { HttpUser } from "../auth/decorator/HttpUser";
 import { HttpUserPayload } from "../auth/type/HttpAuthTypes";
 import { GetUserAdapter } from "@infrastructure/adapter/usecase/user/GetUserAdapter";
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
-import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
+import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
 import { UserService } from "@core/services/user/UserService";
 import { HttpRestApiModelUpdateUser } from "./documentation/UserDocumentation";
 // import { avatarStoragePath } from "src/data/path";
@@ -51,22 +50,22 @@ export class UserController {
 
   @Get("me")
   @HttpCode(HttpStatus.OK)
-  @HttpAuth()
+  @HttpUserAuth()
   @ApiBearerAuth()
   public async getMe(
     @HttpUser() httpUser: HttpUserPayload,
-  ): Promise<CoreApiResponse<UserUsecaseDto>> {
+  ): Promise<CoreApiResponse<UserUsecaseDTO>> {
     const adapter: GetUserAdapter = await GetUserAdapter.new({
       userId: httpUser.id,
     });
 
     const result = await this.userService.getUser(adapter);
-    return CoreApiResponse.success<UserUsecaseDto>(result);
+    return CoreApiResponse.success<UserUsecaseDTO>(result);
   }
 
   @Put("me")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @HttpAuth()
+  @HttpUserAuth()
   @ApiBearerAuth()
   @ApiConsumes("multipart/form-data")
   @UseInterceptors(
