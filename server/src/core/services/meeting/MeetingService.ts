@@ -36,31 +36,33 @@ export class MeetingService {
     endDate?: Date;
     type?: MeetingType;
   }): Promise<MeetingUsecaseDTO> {
-    return await this.unitOfWork.runInTransaction(async () => {
-      const userId = this.requestWithOptionalUser.user?.id;
+    return await await await await this.unitOfWork.runInTransaction(
+      async () => {
+        const userId = this.requestWithOptionalUser.user?.id;
 
-      const currentuser = await this.unitOfWork
-        .getUserRepository()
-        .findUser({ id: userId });
+        const currentuser = await this.unitOfWork
+          .getUserRepository()
+          .findUser({ id: userId });
 
-      if (!currentuser) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
+        if (!currentuser) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
 
-      const meeting = await Meeting.new(payload);
+        const meeting = await Meeting.new(payload);
 
-      const participant = await Participant.new({
-        meetingId: meeting.getId(),
-        name: currentuser.fullName(),
-        userId: currentuser.getId(),
-        role: ParticipantRole.HOST,
-      });
+        const participant = await Participant.new({
+          meetingId: meeting.getId(),
+          name: currentuser.fullName(),
+          userId: currentuser.getId(),
+          role: ParticipantRole.HOST,
+        });
 
-      await this.unitOfWork.getMeetingRepository().addMeeting(meeting);
-      await this.unitOfWork
-        .getParticipantRepository()
-        .addParticipant(participant);
+        await this.unitOfWork.getMeetingRepository().addMeeting(meeting);
+        await this.unitOfWork
+          .getParticipantRepository()
+          .addParticipant(participant);
 
-      return MeetingUsecaseDTO.newFromEntity(meeting);
-    });
+        return MeetingUsecaseDTO.newFromEntity(meeting);
+      },
+    );
   }
 
   public async getMyMeetings(): Promise<Meeting[]> {
@@ -76,25 +78,24 @@ export class MeetingService {
     return myMeetings;
   }
 
-  public async deleteMeetings(payload: { meetingIds: string[] }) {
+  public async deleteMeetings(payload: { ids: string[] }) {
     return await this.unitOfWork.runInTransaction(async () => {
       const userId = this.requestWithOptionalUser.user?.id;
       if (!userId) throw new InternalServerErrorException("User not found!");
-
       const meetings = await this.unitOfWork
         .getParticipantRepository()
         .findManyParticipants({
           userId: userId,
           role: ParticipantRole.HOST,
-          meetingIds: payload.meetingIds,
+          meetingIds: payload.ids,
         })
         .then((participants) => participants.map((p) => p.meeting!))
         .catch(() => []);
-      if (meetings.length !== payload.meetingIds.length)
+      if (meetings.length !== payload.ids.length)
         throw new BadRequestException("Invalid argument");
       return await this.unitOfWork
         .getMeetingRepository()
-        .deleteMeetings({ ids: payload.meetingIds });
+        .deleteMeetings({ ids: payload.ids });
     });
   }
 

@@ -4,7 +4,6 @@ import { Prisma } from "@prisma/client";
 import { PrismaMeetingMapper } from "../entity/meeting/PrismaMeetingMapper";
 import { PrismaMeeting } from "../entity/meeting/PrismaMeeting";
 import { Nullable } from "@core/common/type/CommonTypes";
-import { RepositoryFindOptions } from "@core/common/persistence/RepositoryOptions";
 import { MeetingRepositoryPort } from "@core/domain/meeting/port/MeetingRepositoryPort";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
 
@@ -31,17 +30,13 @@ export class PrismaMeetingRepositoryAdapter
       findOptions,
     );
 
-    const domainEntities: Meeting[] = orm.map((o) =>
-      PrismaMeetingMapper.toDomainEntity(o),
-    );
-
-    return domainEntities;
+    return orm.map((o) => PrismaMeetingMapper.toDomainEntity(o));
   }
 
   public async findMeeting(by: { id: string }): Promise<Nullable<Meeting>> {
     const findOptions: Prisma.MeetingFindFirstArgs = { where: by };
 
-    const orm: Nullable<PrismaMeeting> = await this.context.meeting
+    const orm = await this.context.meeting
       .findFirst(findOptions)
       .then((o) => o ?? null);
 

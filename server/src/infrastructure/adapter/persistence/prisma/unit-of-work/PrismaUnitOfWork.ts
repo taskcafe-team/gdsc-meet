@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { Prisma, PrismaClient } from "@prisma/client";
 
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
@@ -17,15 +17,15 @@ type TransactionOptions = Parameters<PrismaClient["$transaction"]>[1];
 @Injectable()
 export class PrismaUnitOfWork implements UnitOfWork {
   private context: Prisma.TransactionClient;
-  private repositories: Record<string, any>;
+  private repositories: Map<string, PrismaBaseRepository>;
 
   constructor(private readonly prisma: PrismaService) {
     this.context = prisma;
-    this.repositories = {};
+    this.repositories = new Map();
   }
 
   public async runInTransaction<T>(
-    fn: () => Promise<T>,
+    fn: () => Promise<T> | T,
     options?: TransactionOptions,
   ): Promise<T> {
     return await this.prisma.$transaction(
@@ -35,10 +35,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
         this.context = this.prisma;
         return result;
       },
-      {
-        maxWait: 10000,
-        timeout: 10000,
-      },
+      { maxWait: 10000, timeout: 10000 },
     );
   }
 
@@ -46,31 +43,34 @@ export class PrismaUnitOfWork implements UnitOfWork {
     type: Prisma.ModelName,
     newRepo: () => T,
   ): T {
-    if (this.repositories[type] == null) this.repositories[type] = newRepo();
-    else if (this.repositories[type].getContext() !== this.context)
-      this.repositories[type].setContext(this.context);
-
-    return this.repositories[type];
+    const repo = this.repositories.get(type);
+    if (!repo) this.repositories.set(type, newRepo());
+    else if (repo._context !== this.context)
+      this.repositories.get(type)!._context = this.context;
+    return this.repositories.get(type)! as T;
   }
 
   public getUserRepository(): UserRepositoryPort {
     const type = Prisma.ModelName.User;
-    this.getRepo(type, () => new PrismaUserRepositoryAdapter(this.context));
-    return this.repositories[type];
+    return this.getRepo(
+      type,
+      () => new PrismaUserRepositoryAdapter(this.context),
+    );
   }
 
   public getMeetingRepository(): MeetingRepositoryPort {
     const type = Prisma.ModelName.Meeting;
-    this.getRepo(type, () => new PrismaMeetingRepositoryAdapter(this.context));
-    return this.repositories[type];
+    return this.getRepo(
+      type,
+      () => new PrismaMeetingRepositoryAdapter(this.context),
+    );
   }
 
   public getParticipantRepository(): ParticipantRepositoryPort {
     const type = Prisma.ModelName.Participant;
-    this.getRepo(
+    return this.getRepo(
       type,
       () => new PrismaParticipantRepositoryAdapter(this.context),
     );
-    return this.repositories[type];
   }
 }

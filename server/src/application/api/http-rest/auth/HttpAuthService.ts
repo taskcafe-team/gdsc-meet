@@ -80,7 +80,7 @@ export class HttpAuthService {
     id?: string;
     email?: string;
   }): Promise<Nullable<User>> {
-    return this.unitOfWork.getUserRepository().findUser(by);
+    return await this.unitOfWork.getUserRepository().findUser(by);
   }
 
   public async registerWithGoogle(user: User): Promise<{ id: string }> {

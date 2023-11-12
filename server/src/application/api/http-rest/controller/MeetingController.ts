@@ -57,9 +57,7 @@ export class MeetingController {
     @Query("ids", new ParseArrayPipe({ items: String, separator: "," }))
     ids: string[],
   ) {
-    const result = await this.meetingService.deleteMeetings({
-      meetingIds: ids,
-    });
+    const result = await this.meetingService.deleteMeetings({ ids });
     return CoreApiResponse.success(result);
   }
 

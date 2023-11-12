@@ -6,4 +6,12 @@ export abstract class PrismaBaseRepository {
   constructor(context: Prisma.TransactionClient) {
     this.context = context;
   }
+
+  public set _context(context: Prisma.TransactionClient) {
+    this.context = context;
+  }
+
+  public get _context() {
+    return this.context;
+  }
 }
