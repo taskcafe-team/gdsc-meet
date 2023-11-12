@@ -1,6 +1,8 @@
+import { Nullable } from "@core/common/type/CommonTypes";
+
 export type EditMeetingEntityPayload = {
   startTime?: Date;
-  endTime?: Date;
-  title?: string;
-  description?: string;
+  endTime?: Nullable<Date>;
+  title?: Nullable<string>;
+  description?: Nullable<string>;
 };

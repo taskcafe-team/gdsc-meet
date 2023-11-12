@@ -15,13 +15,13 @@ import {
 } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 
 import { User } from "@core/domain/user/entity/User";
-import { Optional } from "@core/common/type/CommonTypes";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { Exception } from "@core/common/exception/Exception";
 import Code from "@core/common/constants/Code";
 import { CreateUserPort } from "@core/domain/user/port/CreateUserPort";
 import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
+import { Nullable } from "@core/common/type/CommonTypes";
 
 @Injectable()
 export class HttpAuthService {
@@ -34,6 +34,7 @@ export class HttpAuthService {
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService,
   ) {}
+
   public async createToken(
     payload: HttpUserPayload,
   ): Promise<HttpLoggedInUser> {
@@ -78,12 +79,13 @@ export class HttpAuthService {
   public async getUser(by: {
     id?: string;
     email?: string;
-  }): Promise<Optional<User>> {
+  }): Promise<Nullable<User>> {
     return this.unitOfWork.getUserRepository().findUser(by);
   }
 
   public async registerWithGoogle(user: User): Promise<{ id: string }> {
-    return await this.unitOfWork.getUserRepository().addUser(user);
+    const result = await this.unitOfWork.getUserRepository().addUser(user);
+    return { id: result.getId() };
   }
 
   public async register(payload: CreateUserPort): Promise<UserUsecaseDTO> {

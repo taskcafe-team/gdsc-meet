@@ -1,4 +1,4 @@
-import { Optional } from "@core/common/type/CommonTypes";
+import { Nullable } from "@core/common/type/CommonTypes";
 import { validate, ValidationError } from "class-validator";
 
 export type ClassValidationErrors = {
@@ -15,8 +15,8 @@ export class ClassValidator {
   public static async validate<TTarget extends object>(
     target: TTarget,
     context?: string,
-  ): Promise<Optional<ClassValidationDetails>> {
-    let details: Optional<ClassValidationDetails>;
+  ): Promise<Nullable<ClassValidationDetails>> {
+    let details: Nullable<ClassValidationDetails> = null;
     const errors: ValidationError[] = await validate(target);
 
     if (errors.length > 0) {

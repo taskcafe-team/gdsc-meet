@@ -11,6 +11,8 @@ import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
 import { HttpRestApiModelSendMessage } from "./documentation/ParticipantDocumantion";
 import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
 import { HttpParticipantAuth } from "../auth/decorator/HttpParticipantAuth";
+import { HttpParticipant } from "../auth/decorator/HttpParticipant";
+import { ParticipantMetadataDTO } from "@core/domain/participant/usecase/dto/ParticipantMetadataDTO";
 
 @Controller("meetings/:meetingId/participants")
 @ApiTags("participants")
@@ -46,12 +48,13 @@ export class ParticipantController {
   @HttpUserAuth()
   @HttpParticipantAuth()
   @ApiBody({ type: HttpRestApiModelSendMessage })
-  @HttpCode(HttpStatus.OK)
   public async sendMessage(
+    @HttpParticipant() sender: ParticipantMetadataDTO,
     @Param("meetingId") meetingId: string,
     @Body() body: HttpRestApiModelSendMessage,
   ) {
     return await this.participantService.sendMessage({
+      sendby: sender,
       sendto: { meetingId },
       message: body.message,
     });

@@ -3,29 +3,29 @@ import { Meeting } from "@core/domain/meeting/entity/Meeting";
 import { Prisma } from "@prisma/client";
 import { PrismaMeetingMapper } from "../entity/meeting/PrismaMeetingMapper";
 import { PrismaMeeting } from "../entity/meeting/PrismaMeeting";
-import { Nullable, Optional } from "@core/common/type/CommonTypes";
+import { Nullable } from "@core/common/type/CommonTypes";
 import { RepositoryFindOptions } from "@core/common/persistence/RepositoryOptions";
 import { MeetingRepositoryPort } from "@core/domain/meeting/port/MeetingRepositoryPort";
-import { MeetingStatusEnums } from "@core/common/enums/MeetingEnums";
+import { MeetingType } from "@core/common/enums/MeetingEnums";
 
 export class PrismaMeetingRepositoryAdapter
-  extends PrismaBaseRepository<Meeting>
+  extends PrismaBaseRepository
   implements MeetingRepositoryPort
 {
   constructor(context: Prisma.TransactionClient) {
-    super(Prisma.ModelName.Meeting, context);
+    super(context);
   }
 
   public async findMeetings(by: {
     id?: string;
     ids?: string[];
-    status?: MeetingStatusEnums;
+    type?: MeetingType;
   }): Promise<Meeting[]> {
     const findOptions: Prisma.MeetingFindManyArgs = { where: {} };
 
     if (by.id) findOptions.where!.id = by.id;
     if (by.ids) findOptions.where!.id = { in: by.ids };
-    if (by.status) findOptions.where!.status = by.status;
+    if (by.type) findOptions.where!.type = by.type;
 
     const orm: PrismaMeeting[] = await this.context.meeting.findMany(
       findOptions,
@@ -38,24 +38,14 @@ export class PrismaMeetingRepositoryAdapter
     return domainEntities;
   }
 
-  public async findMeeting(
-    by: { id: string },
-    options: RepositoryFindOptions = {},
-  ): Promise<Optional<Meeting>> {
-    const findOptions: Prisma.MeetingFindFirstArgs = { where: {} };
+  public async findMeeting(by: { id: string }): Promise<Nullable<Meeting>> {
+    const findOptions: Prisma.MeetingFindFirstArgs = { where: by };
 
-    if (by.id) findOptions.where!.id = by.id;
+    const orm: Nullable<PrismaMeeting> = await this.context.meeting
+      .findFirst(findOptions)
+      .then((o) => o ?? null);
 
-    if (!options?.includeRemoved) findOptions.where!.removedAt = null;
-
-    const orm: Nullable<PrismaMeeting> = (await this.context.meeting.findFirst(
-      findOptions,
-    )) as PrismaMeeting;
-
-    let domainEntity: Optional<Meeting>;
-    if (orm) domainEntity = PrismaMeetingMapper.toDomainEntity(orm);
-
-    return domainEntity;
+    return orm && PrismaMeetingMapper.toDomainEntity(orm);
   }
 
   public async addMeeting(meeting: Meeting): Promise<Meeting> {
@@ -74,29 +64,26 @@ export class PrismaMeetingRepositoryAdapter
       title?: string;
       description?: string;
     },
-  ): Promise<Optional<{ id: string }>> {
+  ): Promise<Nullable<{ id: string }>> {
     const meeting = await this.findMeeting(by);
-
-    if (!meeting) return undefined;
+    if (!meeting) return null;
 
     meeting.edit(data);
-
-    this.context.meeting.update({
-      where: { id: meeting.getId() },
+    const id = meeting.getId();
+    await this.context.meeting.update({
+      where: { id },
       data: PrismaMeetingMapper.toOrmEntity(meeting),
     });
 
-    return { id: meeting.getId() };
+    return { id };
   }
 
   public async deleteMeeting(by: {
     id: string;
-  }): Promise<Optional<{ id: string }>> {
+  }): Promise<Nullable<{ id: string }>> {
     const meeting = await this.findMeeting(by);
-
-    if (!meeting) return undefined;
-    this.context.meeting.delete({ where: { id: meeting.getId() } });
-
+    if (!meeting) return null;
+    await this.context.meeting.delete({ where: { id: meeting.getId() } });
     return { id: meeting.getId() };
   }
 

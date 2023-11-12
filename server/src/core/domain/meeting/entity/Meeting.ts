@@ -5,14 +5,14 @@ import { Entity } from "@core/common/entity/Entity";
 import { Nullable } from "@core/common/type/CommonTypes";
 import { CreateMeetingEntityPayload } from "./type/CreateMeetingEntityPayload";
 import { EditMeetingEntityPayload } from "./type/EditMeetingEntityPayload";
-import { MeetingStatusEnums } from "@core/common/enums/MeetingEnums";
+import { MeetingType } from "@core/common/enums/MeetingEnums";
 
 export class Meeting extends Entity<string> {
   @IsDate() public startTime: Date;
   @IsOptional() @IsDate() public endTime: Nullable<Date>;
   @IsOptional() @IsString() public title: Nullable<string>;
   @IsOptional() @IsString() public description: Nullable<string>;
-  @IsEnum(MeetingStatusEnums) public status: MeetingStatusEnums;
+  @IsEnum(MeetingType) public type: MeetingType;
 
   @IsDate() public readonly createdAt: Date;
   @IsOptional() @IsDate() public updatedAt: Nullable<Date>;
@@ -25,7 +25,7 @@ export class Meeting extends Entity<string> {
     this.endTime = payload.endTime || null;
     this.title = payload.title || null;
     this.description = payload.description || null;
-    this.status = payload.status || MeetingStatusEnums.PRIVATE;
+    this.type = payload.type || MeetingType.PRIVATE;
 
     this.id = payload.id || v4();
     this.createdAt = payload.createdAt || new Date();

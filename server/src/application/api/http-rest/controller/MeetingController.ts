@@ -34,7 +34,7 @@ export class MeetingController {
       description: body.description,
       startDate: body.startDate,
       endDate: body.endDate,
-      status: body.status,
+      type: body.type,
     };
     const result = await this.meetingService.createMeeting(adapter);
     return CoreApiResponse.success(result);

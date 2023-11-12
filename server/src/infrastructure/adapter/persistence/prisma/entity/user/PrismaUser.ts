@@ -1,4 +1,4 @@
-import { ProviderNameEnums, User, UserRole } from "@prisma/client";
+import { AuthProviderName, User, UserRole } from "@prisma/client";
 
 export class PrismaUser implements User {
   id: string;
@@ -9,7 +9,7 @@ export class PrismaUser implements User {
   isValid: boolean;
   password: string | null;
   avatar: string | null;
-  providerName: ProviderNameEnums | null;
+  authProviderName: AuthProviderName | null;
   providerId: string | null;
 
   createdAt: Date;

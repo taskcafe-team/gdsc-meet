@@ -42,7 +42,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
     );
   }
 
-  private getRepo<T extends PrismaBaseRepository<any>>(
+  private getRepo<T extends PrismaBaseRepository>(
     type: Prisma.ModelName,
     newRepo: () => T,
   ): T {

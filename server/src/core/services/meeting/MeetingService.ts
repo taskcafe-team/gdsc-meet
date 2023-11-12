@@ -15,7 +15,7 @@ import { Participant } from "@core/domain/participant/entity/Participant";
 import { MeetingUsecaseDTO } from "@core/domain/meeting/usecase/MeetingUsecaseDTO";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
-import { MeetingStatusEnums } from "@core/common/enums/MeetingEnums";
+import { MeetingType } from "@core/common/enums/MeetingEnums";
 import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDTO";
 import { HttpResponseWithOptionalUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 import { CreateAccessTokenPort } from "@core/domain/meeting/port/CreateAccessTokenPort";
@@ -34,7 +34,7 @@ export class MeetingService {
     description?: string;
     startDate?: Date;
     endDate?: Date;
-    status?: MeetingStatusEnums;
+    type?: MeetingType;
   }): Promise<MeetingUsecaseDTO> {
     return await this.unitOfWork.runInTransaction(async () => {
       const userId = this.requestWithOptionalUser.user?.id;
@@ -161,8 +161,8 @@ export class MeetingService {
       hidden: false,
     };
 
-    if (meeting.status === MeetingStatusEnums.PUBLIC) {
-    } else if (meeting.status === MeetingStatusEnums.PRIVATE) {
+    if (meeting.type === MeetingType.PUBLIC) {
+    } else if (meeting.type === MeetingType.PRIVATE) {
       // Check if the user has already subscribed to the meeting
       const participantExits = await this.unitOfWork
         .getParticipantRepository()
@@ -177,7 +177,7 @@ export class MeetingService {
       }
     }
 
-    const token = await this.webRTCService.createToken<ParticipantUsecaseDTO>(
+    const token = await this.webRTCService.createToken(
       createAccessTokenPayload,
       participant,
     );

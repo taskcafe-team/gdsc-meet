@@ -13,51 +13,25 @@ import { CreateUserEntityPayload } from "@core/domain/user/entity/type/CreateUse
 import { EditUserEntityPayload } from "@core/domain/user/entity/type/EditUserEntityPayload";
 import { Entity } from "@core/common/entity/Entity";
 import { compare, genSalt, hash } from "bcryptjs";
-import { ProviderNameEnums } from "@core/common/enums/ProviderNameEnums";
+import { AuthProviderName } from "@prisma/client";
 
 export class User extends Entity<string> {
-  @IsOptional()
-  @IsString()
-  public firstName: Nullable<string>;
-
-  @IsOptional()
-  @IsString()
-  public lastName: Nullable<string>;
-
-  @IsOptional()
-  @IsEmail()
-  public email: Nullable<string>;
-
+  @IsOptional() @IsString() public firstName: Nullable<string>;
+  @IsOptional() @IsString() public lastName: Nullable<string>;
+  @IsOptional() @IsEmail() public email: Nullable<string>;
   @IsBoolean() public isValid: boolean;
-
-  @IsOptional()
-  @IsString()
-  public password: Nullable<string>;
-
+  @IsOptional() @IsString() public password: Nullable<string>;
   @IsEnum(UserRole) public role: UserRole;
+  @IsOptional() @IsString() public avatar: Nullable<string>;
 
   @IsOptional()
-  @IsString()
-  public avatar: Nullable<string>;
+  @IsEnum(AuthProviderName)
+  public authProviderName: Nullable<AuthProviderName>;
+  @IsOptional() @IsString() public providerId: Nullable<string>;
 
-  @IsOptional()
-  @IsEnum(ProviderNameEnums)
-  public providerName: Nullable<ProviderNameEnums>;
-
-  @IsOptional()
-  @IsString()
-  public providerId: Nullable<string>;
-
-  @IsDate()
-  public readonly createdAt: Date;
-
-  @IsOptional()
-  @IsDate()
-  public updatedAt: Nullable<Date>;
-
-  @IsOptional()
-  @IsDate()
-  public removedAt: Nullable<Date>;
+  @IsDate() public readonly createdAt: Date;
+  @IsOptional() @IsDate() public updatedAt: Nullable<Date>;
+  @IsOptional() @IsDate() public removedAt: Nullable<Date>;
 
   constructor(payload: CreateUserEntityPayload) {
     super();
@@ -66,10 +40,11 @@ export class User extends Entity<string> {
     this.lastName = payload.lastName || null;
     this.email = payload.email || null;
     this.isValid = payload.isValid || false;
-    this.role = payload.role;
+    this.role = payload.role || UserRole.USER;
     this.password = payload.password || null;
     this.avatar = payload.avatar || null;
-    this.providerName = payload.providerName || null;
+
+    this.authProviderName = payload.authProviderName || null;
     this.providerId = payload.providerId || null;
 
     this.id = payload.id || v4();

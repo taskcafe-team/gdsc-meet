@@ -1,16 +1,16 @@
 import { CodeDescription } from "@core/common/constants/Code";
-import { Optional } from "@core/common/type/CommonTypes";
+import { Nullable } from "../type/CommonTypes";
 
 export class Exception<T> extends Error implements CodeDescription {
   public readonly code: string;
-  public readonly data: Optional<T>;
+  public readonly data: Nullable<T>;
   public readonly message: string;
 
   private constructor(code: string, message?: string, data?: T) {
     super();
     this.name = this.constructor.name;
     this.code = code;
-    this.data = data;
+    this.data = data ?? null;
     if (message) this.message = message;
     Error.captureStackTrace(this, this.constructor);
   }

@@ -7,61 +7,47 @@ import { User } from "@core/domain/user/entity/User";
 import { PrismaBaseRepository } from "./PrismaBaseRepository";
 import { PrismaUser } from "../entity/user/PrismaUser";
 import { PrismaUserMapper } from "../entity/user/PrismaUserMapper";
-import { Nullable, Optional } from "@core/common/type/CommonTypes";
+import { Nullable } from "@core/common/type/CommonTypes";
 
 export class PrismaUserRepositoryAdapter
-  extends PrismaBaseRepository<User>
+  extends PrismaBaseRepository
   implements UserRepositoryPort
 {
   constructor(context: Prisma.TransactionClient) {
-    super(Prisma.ModelName.User, context);
+    super(context);
   }
 
-  public async deleteUser(id: string): Promise<void> {
-    this.context.user.delete({ where: { id } });
+  public async deleteUser(id: string) {
+    return await this.context.user
+      .delete({ where: { id } })
+      .then(() => ({ id }));
   }
 
-  public async findUser(
-    by: { id?: string; email?: string },
-    options?: RepositoryFindOptions,
-  ): Promise<Optional<User>> {
-    const findOptions: Prisma.UserFindFirstArgs = { where: {} };
+  public async findUser(by: {
+    id?: string;
+    email?: string;
+  }): Promise<Nullable<User>> {
+    const findOptions: Prisma.UserFindFirstArgs = { where: by };
 
-    if (by.id) findOptions.where!.id = by.id;
-    if (by.email) findOptions.where!.email = by.email;
+    const user: Nullable<PrismaUser> = await this.context.user
+      .findFirst(findOptions)
+      .then((user) => user ?? null);
 
-    if (!options?.includeRemoved) findOptions.where!.removedAt = null;
-
-    const user: Nullable<PrismaUser> = (await this.context.user.findFirst(
-      findOptions,
-    )) as PrismaUser;
-
-    let domainEntity: Optional<User>;
-    if (user) domainEntity = PrismaUserMapper.toDomainEntity(user);
-
-    return domainEntity;
+    return user && PrismaUserMapper.toDomainEntity(user);
   }
 
-  public async countUsers(
-    by: { id?: string; email?: string },
-    options: RepositoryFindOptions = {},
-  ): Promise<number> {
-    const findOptions: Prisma.UserCountArgs = { where: {} };
-
-    if (by.id) findOptions.where!.id = by.id;
-    if (by.email) findOptions.where!.email = by.email;
-
-    if (!options.includeRemoved) findOptions.where!.removedAt = null;
-
+  public async countUsers(by: {
+    id?: string;
+    email?: string;
+  }): Promise<number> {
+    const findOptions: Prisma.UserCountArgs = { where: by };
     return this.context.user.count(findOptions);
   }
 
-  public async addUser(user: User): Promise<{ id: string }> {
-    const ormUser: PrismaUser = await this.context.user.create({
-      data: PrismaUserMapper.toOrmEntity(user),
-    });
-
-    return { id: ormUser.id };
+  public async addUser(user: User) {
+    const data = PrismaUserMapper.toOrmEntity(user);
+    const ormUser: PrismaUser = await this.context.user.create({ data });
+    return PrismaUserMapper.toDomainEntity(ormUser);
   }
 
   public async updateUser(user: User): Promise<void> {

@@ -1,6 +1,7 @@
 import { Exclude, Expose, plainToClass } from "class-transformer";
 import { Meeting } from "../entity/Meeting";
 import { Nullable } from "@core/common/type/CommonTypes";
+import { MeetingType } from "@core/common/enums/MeetingEnums";
 
 @Exclude()
 export class MeetingUsecaseDTO {
@@ -9,7 +10,7 @@ export class MeetingUsecaseDTO {
   @Expose() public endTime: Nullable<Date>;
   @Expose() public title: Nullable<string>;
   @Expose() public description: Nullable<string>;
-  @Expose() public status: string;
+  @Expose() public type: MeetingType;
 
   public static newFromEntity(entity: Meeting): MeetingUsecaseDTO {
     return plainToClass(MeetingUsecaseDTO, entity);

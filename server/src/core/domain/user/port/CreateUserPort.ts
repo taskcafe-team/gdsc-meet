@@ -1,4 +1,4 @@
-import { ProviderNameEnums } from "@core/common/enums/ProviderNameEnums";
+import { AuthProviderName } from "@core/common/enums/AuthEnum";
 import { UserRole } from "@core/common/enums/UserEnums";
 
 export interface CreateUserPort {
@@ -8,6 +8,6 @@ export interface CreateUserPort {
   role: UserRole;
   password: string | null;
   avatar: string | null;
-  providerName: ProviderNameEnums | null;
+  authProviderName: AuthProviderName | null;
   providerId: string | null;
 }

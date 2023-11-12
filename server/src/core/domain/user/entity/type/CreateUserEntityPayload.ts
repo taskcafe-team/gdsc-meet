@@ -1,4 +1,4 @@
-import { ProviderNameEnums } from "@core/common/enums/ProviderNameEnums";
+import { AuthProviderName } from "@core/common/enums/AuthEnum";
 import { UserRole } from "@core/common/enums/UserEnums";
 import { Nullable } from "@core/common/type/CommonTypes";
 
@@ -10,7 +10,7 @@ export type CreateUserEntityPayload = {
   role: UserRole;
   password?: Nullable<string>;
   avatar?: Nullable<string>;
-  providerName?: Nullable<ProviderNameEnums>;
+  authProviderName?: Nullable<AuthProviderName>;
   providerId?: Nullable<string>;
 
   id?: Nullable<string>;

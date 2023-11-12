@@ -55,7 +55,7 @@ export class AuthController {
       role: UserRole.USER,
       password: body.password,
       avatar: null,
-      providerName: null,
+      authProviderName: null,
       providerId: null,
     });
     const result = await this.authService.register(adapter);

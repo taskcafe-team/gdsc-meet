@@ -1,8 +1,8 @@
 import { IBaseRepository } from "@core/common/persistence/IBaseRepository";
 import { Participant } from "../../entity/Participant";
 import { RepositoryFindOptions } from "@core/common/persistence/RepositoryOptions";
-import { Optional } from "@core/common/type/CommonTypes";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
+import { Nullable } from "@core/common/type/CommonTypes";
 
 export interface FindFirstParticipantById {
   id: string;
@@ -23,8 +23,7 @@ export type FindFirstParticipantBy =
   | FindFirstParticipantByUserId
   | FindFirstParticipantByRole;
 
-export interface ParticipantRepositoryPort
-  extends IBaseRepository<Participant> {
+export interface ParticipantRepositoryPort {
   findManyParticipants(by: {
     id?: string;
     meetingId?: string;
@@ -36,7 +35,7 @@ export interface ParticipantRepositoryPort
   findParticipant<T extends FindFirstParticipantBy>(
     by: T,
     options?: RepositoryFindOptions,
-  ): Promise<Optional<Participant>>;
+  ): Promise<Nullable<Participant>>;
 
   addParticipant(domain: Participant): Promise<Participant>;
 }

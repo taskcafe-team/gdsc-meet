@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-import { MeetingStatusEnums } from "@core/common/enums/MeetingEnums";
+import { MeetingType } from "@core/common/enums/MeetingEnums";
 import { IsDate, IsEnum, IsOptional, IsString } from "class-validator";
 import { Transform, TransformFnParams } from "class-transformer";
 
@@ -26,12 +26,12 @@ export class HttpRestApiModelCreateMeetingBody {
   public endDate: Date;
 
   @ApiProperty({
-    enum: MeetingStatusEnums,
+    enum: MeetingType,
     nullable: true,
-    default: MeetingStatusEnums.PUBLIC,
+    default: MeetingType.PUBLIC,
   })
-  @IsEnum(MeetingStatusEnums)
-  public status: MeetingStatusEnums;
+  @IsEnum(MeetingType)
+  public type: MeetingType;
 }
 
 export class HttpRestApiModelDeleteMeetingsBody {

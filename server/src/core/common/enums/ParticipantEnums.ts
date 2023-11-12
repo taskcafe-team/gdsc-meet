@@ -2,6 +2,7 @@ export enum ParticipantRole {
   HOST = "HOST",
   OBSERVER = "OBSERVER",
   PARTICIPANT = "PARTICIPANT",
+  ANONYMOUSE = "ANONYMOUSE", // chưa thêm permission
 }
 
 export enum PermissionAction {

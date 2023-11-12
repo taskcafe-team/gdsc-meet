@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import { Participant } from "@core/domain/participant/entity/Participant";
 import { RepositoryFindOptions } from "@core/common/persistence/RepositoryOptions";
-import { Nullable, Optional } from "@core/common/type/CommonTypes";
+import { Nullable } from "@core/common/type/CommonTypes";
 
 import { PrismaBaseRepository } from "./PrismaBaseRepository";
 import { PrismaParticipant } from "../entity/participant/PrismaParticipant";
@@ -14,11 +14,11 @@ import {
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 
 export class PrismaParticipantRepositoryAdapter
-  extends PrismaBaseRepository<Participant>
+  extends PrismaBaseRepository
   implements ParticipantRepositoryPort
 {
   constructor(context: Prisma.TransactionClient) {
-    super(Prisma.ModelName.Meeting, context);
+    super(context);
   }
 
   public async findManyParticipants(by: {
@@ -53,7 +53,7 @@ export class PrismaParticipantRepositoryAdapter
   public async findParticipant(
     by: FindFirstParticipantBy,
     options?: RepositoryFindOptions,
-  ): Promise<Optional<Participant>> {
+  ): Promise<Nullable<Participant>> {
     const context = this.context.participant;
     const findOptions: Prisma.ParticipantFindFirstArgs = {
       where: {},
@@ -69,13 +69,10 @@ export class PrismaParticipantRepositoryAdapter
       findOptions.where!.role = by.role;
       findOptions.where!.meetingId = by.meetingId;
     }
-    const orm: Nullable<PrismaParticipant> = (await context.findFirst(
-      findOptions,
-    )) as PrismaParticipant;
+    const orm = await context.findFirst(findOptions).then((p) => p ?? null);
 
-    let domain: Optional<Participant>;
-    if (orm) domain = PrismaParticipantMapper.toDomainEntity(orm);
-
+    const domain =
+      orm && PrismaParticipantMapper.toDomainEntity(orm as PrismaParticipant);
     return domain;
   }
 

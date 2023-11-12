@@ -1,25 +1,20 @@
-import { IBaseRepository } from "@core/common/persistence/IBaseRepository";
-import { Optional } from "@core/common/type/CommonTypes";
+import { Nullable } from "@core/common/type/CommonTypes";
 import { Meeting } from "../entity/Meeting";
-import { MeetingStatusEnums } from "@core/common/enums/MeetingEnums";
+import { MeetingType } from "@core/common/enums/MeetingEnums";
+import { EditMeetingEntityPayload } from "../entity/type/EditMeetingEntityPayload";
 
-export interface MeetingRepositoryPort extends IBaseRepository<Meeting> {
-  findMeeting(by: { id: string }): Promise<Optional<Meeting>>;
+export interface MeetingRepositoryPort {
+  findMeeting(by: { id: string }): Promise<Nullable<Meeting>>;
   addMeeting(meeting: Meeting): Promise<Meeting>;
   updateMeeting(
     by: { id: string },
-    data: {
-      startTime?: Date;
-      endTime?: Date;
-      title?: string;
-      description?: string;
-    },
-  ): Promise<Optional<{ id: string }>>;
-  deleteMeeting(by: { id: string }): Promise<Optional<{ id: string }>>;
+    data: EditMeetingEntityPayload,
+  ): Promise<Nullable<{ id: string }>>;
+  deleteMeeting(by: { id: string }): Promise<Nullable<{ id: string }>>;
   deleteMeetings(by: { ids: string[] }): Promise<string[]>;
   findMeetings(by: {
     id?: string;
     ids?: string[];
-    status?: MeetingStatusEnums;
+    type?: MeetingType;
   }): Promise<Meeting[]>;
 }

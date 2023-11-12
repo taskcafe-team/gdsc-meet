@@ -1,22 +1,10 @@
-import { IBaseRepository } from "@core/common/persistence/IBaseRepository";
-import { RepositoryFindOptions } from "@core/common/persistence/RepositoryOptions";
-import { Optional } from "@core/common/type/CommonTypes";
 import { User } from "../entity/User";
+import { Nullable } from "@core/common/type/CommonTypes";
 
-export interface UserRepositoryPort extends IBaseRepository<User> {
-  findUser(
-    by: { id?: string; email?: string },
-    options?: RepositoryFindOptions,
-  ): Promise<Optional<User>>;
-
-  countUsers(
-    by: { id?: string; email?: string },
-    options?: RepositoryFindOptions,
-  ): Promise<number>;
-
-  addUser(user: User): Promise<{ id: string }>;
-
+export interface UserRepositoryPort {
+  findUser(by: { id?: string; email?: string }): Promise<Nullable<User>>;
+  countUsers(by: { id?: string; email?: string }): Promise<number>;
+  addUser(user: User): Promise<User>;
   updateUser(user: User): Promise<void>;
-
-  deleteUser(userId: string): Promise<void>;
+  deleteUser(userId: string): Promise<Nullable<{ id: string }>>;
 }

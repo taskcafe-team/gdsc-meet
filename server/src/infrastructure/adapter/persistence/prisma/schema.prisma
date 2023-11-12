@@ -1,6 +1,6 @@
 datasource db {
     provider = "postgresql"
-    url      = env("DB_URL")
+    url      = "postgresql://postgres:123456@localhost:5433/mydb?schema=public"
 }
 
 generator client {
@@ -15,24 +15,25 @@ enum UserRole {
     @@map("user_roles")
 }
 
-enum ProviderNameEnums {
+enum AuthProviderName {
     GOOGLE   @map("GOOGLE")
     FACEBOOK @map("FACEBOOK")
 
-    @@map("provider_name_enums")
+    @@map("auth_provider_names")
 }
 
-enum MeetingStatusEnums {
+enum MeetingType {
     PUBLIC  @map("PUBLIC")
     PRIVATE @map("PRIVATE")
 
-    @@map("meeting_status_enums")
+    @@map("meeting_types")
 }
 
 enum ParticipantRole {
     HOST        @map("HOST")
     OBSERVER    @map("OBSERVER")
     PARTICIPANT @map("PARTICIPANT")
+    ANONYMOUSE  @map("ANONYMOUSE")
 
     @@map("participant_roles")
 }
@@ -47,29 +48,31 @@ model User {
     password  String?  @map("password") @db.VarChar(100)
     avatar    String?  @map("avatar") @db.VarChar(100)
 
-    providerName ProviderNameEnums? @map("provider_name")
-    providerId   String?            @unique @map("provider_id") @db.VarChar(250)
+    authProviderName AuthProviderName? @map("provider_name")
+    providerId       String?           @unique @map("provider_id") @db.VarChar(250)
 
-    createdAt   DateTime      @map("created_at") @db.Timestamp()
-    updatedAt   DateTime?     @map("updated_at") @db.Timestamp()
-    removedAt   DateTime?     @map("removed_at") @db.Timestamp()
+    createdAt DateTime  @map("created_at") @db.Timestamp()
+    updatedAt DateTime? @map("updated_at") @db.Timestamp()
+    removedAt DateTime? @map("removed_at") @db.Timestamp()
+
     Participant Participant[]
 
     @@map("users")
 }
 
 model Meeting {
-    id          String             @id @default(uuid()) @map("id") @db.Uuid()
-    startTime   DateTime           @map("start_time") @db.Timestamp()
-    endTime     DateTime?          @map("end_time") @db.Timestamp()
-    title       String?            @map("title") @db.VarChar(250)
-    description String?            @map("description") @db.VarChar(250)
-    status      MeetingStatusEnums @map("status")
+    id          String      @id @default(uuid()) @map("id") @db.Uuid()
+    startTime   DateTime    @map("start_time") @db.Timestamp()
+    endTime     DateTime?   @map("end_time") @db.Timestamp()
+    title       String?     @map("title") @db.VarChar(250)
+    description String?     @map("description") @db.VarChar(250)
+    type        MeetingType @map("type")
 
-    createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamp()
-    updatedAt   DateTime?     @map("updated_at") @db.Timestamp()
-    removedAt   DateTime?     @map("removed_at") @db.Timestamp()
     Participant Participant[]
+
+    createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp()
+    updatedAt DateTime? @map("updated_at") @db.Timestamp()
+    removedAt DateTime? @map("removed_at") @db.Timestamp()
 
     @@map("meetings")
 }
@@ -85,7 +88,7 @@ model Participant {
     user    User?    @relation(fields: [userId], references: [id])
     meeting Meeting? @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
-    createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp()
+    createdAt DateTime  @map("created_at") @db.Timestamp()
     updatedAt DateTime? @map("updated_at") @db.Timestamp()
     removedAt DateTime? @map("removed_at") @db.Timestamp()
 

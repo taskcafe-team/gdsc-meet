@@ -1,8 +1,8 @@
 import { User } from "@core/domain/user/entity/User";
 import { PrismaUser } from "./PrismaUser";
 import { UserRole } from "@core/common/enums/UserEnums";
-import { ProviderNameEnums as PrismaProviderNameEnums } from "@prisma/client";
-import { ProviderNameEnums } from "@core/common/enums/ProviderNameEnums";
+import { AuthProviderName as PrismaAuthProviderName } from "@prisma/client";
+import { AuthProviderName } from "@core/common/enums/AuthEnum";
 
 export class PrismaUserMapper {
   public static toOrmEntity(domain: User): PrismaUser {
@@ -16,7 +16,7 @@ export class PrismaUserMapper {
     orm.role = domain.role;
     orm.password = domain.password;
     orm.avatar = domain.avatar;
-    orm.providerName = domain.providerName as PrismaProviderNameEnums;
+    orm.authProviderName = domain.authProviderName as PrismaAuthProviderName;
     orm.providerId = domain.providerId;
 
     orm.createdAt = domain.createdAt;
@@ -39,7 +39,7 @@ export class PrismaUserMapper {
       role: orm.role as UserRole,
       password: orm.password,
       avatar: orm.avatar,
-      providerName: orm.providerName as ProviderNameEnums,
+      authProviderName: orm.authProviderName as AuthProviderName,
       providerId: orm.providerId,
       id: orm.id,
       createdAt: orm.createdAt,

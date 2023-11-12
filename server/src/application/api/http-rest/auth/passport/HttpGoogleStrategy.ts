@@ -6,7 +6,7 @@ import { Profile } from "passport";
 
 import { User } from "@core/domain/user/entity/User";
 import { UserRole } from "@core/common/enums/UserEnums";
-import { ProviderNameEnums } from "@core/common/enums/ProviderNameEnums";
+import { AuthProviderName } from "@core/common/enums/AuthEnum";
 import { HttpUserPayload } from "../type/HttpAuthTypes";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { HttpAuthService } from "../HttpAuthService";
@@ -61,7 +61,7 @@ export class HttpGoogleStrategy
       firstName: firstName,
       lastName: lastName,
       email: email,
-      providerName: ProviderNameEnums.GOOGLE,
+      authProviderName: AuthProviderName.GOOGLE,
       providerId: profile.id,
       isValid: true,
       role: UserRole.USER,

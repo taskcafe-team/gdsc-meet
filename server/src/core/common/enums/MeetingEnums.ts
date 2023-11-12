@@ -1,4 +1,4 @@
-export enum MeetingStatusEnums {
+export enum MeetingType {
   PUBLIC = "PUBLIC",
   PRIVATE = "PRIVATE",
 }

@@ -1,7 +1,3 @@
-import { HttpRequestWithUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
-import Code from "@core/common/constants/Code";
-import { UserRole } from "@core/common/enums/UserEnums";
-import { Exception } from "@core/common/exception/Exception";
 import { WebRTCLivekitService } from "@infrastructure/adapter/webrtc/WebRTCLivekitManagement";
 import {
   CanActivate,
@@ -9,18 +5,42 @@ import {
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
+
+import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDTO";
+import ParticipantService from "@core/services/participant/ParticipantService";
 
 @Injectable()
 export class HttpParticipantAuthGuard implements CanActivate {
-  constructor(private readonly webRTCService: WebRTCLivekitService) {}
+  constructor(
+    private readonly webRTCService: WebRTCLivekitService,
+    private readonly participantService: ParticipantService,
+  ) {}
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    // validate meeting permissions
     const meetingApiToken = request.headers["meeting-api-token"];
-    const verifedToken = this.webRTCService.verifyToken(meetingApiToken);
+
+    const verifedToken = await this.webRTCService
+      .verifyToken(meetingApiToken)
+      .catch(() => null);
     if (!verifedToken) throw new UnauthorizedException();
+    const meetingId = verifedToken.meetingId;
+    const participantId = verifedToken.id;
+
+    let localParticipant: ParticipantUsecaseDTO | null = null;
+    localParticipant = await this.webRTCService.getParticipant(
+      meetingId,
+      participantId,
+    );
+    if (!localParticipant)
+      localParticipant = await this.participantService
+        .getParticipant({
+          meetingId,
+          participantId,
+        })
+        .catch(() => null);
+    if (!localParticipant) throw new UnauthorizedException();
+    request["participant"] = localParticipant;
     return true;
   }
 }
