@@ -8,11 +8,6 @@ export interface CodeDescription<T extends number | string> {
 const StatusCode = HttpStatus;
 
 export default class Code {
-  public static SUCCESS: CodeDescription<number> = {
-    code: 200,
-    message: "Success.",
-  };
-
   public static BAD_REQUEST_ERROR: CodeDescription<number> = {
     code: 400,
     message: "Bad request.",
@@ -41,6 +36,11 @@ export default class Code {
   public static CONFLICT_ERROR: CodeDescription<number> = {
     code: 409,
     message: "Conflict detected.",
+  };
+
+  public static SUCCESS: CodeDescription<string> = {
+    code: "SUCCESS",
+    message: "Success.",
   };
 
   public static INTERNAL_ERROR: CodeDescription<string> = {

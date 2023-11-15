@@ -28,10 +28,11 @@ export class CoreApiResponse<T = unknown> implements ApiResponse<T> {
   }
 
   public static success<T>(data?: T) {
-    return new CoreApiResponse<T>(true, data);
+    return new CoreApiResponse<T>(true, data, Code.SUCCESS);
   }
 
   public static error<T>(error?: ApiResponseError, data?: T) {
-    return new CoreApiResponse<T>(false, data);
+    const _error = error ?? Code.INTERNAL_ERROR;
+    return new CoreApiResponse<T>(false, data, _error);
   }
 }
