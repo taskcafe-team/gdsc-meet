@@ -46,4 +46,4 @@ export type ParticipantRequestJoinDTO = {
   participantId: string;
 };
 
-export type ParticipantSendMessageDTO = Message; //TODO: Client Chua fix
+export type ParticipantSendMessageDTO = Message;

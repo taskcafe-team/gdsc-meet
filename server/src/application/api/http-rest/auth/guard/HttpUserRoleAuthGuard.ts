@@ -1,8 +1,11 @@
 import { HttpRequestWithUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
-import Code from "@core/common/constants/Code";
 import { UserRole } from "@core/common/enums/UserEnums";
-import { Exception } from "@core/common/exception/Exception";
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 
 @Injectable()
@@ -17,8 +20,7 @@ export class HttpUserRoleAuthGuard implements CanActivate {
     const canActivate: boolean =
       roles.length > 0 ? roles.includes(request.user.role) : true;
 
-    if (!canActivate) throw Exception.newFromCode(Code.ACCESS_DENIED_ERROR);
-
+    if (!canActivate) throw new ForbiddenException();
     return canActivate;
   }
 }

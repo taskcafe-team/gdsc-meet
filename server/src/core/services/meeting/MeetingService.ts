@@ -8,7 +8,6 @@ import {
 import { REQUEST } from "@nestjs/core";
 
 import { Meeting } from "@core/domain/meeting/entity/Meeting";
-import { WebRTCLivekitService } from "@infrastructure/adapter/webrtc/WebRTCLivekitManagement";
 import { Exception } from "@core/common/exception/Exception";
 import Code from "@core/common/constants/Code";
 import { Participant } from "@core/domain/participant/entity/Participant";
@@ -40,7 +39,7 @@ export class MeetingService {
         .getUserRepository()
         .findUser({ id: userId });
 
-      if (!currentuser) throw Exception.newFromCode(Code.NOT_FOUND_ERROR);
+      if (!currentuser) throw new Exception(Code.ENTITY_NOT_FOUND_ERROR);
 
       const meeting = await Meeting.new(payload);
 

@@ -1,6 +1,7 @@
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -128,8 +129,8 @@ export class HttpAuthService {
   private async sendVerificationEmail(
     user: User,
   ): Promise<{ token: string; expiresIn: number }> {
-    if (user.isValid) throw Exception.newFromCode(Code.BAD_REQUEST_ERROR);
-    if (!user.email) throw Exception.newFromCode(Code.BAD_REQUEST_ERROR);
+    if (user.isValid) throw new BadRequestException();
+    if (!user.email) throw new BadRequestException();
 
     const payload: HttpJwtPayload = { id: user.getId() };
 
@@ -163,7 +164,7 @@ export class HttpAuthService {
       .getUserRepository()
       .findUser({ email: email });
 
-    if (!userExist) throw Exception.newFromCode(Code.ENTITY_NOT_FOUND_ERROR);
+    if (!userExist) throw new Exception(Code.ENTITY_NOT_FOUND_ERROR);
 
     const resut = await this.sendVerificationEmail(userExist);
     return { expiresIn: resut.expiresIn };
@@ -179,7 +180,7 @@ export class HttpAuthService {
       .getUserRepository()
       .findUser({ id: payload.id });
 
-    if (!user) throw Exception.newFromCode(Code.ENTITY_NOT_FOUND_ERROR);
+    if (!user) throw new Exception(Code.ENTITY_NOT_FOUND_ERROR);
 
     if (user.isValid) return;
 
@@ -230,7 +231,7 @@ export class HttpAuthService {
     const user = await this.unitOfWork
       .getUserRepository()
       .findUser({ id: userPayload.id });
-    if (!user) throw Exception.newFromCode(Code.ENTITY_NOT_FOUND_ERROR);
+    if (!user) throw new Exception(Code.ENTITY_NOT_FOUND_ERROR);
 
     await user.changePassword(payload.newPassword);
     await this.unitOfWork.getUserRepository().updateUser(user);

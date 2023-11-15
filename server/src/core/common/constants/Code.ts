@@ -1,11 +1,11 @@
-export interface CodeDescription<T = string | number> {
+import { HttpStatus } from "@nestjs/common";
+
+export interface CodeDescription<T extends number | string> {
   code: T;
   message: string;
 }
 
-export interface OverwriteStatus {
-  overwriteStatus: CodeDescription<number>;
-}
+const StatusCode = HttpStatus;
 
 export default class Code {
   public static SUCCESS: CodeDescription<number> = {
@@ -21,11 +21,6 @@ export default class Code {
   public static UNAUTHORIZED_ERROR: CodeDescription<number> = {
     code: 401,
     message: "Unauthorized error.",
-  };
-
-  public static JWT_EXPIRED: CodeDescription<number> = {
-    code: 401,
-    message: "Token expired",
   };
 
   public static WRONG_CREDENTIALS_ERROR: CodeDescription<number> = {
@@ -48,32 +43,37 @@ export default class Code {
     message: "Conflict detected.",
   };
 
-  public static INTERNAL_ERROR: CodeDescription<number> = {
-    code: 500,
+  public static INTERNAL_ERROR: CodeDescription<string> = {
+    code: "INTERNAL_ERROR",
     message: "Internal error.",
   };
 
-  public static ENTITY_NOT_FOUND_ERROR: CodeDescription = {
+  public static JWT_EXPIRED: CodeDescription<string> = {
+    code: "JWT_EXPIRED",
+    message: "Token expired.",
+  };
+
+  public static ENTITY_NOT_FOUND_ERROR: CodeDescription<string> = {
     code: "ENTITY_NOT_FOUND_ERROR",
     message: "Entity not found.",
   };
 
-  public static ENTITY_VALIDATION_ERROR: CodeDescription = {
+  public static ENTITY_VALIDATION_ERROR: CodeDescription<string> = {
     code: "ENTITY_VALIDATION_ERROR",
     message: "Entity validation error.",
   };
 
-  public static USE_CASE_PORT_VALIDATION_ERROR: CodeDescription = {
+  public static USE_CASE_PORT_VALIDATION_ERROR: CodeDescription<string> = {
     code: "USE_CASE_PORT_VALIDATION_ERROR",
     message: "Use-case port validation error.",
   };
 
-  public static VALUE_OBJECT_VALIDATION_ERROR: CodeDescription = {
+  public static VALUE_OBJECT_VALIDATION_ERROR: CodeDescription<string> = {
     code: "VALUE_OBJECT_VALIDATION_ERROR",
     message: "Value object validation error.",
   };
 
-  public static ENTITY_ALREADY_EXISTS_ERROR: CodeDescription = {
+  public static ENTITY_ALREADY_EXISTS_ERROR: CodeDescription<string> = {
     code: "1004",
     message: "Entity already exists.",
   };

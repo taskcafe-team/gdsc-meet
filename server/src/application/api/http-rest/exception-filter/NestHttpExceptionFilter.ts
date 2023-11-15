@@ -1,5 +1,5 @@
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
-import Code, { OverwriteStatus } from "@core/common/constants/Code";
+import Code from "@core/common/constants/Code";
 import { Exception } from "@core/common/exception/Exception";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import {
@@ -7,6 +7,7 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
+  HttpStatus,
   Injectable,
   Logger,
 } from "@nestjs/common";
@@ -26,13 +27,13 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
     let errorResponse = CoreApiResponse.error();
 
     errorResponse = this.handleNestError(error, errorResponse);
-    errorResponse = this.handleCoreException(error, errorResponse);
+    errorResponse = this.handleCoreException(error, errorResponse, response);
 
     if (this.configService.get("API_LOG_ENABLE")) {
       const message: string =
         `Method: ${request.method}; ` +
         `Path: ${request.path}; ` +
-        `Error: ${errorResponse.metadata.error?.message}`;
+        `Error: ${errorResponse.error?.message ?? error.message}`;
 
       Logger.error(message);
     }
@@ -45,9 +46,6 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
     errorResponse: CoreApiResponse<unknown>,
   ): CoreApiResponse<unknown> {
     if (error instanceof HttpException) {
-      errorResponse.metadata.status = error.getStatus();
-      errorResponse.metadata.success = false;
-      errorResponse.metadata.message = error.message;
     }
 
     return errorResponse;
@@ -56,24 +54,17 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
   private handleCoreException(
     error: Error,
     errorResponse: CoreApiResponse<unknown>,
+    response: Response,
   ): CoreApiResponse<unknown> {
     if (error instanceof Exception) {
-      const { code, message } = error;
-      errorResponse.metadata.error = { code, message };
+      response.status(error.status);
 
-      if (error.data && "overwriteStatus" in error.data) {
-        const { overwriteStatus } = error.data as OverwriteStatus;
-        if (overwriteStatus) {
-          const { code, message } = overwriteStatus;
-          if (code && message) {
-            errorResponse.metadata;
-            errorResponse.metadata.message = overwriteStatus.message;
-          }
-        }
-      }
-      if (typeof error.code === "number")
-        errorResponse.metadata.status = error.code;
+      errorResponse = CoreApiResponse.error({
+        code: error.name,
+        message: error.message,
+      });
     } else if (error.name === "TokenExpiredError") {
+      response.status(HttpStatus.UNAUTHORIZED);
       errorResponse = CoreApiResponse.error(Code.JWT_EXPIRED);
     }
 

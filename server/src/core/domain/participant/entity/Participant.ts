@@ -75,8 +75,8 @@ export class Participant extends Entity<string> {
 
   public async validate(): Promise<void> {
     if (!this.name && !this.userId)
-      throw Exception.new(
-        Code.ENTITY_VALIDATION_ERROR.code.toString(),
+      throw new Exception(
+        Code.ENTITY_VALIDATION_ERROR,
         "At least one of name or userId must exist.",
       );
 

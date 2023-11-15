@@ -6,6 +6,11 @@ export class UseCaseValidatableAdapter {
   public async validate(): Promise<void> {
     const details = await ClassValidator.validate(this);
     if (details)
-      throw Exception.newFromCode(Code.USE_CASE_PORT_VALIDATION_ERROR, details);
+      throw new Exception(
+        Code.USE_CASE_PORT_VALIDATION_ERROR,
+        undefined,
+        undefined,
+        details,
+      );
   }
 }

@@ -11,8 +11,8 @@ export class Entity<TIdentifier extends string | number> {
 
   public getId(): TIdentifier {
     if (!this.id)
-      throw Exception.new(
-        Code.ENTITY_VALIDATION_ERROR.code.toString(),
+      throw new Exception(
+        Code.ENTITY_VALIDATION_ERROR,
         `${this.constructor.name}: ID is empty`,
       );
 
@@ -24,9 +24,10 @@ export class Entity<TIdentifier extends string | number> {
       await ClassValidator.validate(this);
 
     if (details) {
-      throw Exception.new(
+      throw new Exception(
         Code.ENTITY_VALIDATION_ERROR.code.toString(),
-        undefined,
+        null,
+        null,
         details,
       );
     }
