@@ -1,30 +1,49 @@
-import { SendDataOptions, VideoGrant } from "livekit-server-sdk";
+import { SendDataOptions } from "livekit-server-sdk";
 import { createSendDataMessageAction } from "./Actions";
-import { ParticipantMetadataDTO } from "@core/domain/participant/usecase/dto/ParticipantMetadataDTO";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
+import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDTO";
 
-export interface SendtoOptions {
-  meetingId: string;
-  participantIds: SendDataOptions["destinationIdentities"];
+export enum RoomType {
+  DEFAULT = "default",
+  MEETING = "meeting",
+  WAITING = "waiting",
 }
 
-export interface SendDataMessagePort {
+export type RoomDTO = {
+  id: string;
+  type: RoomType;
+};
+export type AccessTokenMetadata = ParticipantUsecaseDTO & {
+  room: RoomDTO;
+};
+
+export type SendtoOptions = {
+  roomId: string;
+  roomType: RoomType;
+  participantIds?: SendDataOptions["destinationIdentities"];
+};
+
+export type SendDataMessagePort = {
   sendto: SendtoOptions;
   action: ReturnType<typeof createSendDataMessageAction>;
-}
+};
 
-export interface ParticipantAccessToken {
+export type ParticipantAccessToken = {
   id: string;
   meetingId: string;
   participantRole: ParticipantRole;
-}
+};
+
+export type Message = {
+  roomId: string;
+  roomType: RoomType;
+  senderId: string;
+  content: string;
+};
 
 // ----- DTOs ----- //
-export interface ParticipantRequestJoinDTO {
+export type ParticipantRequestJoinDTO = {
   participantId: string;
-}
+};
 
-export interface ParticipantSendMessageDTO {
-  sendby: string;
-  message: string;
-}
+export type ParticipantSendMessageDTO = Message; //TODO: Client Chua fix

@@ -1,16 +1,18 @@
+import { RoomType } from "@infrastructure/adapter/webrtc/Types";
 import { ApiProperty } from "@nestjs/swagger";
-import { Type } from "class-transformer";
-import { IsArray, IsOptional, IsString, ValidateNested } from "class-validator";
+import { IsEmpty, IsEnum, IsNotEmpty, IsString } from "class-validator";
 
 export class HttpRestApiModelSendMessage {
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => String)
-  @ApiProperty({ type: "array", items: { type: "string" } })
-  sendto?: string[];
-
+  @ApiProperty({ type: "string", required: true })
   @IsString()
-  @ApiProperty({ type: "string" })
-  message: string;
+  roomId: string;
+
+  @ApiProperty({ enum: RoomType })
+  @IsEnum(RoomType)
+  roomType: RoomType;
+
+  @ApiProperty({ type: "string", required: true })
+  @IsString()
+  @IsNotEmpty()
+  content: string;
 }

@@ -72,14 +72,4 @@ export class MeetingController {
     const result = await this.meetingService.getMeeting(adapter);
     return CoreApiResponse.success(result);
   }
-
-  @Get(":meetingId/access-token")
-  @HttpUserAuth()
-  @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
-  public async getAccessToken(@Param("meetingId") meetingId: string) {
-    const adapter = { meetingId };
-    const result = await this.meetingService.getAccessToken(adapter);
-    return CoreApiResponse.success(result);
-  }
 }

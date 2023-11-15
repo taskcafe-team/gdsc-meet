@@ -20,27 +20,27 @@ export class HttpParticipantAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const meetingApiToken = request.headers["meeting-api-token"];
 
-    const verifedToken = await this.webRTCService
+    const tokenPayload = await this.webRTCService
       .verifyToken(meetingApiToken)
       .catch(() => null);
-    if (!verifedToken) throw new UnauthorizedException();
-    const meetingId = verifedToken.meetingId;
-    const participantId = verifedToken.id;
+    if (!tokenPayload) throw new UnauthorizedException();
 
     let localParticipant: ParticipantUsecaseDTO | null = null;
-    localParticipant = await this.webRTCService.getParticipant(
-      meetingId,
-      participantId,
-    );
+    localParticipant = await this.webRTCService.getParticipant({
+      roomId: tokenPayload.room.id,
+      roomType: tokenPayload.room.type,
+      participantId: tokenPayload.id,
+    });
     if (!localParticipant)
       localParticipant = await this.participantService
         .getParticipant({
-          meetingId,
-          participantId,
+          meetingId: tokenPayload.room.id,
+          participantId: tokenPayload.id,
         })
         .catch(() => null);
     if (!localParticipant) throw new UnauthorizedException();
-    request["participant"] = localParticipant;
+
+    request["participant"] = tokenPayload; // Token includes participant info and room information
     return true;
   }
 }

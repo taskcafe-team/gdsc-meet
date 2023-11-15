@@ -1,8 +1,6 @@
+import { AccessTokenMetadata } from "@infrastructure/adapter/webrtc/Types";
 import { Request } from "express";
 
-export type HttpRequestWithParticpant = Request & {
-  participant: {
-    id: string;
-    meetingId: string;
-  };
+export type HttpRequestWithParticipant = Request & {
+  participant?: AccessTokenMetadata;
 };

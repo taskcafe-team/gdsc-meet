@@ -1,5 +1,9 @@
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
-import { Injectable, InternalServerErrorException } from "@nestjs/common";
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
   AccessToken,
@@ -10,17 +14,65 @@ import {
   TokenVerifier,
   VideoGrant,
 } from "livekit-server-sdk";
-import { CreateAccessTokenPort } from "@core/domain/meeting/port/CreateAccessTokenPort";
-import { ParticipantAccessToken, SendDataMessagePort } from "./Types";
-import { ParticipantMetadataDTO } from "@core/domain/participant/usecase/dto/ParticipantMetadataDTO";
+import { AccessTokenMetadata, RoomType, SendDataMessagePort } from "./Types";
+import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDTO";
 
-type _RoomClientService = Omit<
+export type _RoomClientService = Omit<
   RoomServiceClient,
   "getParticipant" | "createRoom" | "updateParticipants" | "sendData"
 >;
 
+export type CreateRoomDTO = {
+  roomId: string;
+  roomType: RoomType;
+  emptyTimeout: number;
+  maxParticipants: number;
+};
+export type CreateTokenDTO = {
+  roomId: string;
+  roomType: RoomType;
+  roomToken: string;
+};
+
+export type GetParticipantPort = {
+  roomId: string;
+  roomType: RoomType;
+  participantId: string;
+};
+
+export type GetParticipantsPort = {
+  roomId: string;
+  roomType: RoomType;
+  participantIds: string[];
+};
+
+export type CreateAccessTokenPort = {
+  permissions: VideoGrant;
+  metadata: AccessTokenMetadata;
+};
+
+export type CreateRoomPort = {
+  roomId: string;
+  roomType: RoomType;
+  emptyTimeout?: number;
+  maxParticipants?: number;
+};
+
+export type IWebRTCLivekitService = {
+  _roomServiceClient: _RoomClientService;
+  createRoom: (port: CreateRoomPort) => Promise<CreateRoomDTO>;
+  createToken: (
+    port: CreateAccessTokenPort,
+    metadata: AccessTokenMetadata,
+  ) => Promise<CreateTokenDTO>;
+  verifyToken: (token: string) => Promise<AccessTokenMetadata>;
+  sendDataMessage: (port: SendDataMessagePort) => Promise<void>;
+  getParticipant: (port: GetParticipantPort) => Promise<ParticipantUsecaseDTO>;
+  getParticipants(port: GetParticipantsPort): Promise<ParticipantUsecaseDTO[]>;
+};
+
 @Injectable()
-export class WebRTCLivekitService {
+export class WebRTCLivekitService implements IWebRTCLivekitService {
   private readonly livekitHost: string;
   private readonly livekitClientId: string;
   private readonly livekitClientSecret: string;
@@ -48,61 +100,61 @@ export class WebRTCLivekitService {
     return this.roomServiceClient;
   }
 
-  public async updateParticipants(port: { room: string; identity: string }) {
-    const { room, identity } = port;
-    return await this.roomServiceClient.updateParticipant(room, identity);
-  }
-
   public async createRoom(port: {
-    name: string;
+    roomId: string;
+    roomType: RoomType;
     emptyTimeout?: number;
     maxParticipants?: number;
   }) {
+    const { roomId, roomType } = port;
+    const roomname = `${port.roomType}:${port.roomId}`;
     const room: Room = await this.roomServiceClient.createRoom({
-      name: port.name,
+      name: roomname,
       emptyTimeout: port.emptyTimeout || this.emptyTimeout,
       maxParticipants: port.maxParticipants || this.maxParticipants,
     });
 
-    return room;
-  }
-
-  public async getParticipant(meetingId: string, participantId: string) {
-    const p = await this.roomServiceClient
-      .getParticipant(meetingId, participantId)
-      .catch(() => null);
-    if (!p) return null;
-    const metadata = JSON.parse(p.metadata) as ParticipantMetadataDTO;
-    return metadata;
+    return {
+      roomId,
+      roomType,
+      emptyTimeout: room.emptyTimeout,
+      maxParticipants: room.maxParticipants,
+    };
   }
 
   public async createToken(
     port: CreateAccessTokenPort,
-    metadata: ParticipantMetadataDTO,
-  ) {
+  ): Promise<CreateTokenDTO> {
+    const { metadata, permissions } = port;
     const at = new AccessToken(this.livekitClientId, this.livekitClientSecret, {
-      identity: port.participantId,
-      name: port.participantName,
+      name: metadata.name === "" ? "no name" : metadata.name,
+      identity: metadata.id,
+      metadata: JSON.stringify(metadata),
     });
 
-    at.metadata = JSON.stringify(metadata);
+    const roomname = `${metadata.room.type}:${metadata.room.id}`;
+    at.addGrant({
+      room: roomname,
+      roomJoin: permissions.roomJoin ?? true,
+      canPublish: permissions.canPublish ?? true,
+      canSubscribe: permissions.canSubscribe ?? true,
+      roomList: permissions.roomList ?? false,
+      roomCreate: permissions.roomCreate ?? false,
+      canPublishData: permissions.canPublishData ?? true,
+      canPublishSources: permissions.canPublishSources ?? undefined,
+      hidden: permissions.hidden ?? false,
+    });
 
-    const permissions: VideoGrant = {
-      room: port.meetingId,
-      roomJoin: port.roomJoin || undefined,
-      canPublish: port.canPublish || undefined,
-      canSubscribe: port.canSubscribe || undefined,
-      roomList: port.roomList || undefined,
-      roomCreate: port.roomCreate || undefined,
-      canPublishData: port.canPublishData || undefined,
-      hidden: port.hidden || undefined,
+    const result = {
+      roomId: metadata.room.id,
+      roomType: metadata.room.type,
+      roomToken: at.toJwt(),
     };
 
-    at.addGrant(permissions);
-    return at.toJwt();
+    return result;
   }
 
-  public async verifyToken(token: string) {
+  public async verifyToken(token: string): Promise<AccessTokenMetadata> {
     const jwtVerify = new TokenVerifier(
       this.livekitClientId,
       this.livekitClientSecret,
@@ -113,26 +165,59 @@ export class WebRTCLivekitService {
     if (!video || !metadata)
       throw new InternalServerErrorException("Verify token failed!");
 
-    const metadataObject = JSON.parse(metadata) as ParticipantMetadataDTO;
-    if (
-      !metadataObject ||
-      !metadataObject.id ||
-      !metadataObject.role ||
-      !metadataObject.meetingId
-    )
+    const accessToken = JSON.parse(metadata) as AccessTokenMetadata;
+    if (!accessToken || !accessToken.room)
       throw new InternalServerErrorException("Verify token failed!");
 
-    const result: ParticipantAccessToken = {
-      id: metadataObject.id,
-      meetingId: metadataObject.meetingId,
-      participantRole: metadataObject.role,
-    };
+    return accessToken;
+  }
 
-    return result;
+  public async getParticipant(
+    port: GetParticipantPort,
+  ): Promise<ParticipantUsecaseDTO> {
+    const { roomId, roomType, participantId } = port;
+
+    const roomname = `${roomType}:${roomId}`;
+    const p = await this.roomServiceClient
+      .getParticipant(roomname, participantId)
+      .catch(() => null);
+    if (!p) throw new NotFoundException("Participant not found!");
+    const metadata = JSON.parse(p.metadata) as AccessTokenMetadata;
+    return metadata as ParticipantUsecaseDTO;
+  }
+
+  public async getParticipants(
+    port: GetParticipantsPort,
+  ): Promise<ParticipantUsecaseDTO[]> {
+    const { roomId, roomType, participantIds } = port;
+    const psPromis = participantIds.map(async (participantId) => {
+      return await this.getParticipant({
+        roomId,
+        roomType,
+        participantId,
+      });
+    });
+    const ps = await Promise.all(psPromis);
+    return ps;
+  }
+
+  public async updateParticipants(port: {
+    roomId: string;
+    roomType: RoomType;
+    participantId: string;
+  }) {
+    //TODO: chua xu ly
+    const { roomId, roomType, participantId } = port;
+
+    const roomname = `${roomType}:${roomId}`;
+    return await this.roomServiceClient.updateParticipant(
+      roomname,
+      participantId,
+    );
   }
 
   public async sendDataMessage(port: SendDataMessagePort) {
-    const { meetingId, participantIds } = port.sendto;
+    const { roomId, roomType, participantIds } = port.sendto;
 
     const encoder = new TextEncoder();
     const action = encoder.encode(JSON.stringify(port.action));
@@ -141,11 +226,12 @@ export class WebRTCLivekitService {
       destinationIdentities: participantIds,
     };
 
+    const roomname = `${roomType}:${roomId}`;
     return await this.roomServiceClient.sendData(
-      meetingId,
+      roomname,
       action,
       DataPacket_Kind.RELIABLE,
-      sendDataOptions,
+      // sendDataOptions,
     );
   }
 }

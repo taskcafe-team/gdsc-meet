@@ -6,8 +6,6 @@ import { GetUserPort } from "../../domain/user/port/GetUserPort";
 import { CreateUserPort } from "../../domain/user/port/CreateUserPort";
 
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
-import { Exception } from "@core/common/exception/Exception";
-import Code from "@core/common/constants/Code";
 import { UpdateUserPort } from "@core/domain/user/port/UpdateUserPort";
 import { REQUEST } from "@nestjs/core";
 import { HttpResponseWithOptionalUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
