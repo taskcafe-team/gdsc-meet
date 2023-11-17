@@ -35,7 +35,6 @@ export class AuthController {
   constructor(private readonly authService: HttpAuthService) {}
 
   @Post("email/login")
-  @HttpCode(HttpStatus.OK)
   public async loginWithEmail(
     @Body() body: HttpRestApiModelLogInBody,
   ): Promise<CoreApiResponse<HttpLoggedInUser>> {
@@ -44,7 +43,6 @@ export class AuthController {
   }
 
   @Post("email/register")
-  @HttpCode(HttpStatus.CREATED)
   public async registerWithEmail(
     @Body(new ValidationPipe()) body: HttpRestApiModelRegisterBody,
   ): Promise<CoreApiResponse<UserUsecaseDTO>> {
@@ -66,13 +64,11 @@ export class AuthController {
   @Post("verify/access-token")
   @HttpUserAuth()
   @ApiBearerAuth()
-  @HttpCode(HttpStatus.NO_CONTENT)
   public async verifyAccessToken() {
     //
   }
 
   @Post("access-token")
-  @HttpCode(HttpStatus.OK)
   public async getAccessToken(
     @Body(new ValidationPipe()) body: HttpRestApiModelGetAccessTokenBody,
   ): Promise<CoreApiResponse<{ accessToken: string }>> {
@@ -81,7 +77,6 @@ export class AuthController {
   }
 
   @Get("email/confirm-email")
-  @HttpCode(HttpStatus.NO_CONTENT)
   public async confirmEmail(
     @Query("token") token: string,
   ): Promise<CoreApiResponse<void>> {
@@ -90,7 +85,6 @@ export class AuthController {
   }
 
   @Get("email/resend-verification")
-  @HttpCode(HttpStatus.OK)
   public async resendVerification(
     @Query("email") email: string,
   ): Promise<CoreApiResponse> {

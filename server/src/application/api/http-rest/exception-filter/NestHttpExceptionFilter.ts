@@ -26,7 +26,7 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
     const response: Response = host.switchToHttp().getResponse<Response>();
     let errorResponse = CoreApiResponse.error();
 
-    errorResponse = this.handleNestError(error, errorResponse);
+    errorResponse = this.handleNestError(error, errorResponse, response);
     errorResponse = this.handleCoreException(error, errorResponse, response);
 
     if (this.configService.get("API_LOG_ENABLE")) {
@@ -44,6 +44,7 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
   private handleNestError(
     error: Error,
     errorResponse: CoreApiResponse<unknown>,
+    response: Response,
   ): CoreApiResponse<unknown> {
     if (error instanceof HttpException) {
       errorResponse = CoreApiResponse.error({
