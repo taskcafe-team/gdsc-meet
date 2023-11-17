@@ -10,7 +10,7 @@ import {
   UseGuards,
   ValidationPipe,
 } from "@nestjs/common";
-import { ApiTags, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
+import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 
 import { CreateUserAdapter } from "@infrastructure/adapter/usecase/user/CreateUserAdapter";
 
@@ -66,13 +66,13 @@ export class AuthController {
   @Post("verify/access-token")
   @HttpUserAuth()
   @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   public async verifyAccessToken() {
     //
   }
 
   @Post("access-token")
-  @ApiResponse({ status: HttpStatus.OK })
+  @HttpCode(HttpStatus.OK)
   public async getAccessToken(
     @Body(new ValidationPipe()) body: HttpRestApiModelGetAccessTokenBody,
   ): Promise<CoreApiResponse<{ accessToken: string }>> {
@@ -85,15 +85,17 @@ export class AuthController {
   public async confirmEmail(
     @Query("token") token: string,
   ): Promise<CoreApiResponse<void>> {
-    return CoreApiResponse.success(await this.authService.confirmEmail(token));
+    const res = await this.authService.confirmEmail(token);
+    return CoreApiResponse.success(res);
   }
 
   @Get("email/resend-verification")
   @HttpCode(HttpStatus.OK)
   public async resendVerification(
     @Query("email") email: string,
-  ): Promise<void> {
-    const result = await this.authService.resendVerification(email);
+  ): Promise<CoreApiResponse> {
+    await this.authService.resendVerification(email);
+    return CoreApiResponse.success();
   }
 
   @Get("email/forgot-password")

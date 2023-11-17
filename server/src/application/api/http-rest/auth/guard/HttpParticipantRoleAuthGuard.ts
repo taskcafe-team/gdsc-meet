@@ -23,7 +23,7 @@ export class HttpParticipantRoleAuthGuard implements CanActivate {
     );
     const isPassRolesAuth: boolean =
       participantRoles.length > 0
-        ? participantRoles.includes(request.user.role)
+        ? participantRoles.includes(request.participant.role)
         : true;
     if (!isPassRolesAuth) throw new UnauthorizedException();
     return true;

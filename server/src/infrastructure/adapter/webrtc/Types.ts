@@ -2,6 +2,7 @@ import { SendDataOptions } from "livekit-server-sdk";
 import { createSendDataMessageAction } from "./Actions";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDTO";
+import { CreateTokenDTO } from "./WebRTCLivekitManagement";
 
 export enum RoomType {
   DEFAULT = "default",
@@ -42,8 +43,15 @@ export type Message = {
 };
 
 // ----- DTOs ----- //
+export enum RespondJoinStatus {
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+  PENDING = "pending",
+}
+
 export type ParticipantRequestJoinDTO = {
-  participantId: string;
+  status: RespondJoinStatus;
+  token?: CreateTokenDTO;
 };
 
 export type ParticipantSendMessageDTO = Message;

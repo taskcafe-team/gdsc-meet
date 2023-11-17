@@ -46,6 +46,10 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
     errorResponse: CoreApiResponse<unknown>,
   ): CoreApiResponse<unknown> {
     if (error instanceof HttpException) {
+      errorResponse = CoreApiResponse.error({
+        code: error.getStatus(),
+        message: error.message,
+      });
     }
 
     return errorResponse;

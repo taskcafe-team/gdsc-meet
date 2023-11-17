@@ -6,7 +6,9 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
+  Query,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
 import { HttpRestApiModelSendMessage } from "./documentation/ParticipantDocumantion";
@@ -14,7 +16,11 @@ import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
 import { HttpParticipantAuth } from "../auth/decorator/HttpParticipantAuth";
 import { HttpParticipant } from "../auth/decorator/HttpParticipant";
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
-import { AccessTokenMetadata } from "@infrastructure/adapter/webrtc/Types";
+import {
+  AccessTokenMetadata,
+  RespondJoinStatus,
+} from "@infrastructure/adapter/webrtc/Types";
+import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 
 @Controller("meetings/:meetingId/participants")
 @ApiTags("participants")
@@ -51,14 +57,23 @@ export class ParticipantController {
   // @HttpCode(HttpStatus.OK)
   // public getParticipants(@Param("meetingId") meetingId: string) {}
 
-  // @Get(":participantId")
-  // @HttpAuth()
-  // @ApiBearerAuth()
-  // @HttpCode(HttpStatus.OK)
-  // public requestJoinMeeting(
-  //   @Param("meetingId") meetingId: string,
-  //   @Param("participantId") participantId: string,
-  // ) {}
+  @Patch("respond-join-request")
+  @HttpParticipantAuth(ParticipantRole.HOST)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  public async resultRequestJoinMeeting(
+    @Param("meetingId") meetingId: string,
+    @Body() body: { participantIds: string[]; status: RespondJoinStatus },
+  ) {
+    const { participantIds, status } = body;
+    await this.participantService.respondJoinRequest(
+      meetingId,
+      participantIds,
+      status,
+    );
+    return;
+  }
+
   @Post("send-message")
   @ApiBearerAuth()
   @HttpUserAuth()

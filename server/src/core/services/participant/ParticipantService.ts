@@ -13,6 +13,7 @@ import {
 import {
   AccessTokenMetadata,
   Message,
+  RespondJoinStatus,
   RoomType,
   SendDataMessagePort,
 } from "@infrastructure/adapter/webrtc/Types";
@@ -159,6 +160,78 @@ export default class ParticipantService implements IParticipantService {
       action,
     };
     await this.webRTCService.sendDataMessage(adapter);
+  }
+
+  async respondJoinRequest(
+    meetingId: string,
+    participantIds: string[],
+    status: RespondJoinStatus,
+  ) {
+    await this.unitOfWork.runInTransaction(async () => {
+      // Just for HOST
+      const meeting = await this.meetingService.getMeeting({ meetingId });
+      const sendPromise = participantIds.map(async (participantId) => {
+        let participant = await this.getParticipant({
+          participantId,
+          meetingId,
+        }).catch(() => null);
+        if (!participant) {
+          participant = await this.webRTCService
+            .getParticipant({
+              roomId: meeting.id,
+              roomType: RoomType.WAITING,
+              participantId,
+            })
+            .then((p) => ({ ...p, isOnline: true }));
+        }
+        if (!participant) return;
+        if (participant.userId) {
+          const p = await Participant.new({ ...participant });
+          await this.unitOfWork.getParticipantRepository().addParticipant(p);
+        }
+
+        if (status === RespondJoinStatus.REJECTED) {
+          await this.webRTCService.sendDataMessage({
+            sendto: {
+              roomId: meeting.id,
+              roomType: RoomType.WAITING,
+              participantIds: [participantId],
+            },
+            action: createSendDataMessageAction(
+              SendMessageActionEnum.ParticipantRequestJoin,
+              { status },
+            ),
+          });
+          return;
+        } else if (status === RespondJoinStatus.ACCEPTED) {
+          const permissions: VideoGrant = this.getPermissions(RoomType.MEETING);
+          const metadata: AccessTokenMetadata = Object.assign(participant, {
+            room: { id: meeting.id, type: RoomType.MEETING },
+          });
+          const _token = await this.webRTCService.createToken({
+            permissions,
+            metadata,
+          });
+
+          const action = createSendDataMessageAction(
+            SendMessageActionEnum.ParticipantRequestJoin,
+            { status, token: _token },
+          );
+
+          const adapter: SendDataMessagePort = {
+            sendto: {
+              roomId: meeting.id,
+              roomType: RoomType.WAITING,
+              participantIds: [participantId],
+            },
+            action,
+          };
+          await this.webRTCService.sendDataMessage(adapter);
+        }
+      });
+
+      return await Promise.all(sendPromise);
+    });
   }
 
   // Private methods

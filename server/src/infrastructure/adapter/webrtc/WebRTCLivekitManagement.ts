@@ -227,11 +227,8 @@ export class WebRTCLivekitService implements IWebRTCLivekitService {
     };
 
     const roomname = `${roomType}:${roomId}`;
-    return await this.roomServiceClient.sendData(
-      roomname,
-      action,
-      DataPacket_Kind.RELIABLE,
-      // sendDataOptions,
-    );
+    return await this.roomServiceClient
+      .sendData(roomname, action, DataPacket_Kind.RELIABLE, sendDataOptions)
+      .catch((e) => console.log(e));
   }
 }

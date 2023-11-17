@@ -1,6 +1,6 @@
 import Code, { CodeDescription } from "../constants/Code";
 
-export type ApiResponseError = CodeDescription<string>;
+export type ApiResponseError = CodeDescription<string | number>;
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -28,7 +28,7 @@ export class CoreApiResponse<T = unknown> implements ApiResponse<T> {
   }
 
   public static success<T>(data?: T) {
-    return new CoreApiResponse<T>(true, data, Code.SUCCESS);
+    return new CoreApiResponse<T>(true, data);
   }
 
   public static error<T>(error?: ApiResponseError, data?: T) {
