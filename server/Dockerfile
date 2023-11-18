@@ -66,10 +66,10 @@ ENV FILE_STORAGE_ENDPOINT="none"
 ENV FILE_STORAGE_AVATAR_ENDPOINT="https://www.gdscmeet.live:5000/users/avatar/"
 #------------------------------------------#
 
-COPY package*.json ./
+COPY package.json ./
 RUN npm install
 
-COPY . .
+COPY . ./
 
 EXPOSE 5000
 CMD npx prisma generate && npx prisma db push --accept-data-loss && npm run build && npm run start:prod
