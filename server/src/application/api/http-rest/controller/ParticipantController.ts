@@ -11,7 +11,10 @@ import {
   Query,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
-import { HttpRestApiModelSendMessage } from "./documentation/ParticipantDocumantion";
+import {
+  HttpResetApiModelGetAccessToken,
+  HttpRestApiModelSendMessage,
+} from "./documentation/ParticipantDocumantion";
 import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
 import { HttpParticipantAuth } from "../auth/decorator/HttpParticipantAuth";
 import { HttpParticipant } from "../auth/decorator/HttpParticipant";
@@ -33,10 +36,11 @@ export class ParticipantController {
   @HttpCode(HttpStatus.OK)
   public async getAccessToken(
     @Param("meetingId") meetingId: string,
+    @Query() query: HttpResetApiModelGetAccessToken,
     // @Query("roomType") roomType?: RoomType,
     // @Query("participantName") participantName?: string,
   ) {
-    const adapter = { meetingId };
+    const adapter = { meetingId, customName: query.customName };
     const result = await this.participantService.getAccessToken(adapter);
 
     return CoreApiResponse.success(result);

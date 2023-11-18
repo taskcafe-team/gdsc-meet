@@ -12,6 +12,7 @@ import {
   RoomServiceClient,
   SendDataOptions,
   TokenVerifier,
+  TrackSource,
   VideoGrant,
 } from "livekit-server-sdk";
 import { AccessTokenMetadata, RoomType, SendDataMessagePort } from "./Types";
@@ -19,7 +20,11 @@ import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/Part
 
 export type _RoomClientService = Omit<
   RoomServiceClient,
-  "getParticipant" | "createRoom" | "updateParticipants" | "sendData"
+  | "getParticipant"
+  | "createRoom"
+  | "updateParticipants"
+  | "sendData"
+  | "updateParticipant"
 >;
 
 export type CreateRoomDTO = {
@@ -122,6 +127,12 @@ export class WebRTCLivekitService implements IWebRTCLivekitService {
     };
   }
 
+  public async deleteRoom(port: { roomId: string; roomType: RoomType }) {
+    const { roomId, roomType } = port;
+    const roomname = `${roomType}:${roomId}`;
+    return await this.roomServiceClient.deleteRoom(roomname);
+  }
+
   public async createToken(
     port: CreateAccessTokenPort,
   ): Promise<CreateTokenDTO> {
@@ -201,18 +212,30 @@ export class WebRTCLivekitService implements IWebRTCLivekitService {
     return ps;
   }
 
-  public async updateParticipants(port: {
+  public async updateParticipant(port: {
     roomId: string;
     roomType: RoomType;
-    participantId: string;
+    particpantId: string;
+    metadata?: AccessTokenMetadata;
+    permission?: {
+      canSubscribe?: boolean;
+      canPublish?: boolean;
+      canPublishData?: boolean;
+      canPublishSources?: TrackSource[];
+      hidden?: boolean;
+      recorder?: boolean;
+      canUpdateMetadata?: boolean;
+    };
+    name?: string;
   }) {
-    //TODO: chua xu ly
-    const { roomId, roomType, participantId } = port;
-
+    const { roomType, roomId, particpantId, permission } = port;
+    const metadata = port.metadata ? JSON.stringify(port.metadata) : undefined;
     const roomname = `${roomType}:${roomId}`;
-    return await this.roomServiceClient.updateParticipant(
+    this.roomServiceClient.updateParticipant(
       roomname,
-      participantId,
+      particpantId,
+      metadata,
+      permission,
     );
   }
 

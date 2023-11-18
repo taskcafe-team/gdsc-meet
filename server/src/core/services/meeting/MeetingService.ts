@@ -16,6 +16,8 @@ import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
 import { HttpResponseWithOptionalUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
+import { WebRTCLivekitService } from "@infrastructure/adapter/webrtc/WebRTCLivekitManagement";
+import { RoomType } from "@infrastructure/adapter/webrtc/Types";
 
 @Injectable()
 export class MeetingService {
@@ -23,6 +25,7 @@ export class MeetingService {
     @Inject(REQUEST)
     private readonly requestWithOptionalUser: HttpResponseWithOptionalUser,
     private readonly unitOfWork: UnitOfWork,
+    private readonly webRTCService: WebRTCLivekitService,
   ) {}
 
   public async createMeeting(payload: {
@@ -87,9 +90,27 @@ export class MeetingService {
         .catch(() => []);
       if (meetings.length !== payload.ids.length)
         throw new BadRequestException("Invalid argument");
-      return await this.unitOfWork
+      const result = await this.unitOfWork
         .getMeetingRepository()
         .deleteMeetings({ ids: payload.ids });
+
+      const deleteRoomPromise = result.map(async (id) => {
+        await this.webRTCService
+          .deleteRoom({
+            roomId: id,
+            roomType: RoomType.MEETING,
+          })
+          .catch(() => null);
+        await this.webRTCService
+          .deleteRoom({
+            roomId: id,
+            roomType: RoomType.WAITING,
+          })
+          .catch(() => null);
+      });
+      await Promise.all(deleteRoomPromise);
+
+      return result;
     });
   }
 

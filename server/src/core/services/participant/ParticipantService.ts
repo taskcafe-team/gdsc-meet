@@ -44,7 +44,10 @@ export type GetAccessTokenDTO = {
 };
 
 export type IParticipantService = {
-  getAccessToken: (port: { meetingId: string }) => Promise<GetAccessTokenDTO>;
+  getAccessToken: (port: {
+    meetingId: string;
+    customName: string;
+  }) => Promise<GetAccessTokenDTO>;
   getParticipant: (
     port: GetParticipantPort,
   ) => Promise<ParticipantUsecaseDTO & { isOnline: boolean }>;
@@ -66,9 +69,9 @@ export default class ParticipantService implements IParticipantService {
     private readonly webRTCService: WebRTCLivekitService,
   ) {}
 
-  async getAccessToken(payload: { meetingId: string }) {
+  async getAccessToken(payload: { meetingId: string; customName: string }) {
     const userId = this.requestWithUser.user?.id;
-    const { meetingId } = payload;
+    const { meetingId, customName } = payload;
     const currentUser = await this.unitOfWork
       .getUserRepository()
       .findUser({ id: userId });
@@ -92,6 +95,7 @@ export default class ParticipantService implements IParticipantService {
       });
 
     const participantDTO = ParticipantUsecaseDTO.newFromEntity(participant);
+    participantDTO.name = customName; // overwrite name
     const tokens = await this.createAccessToken(meeting, participantDTO);
     return { participant: participantDTO, tokens };
   }
@@ -140,6 +144,10 @@ export default class ParticipantService implements IParticipantService {
     return await Promise.all(psPromise);
   }
 
+  // async updateParticipants(port: {}) {
+  //   //
+  // }
+
   async sendMessage(port: ParticipantSendMessagePort) {
     const { roomId, roomType, content, senderId } = port;
 
@@ -185,13 +193,8 @@ export default class ParticipantService implements IParticipantService {
             .then((p) => ({ ...p, isOnline: true }));
         }
         if (!participant) return;
-        if (participant.userId) {
-          const p = await Participant.new({ ...participant });
-          await this.unitOfWork.getParticipantRepository().addParticipant(p);
-        }
-
         if (status === RespondJoinStatus.REJECTED) {
-          await this.webRTCService.sendDataMessage({
+          return await this.webRTCService.sendDataMessage({
             sendto: {
               roomId: meeting.id,
               roomType: RoomType.WAITING,
@@ -202,8 +205,11 @@ export default class ParticipantService implements IParticipantService {
               { status },
             ),
           });
-          return;
         } else if (status === RespondJoinStatus.ACCEPTED) {
+          if (participant.userId) {
+            const p = await Participant.new({ ...participant });
+            await this.unitOfWork.getParticipantRepository().addParticipant(p);
+          }
           const permissions: VideoGrant = this.getPermissions(RoomType.MEETING);
           const metadata: AccessTokenMetadata = Object.assign(participant, {
             room: { id: meeting.id, type: RoomType.MEETING },
