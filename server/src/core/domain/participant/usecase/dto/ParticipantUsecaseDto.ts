@@ -1,7 +1,7 @@
 import { Exclude, Expose, Type, plainToClass } from "class-transformer";
 
 import { Participant } from "../../entity/Participant";
-import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDto";
+import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 
 @Exclude()

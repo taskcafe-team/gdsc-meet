@@ -5,7 +5,7 @@ import {
   CreateTokenDTO,
   WebRTCLivekitService,
 } from "@infrastructure/adapter/webrtc/WebRTCLivekitManagement";
-import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDto";
+import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDTO";
 import {
   SendMessageActionEnum,
   createSendDataMessageAction,
@@ -22,7 +22,7 @@ import { REQUEST } from "@nestjs/core";
 import { HttpRequestWithUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { Participant } from "@core/domain/participant/entity/Participant";
-import { MeetingUsecaseDTO } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
+import { MeetingUsecaseDTO } from "@core/domain/meeting/usecase/MeetingUsecaseDTO";
 import { VideoGrant } from "livekit-server-sdk";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
 

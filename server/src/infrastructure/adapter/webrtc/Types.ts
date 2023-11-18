@@ -1,7 +1,7 @@
 import { SendDataOptions } from "livekit-server-sdk";
 import { createSendDataMessageAction } from "./Actions";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
-import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDto";
+import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDTO";
 import { CreateTokenDTO } from "./WebRTCLivekitManagement";
 
 export enum RoomType {

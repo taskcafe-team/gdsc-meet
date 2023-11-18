@@ -1,6 +1,6 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { UserUsecase } from "@core/domain/user/usecase/UserUsecase";
-import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDto";
+import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
 
 import { GetUserPort } from "../../domain/user/port/GetUserPort";
 import { CreateUserPort } from "../../domain/user/port/CreateUserPort";

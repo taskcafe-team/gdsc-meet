@@ -16,7 +16,7 @@ import {
   VideoGrant,
 } from "livekit-server-sdk";
 import { AccessTokenMetadata, RoomType, SendDataMessagePort } from "./Types";
-import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDto";
+import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDTO";
 
 export type _RoomClientService = Omit<
   RoomServiceClient,

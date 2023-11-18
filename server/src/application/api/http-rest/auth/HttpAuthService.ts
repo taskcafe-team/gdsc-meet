@@ -20,7 +20,7 @@ import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { Exception } from "@core/common/exception/Exception";
 import Code from "@core/common/constants/Code";
 import { CreateUserPort } from "@core/domain/user/port/CreateUserPort";
-import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDto";
+import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { Nullable } from "@core/common/type/CommonTypes";
 
