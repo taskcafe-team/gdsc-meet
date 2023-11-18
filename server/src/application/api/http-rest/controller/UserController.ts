@@ -21,7 +21,7 @@ import { HttpUser } from "../auth/decorator/HttpUser";
 import { HttpUserPayload } from "../auth/type/HttpAuthTypes";
 import { GetUserAdapter } from "@infrastructure/adapter/usecase/user/GetUserAdapter";
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
-import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
+import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 import { UserService } from "@core/services/user/UserService";
 import { HttpRestApiModelUpdateUser } from "./documentation/UserDocumentation";
 // import { avatarStoragePath } from "src/data/path";

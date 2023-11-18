@@ -15,7 +15,7 @@ import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { CreateUserAdapter } from "@infrastructure/adapter/usecase/user/CreateUserAdapter";
 
 import { UserRole } from "@core/common/enums/UserEnums";
-import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
+import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 
 import { HttpAuthService } from "../auth/HttpAuthService";
 import { HttpLoggedInUser, HttpUserPayload } from "../auth/type/HttpAuthTypes";

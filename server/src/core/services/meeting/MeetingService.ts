@@ -11,7 +11,7 @@ import { Meeting } from "@core/domain/meeting/entity/Meeting";
 import { Exception } from "@core/common/exception/Exception";
 import Code from "@core/common/constants/Code";
 import { Participant } from "@core/domain/participant/entity/Participant";
-import { MeetingUsecaseDTO } from "@core/domain/meeting/usecase/MeetingUsecaseDTO";
+import { MeetingUsecaseDTO } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { MeetingType } from "@core/common/enums/MeetingEnums";

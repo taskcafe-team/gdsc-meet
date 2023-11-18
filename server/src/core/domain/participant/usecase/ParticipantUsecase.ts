@@ -1,5 +1,5 @@
 import { Participant } from "../entity/Participant";
-import { ParticipantUsecaseDTO } from "./dto/ParticipantUsecaseDTO";
+import { ParticipantUsecaseDTO } from "./dto/ParticipantUsecaseDto";
 
 import { CreateParticipantPort } from "./port/CreateParticipantPort";
 import { GetOrCreateParticipantPort } from "./port/GetOrCreateParticipantPort";

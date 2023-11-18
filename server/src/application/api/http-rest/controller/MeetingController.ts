@@ -16,7 +16,7 @@ import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
 import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
 import { HttpRestApiModelCreateMeetingBody } from "./documentation/MeetingDocumentation";
-import { MeetingUsecaseDTO } from "@core/domain/meeting/usecase/MeetingUsecaseDTO";
+import { MeetingUsecaseDTO } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
 
 @Controller("meetings")
 @ApiTags("meetings")

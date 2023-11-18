@@ -1,4 +1,4 @@
-import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
+import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 import { GetUserPort } from "@core/domain/user/port/GetUserPort";
 import { CreateUserPort } from "@core/domain/user/port/CreateUserPort";
 
