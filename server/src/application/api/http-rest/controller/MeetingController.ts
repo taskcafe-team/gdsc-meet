@@ -16,7 +16,7 @@ import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
 import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
 import { HttpRestApiModelCreateMeetingBody } from "./documentation/MeetingDocumentation";
-import { MeetingUsecaseDTO } from "@core/domain/meeting/usecase/MeetingUsecaseDTO";
+import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
 
 @Controller("meetings")
 @ApiTags("meetings")
@@ -67,7 +67,7 @@ export class MeetingController {
   @HttpCode(HttpStatus.OK)
   public async getMeeting(
     @Param("meetingId") meetingId: string,
-  ): Promise<CoreApiResponse<MeetingUsecaseDTO>> {
+  ): Promise<CoreApiResponse<MeetingUsecaseDto>> {
     const adapter = { meetingId };
     const result = await this.meetingService.getMeeting(adapter);
     return CoreApiResponse.success(result);

@@ -2,10 +2,10 @@ import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { MeetingService } from "../meeting/MeetingService";
 import {
-  CreateTokenDTO,
+  CreateTokenDto,
   WebRTCLivekitService,
 } from "@infrastructure/adapter/webrtc/WebRTCLivekitManagement";
-import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDTO";
+import { ParticipantUsecaseDto } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDto";
 import {
   SendMessageActionEnum,
   createSendDataMessageAction,
@@ -22,7 +22,7 @@ import { REQUEST } from "@nestjs/core";
 import { HttpRequestWithUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { Participant } from "@core/domain/participant/entity/Participant";
-import { MeetingUsecaseDTO } from "@core/domain/meeting/usecase/MeetingUsecaseDTO";
+import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
 import { VideoGrant } from "livekit-server-sdk";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
 
@@ -38,22 +38,22 @@ export type GetParticipantPort = {
   participantId: string;
 };
 
-export type GetAccessTokenDTO = {
-  participant: ParticipantUsecaseDTO;
-  tokens: CreateTokenDTO[];
+export type GetAccessTokenDto = {
+  participant: ParticipantUsecaseDto;
+  tokens: CreateTokenDto[];
 };
 
 export type IParticipantService = {
   getAccessToken: (port: {
     meetingId: string;
     customName: string;
-  }) => Promise<GetAccessTokenDTO>;
+  }) => Promise<GetAccessTokenDto>;
   getParticipant: (
     port: GetParticipantPort,
-  ) => Promise<ParticipantUsecaseDTO & { isOnline: boolean }>;
+  ) => Promise<ParticipantUsecaseDto & { isOnline: boolean }>;
   getParticipants: (
     meetingId: string,
-  ) => Promise<(ParticipantUsecaseDTO & { isOnline: boolean })[]>;
+  ) => Promise<(ParticipantUsecaseDto & { isOnline: boolean })[]>;
   sendMessage: (port: ParticipantSendMessagePort) => Promise<void>;
 };
 
@@ -94,15 +94,15 @@ export default class ParticipantService implements IParticipantService {
           });
       });
 
-    const participantDTO = ParticipantUsecaseDTO.newFromEntity(participant);
-    participantDTO.name = customName; // overwrite name
-    const tokens = await this.createAccessToken(meeting, participantDTO);
-    return { participant: participantDTO, tokens };
+    const participantDto = ParticipantUsecaseDto.newFromEntity(participant);
+    participantDto.name = customName; // overwrite name
+    const tokens = await this.createAccessToken(meeting, participantDto);
+    return { participant: participantDto, tokens };
   }
 
   async getParticipant(
     port: GetParticipantPort,
-  ): Promise<ParticipantUsecaseDTO & { isOnline: boolean }> {
+  ): Promise<ParticipantUsecaseDto & { isOnline: boolean }> {
     const { meetingId, participantId } = port;
     const p = await this.unitOfWork
       .getParticipantRepository()
@@ -116,20 +116,20 @@ export default class ParticipantService implements IParticipantService {
       })
       .catch(() => null);
 
-    const pDTO = ParticipantUsecaseDTO.newFromEntity(p);
+    const pDto = ParticipantUsecaseDto.newFromEntity(p);
 
-    return { ...pDTO, isOnline: s !== null };
+    return { ...pDto, isOnline: s !== null };
   }
 
   async getParticipants(
     meetingId: string,
-  ): Promise<(ParticipantUsecaseDTO & { isOnline: boolean })[]> {
+  ): Promise<(ParticipantUsecaseDto & { isOnline: boolean })[]> {
     const p = await this.unitOfWork
       .getParticipantRepository()
       .findManyParticipants({ meetingId });
 
     const psPromise = p.map(async (_p) => {
-      const _pDTO = ParticipantUsecaseDTO.newFromEntity(_p);
+      const _pDto = ParticipantUsecaseDto.newFromEntity(_p);
       const is = await this.webRTCService
         .getParticipant({
           roomId: _p.meetingId,
@@ -137,8 +137,8 @@ export default class ParticipantService implements IParticipantService {
           roomType: RoomType.MEETING,
         })
         .catch(() => null);
-      if (!is) return { ..._pDTO, isOnline: false };
-      else return { ..._pDTO, isOnline: true };
+      if (!is) return { ..._pDto, isOnline: false };
+      else return { ..._pDto, isOnline: true };
     });
 
     return await Promise.all(psPromise);
@@ -242,11 +242,11 @@ export default class ParticipantService implements IParticipantService {
 
   // Private methods
   private async createAccessToken(
-    meeting: MeetingUsecaseDTO,
-    participant: ParticipantUsecaseDTO,
+    meeting: MeetingUsecaseDto,
+    participant: ParticipantUsecaseDto,
   ) {
     if (participant.role === ParticipantRole.HOST) {
-      const tokens: CreateTokenDTO[] = [];
+      const tokens: CreateTokenDto[] = [];
       // Create Room Meeting Token
       const meetingPer = this.getPermissions(RoomType.MEETING);
       const meetingMeta = {
@@ -274,7 +274,7 @@ export default class ParticipantService implements IParticipantService {
     }
 
     // Is not Host
-    const tokens: CreateTokenDTO[] = [];
+    const tokens: CreateTokenDto[] = [];
     let roomType = RoomType.MEETING;
     if (meeting.type === MeetingType.PRIVATE) {
       const canJoin = await this.unitOfWork

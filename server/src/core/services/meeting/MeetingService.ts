@@ -11,7 +11,7 @@ import { Meeting } from "@core/domain/meeting/entity/Meeting";
 import { Exception } from "@core/common/exception/Exception";
 import Code from "@core/common/constants/Code";
 import { Participant } from "@core/domain/participant/entity/Participant";
-import { MeetingUsecaseDTO } from "@core/domain/meeting/usecase/MeetingUsecaseDTO";
+import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
@@ -34,7 +34,7 @@ export class MeetingService {
     startDate?: Date;
     endDate?: Date;
     type?: MeetingType;
-  }): Promise<MeetingUsecaseDTO> {
+  }): Promise<MeetingUsecaseDto> {
     return await this.unitOfWork.runInTransaction(async () => {
       const userId = this.requestWithOptionalUser.user?.id;
 
@@ -58,7 +58,7 @@ export class MeetingService {
         .getParticipantRepository()
         .addParticipant(participant);
 
-      return MeetingUsecaseDTO.newFromEntity(meeting);
+      return MeetingUsecaseDto.newFromEntity(meeting);
     });
   }
 
@@ -116,12 +116,12 @@ export class MeetingService {
 
   public async getMeeting(payload: {
     meetingId: string;
-  }): Promise<MeetingUsecaseDTO> {
+  }): Promise<MeetingUsecaseDto> {
     const { meetingId } = payload;
     const meeting = await this.unitOfWork
       .getMeetingRepository()
       .findMeeting({ id: meetingId });
     if (!meeting) throw new NotFoundException("Meeting not found!");
-    return MeetingUsecaseDTO.newFromEntity(meeting);
+    return MeetingUsecaseDto.newFromEntity(meeting);
   }
 }

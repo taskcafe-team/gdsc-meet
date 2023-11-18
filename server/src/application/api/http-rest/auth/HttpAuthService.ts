@@ -20,7 +20,7 @@ import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { Exception } from "@core/common/exception/Exception";
 import Code from "@core/common/constants/Code";
 import { CreateUserPort } from "@core/domain/user/port/CreateUserPort";
-import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
+import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { Nullable } from "@core/common/type/CommonTypes";
 
@@ -89,7 +89,7 @@ export class HttpAuthService {
     return { id: result.getId() };
   }
 
-  public async register(payload: CreateUserPort): Promise<UserUsecaseDTO> {
+  public async register(payload: CreateUserPort): Promise<UserUsecaseDto> {
     return await this.unitOfWork.runInTransaction(async () => {
       const userRepo = this.unitOfWork.getUserRepository();
 
@@ -104,7 +104,7 @@ export class HttpAuthService {
       });
 
       await userRepo.addUser(newUser);
-      const result = UserUsecaseDTO.newFromEntity(newUser);
+      const result = UserUsecaseDto.newFromEntity(newUser);
 
       await this.sendVerificationEmail(newUser);
       return result;

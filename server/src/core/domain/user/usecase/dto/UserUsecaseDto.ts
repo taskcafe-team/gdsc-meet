@@ -3,7 +3,7 @@ import { User } from "@core/domain/user/entity/User";
 import { Exclude, Expose, plainToClass } from "class-transformer";
 
 @Exclude()
-export class UserUsecaseDTO {
+export class UserUsecaseDto {
   @Expose() public id: string;
   @Expose() public firstName: string;
   @Expose() public lastName: string;
@@ -12,11 +12,11 @@ export class UserUsecaseDTO {
   @Expose() public isValid: boolean;
   @Expose() public avatar: string;
 
-  public static newFromEntity(entity: User): UserUsecaseDTO {
-    return plainToClass(UserUsecaseDTO, entity);
+  public static newFromEntity(entity: User): UserUsecaseDto {
+    return plainToClass(UserUsecaseDto, entity);
   }
 
-  public static newListFromEntitys(listEntitys: User[]): UserUsecaseDTO[] {
+  public static newListFromEntitys(listEntitys: User[]): UserUsecaseDto[] {
     return listEntitys.map((entity) => this.newFromEntity(entity));
   }
 }

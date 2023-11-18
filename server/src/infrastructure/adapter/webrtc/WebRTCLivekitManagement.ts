@@ -16,7 +16,7 @@ import {
   VideoGrant,
 } from "livekit-server-sdk";
 import { AccessTokenMetadata, RoomType, SendDataMessagePort } from "./Types";
-import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDTO";
+import { ParticipantUsecaseDto } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDto";
 
 export type _RoomClientService = Omit<
   RoomServiceClient,
@@ -27,13 +27,13 @@ export type _RoomClientService = Omit<
   | "updateParticipant"
 >;
 
-export type CreateRoomDTO = {
+export type CreateRoomDto = {
   roomId: string;
   roomType: RoomType;
   emptyTimeout: number;
   maxParticipants: number;
 };
-export type CreateTokenDTO = {
+export type CreateTokenDto = {
   roomId: string;
   roomType: RoomType;
   roomToken: string;
@@ -65,15 +65,15 @@ export type CreateRoomPort = {
 
 export type IWebRTCLivekitService = {
   _roomServiceClient: _RoomClientService;
-  createRoom: (port: CreateRoomPort) => Promise<CreateRoomDTO>;
+  createRoom: (port: CreateRoomPort) => Promise<CreateRoomDto>;
   createToken: (
     port: CreateAccessTokenPort,
     metadata: AccessTokenMetadata,
-  ) => Promise<CreateTokenDTO>;
+  ) => Promise<CreateTokenDto>;
   verifyToken: (token: string) => Promise<AccessTokenMetadata>;
   sendDataMessage: (port: SendDataMessagePort) => Promise<void>;
-  getParticipant: (port: GetParticipantPort) => Promise<ParticipantUsecaseDTO>;
-  getParticipants(port: GetParticipantsPort): Promise<ParticipantUsecaseDTO[]>;
+  getParticipant: (port: GetParticipantPort) => Promise<ParticipantUsecaseDto>;
+  getParticipants(port: GetParticipantsPort): Promise<ParticipantUsecaseDto[]>;
 };
 
 @Injectable()
@@ -135,7 +135,7 @@ export class WebRTCLivekitService implements IWebRTCLivekitService {
 
   public async createToken(
     port: CreateAccessTokenPort,
-  ): Promise<CreateTokenDTO> {
+  ): Promise<CreateTokenDto> {
     const { metadata, permissions } = port;
     const at = new AccessToken(this.livekitClientId, this.livekitClientSecret, {
       name: metadata.name === "" ? "no name" : metadata.name,
@@ -185,7 +185,7 @@ export class WebRTCLivekitService implements IWebRTCLivekitService {
 
   public async getParticipant(
     port: GetParticipantPort,
-  ): Promise<ParticipantUsecaseDTO> {
+  ): Promise<ParticipantUsecaseDto> {
     const { roomId, roomType, participantId } = port;
 
     const roomname = `${roomType}:${roomId}`;
@@ -194,12 +194,12 @@ export class WebRTCLivekitService implements IWebRTCLivekitService {
       .catch(() => null);
     if (!p) throw new NotFoundException("Participant not found!");
     const metadata = JSON.parse(p.metadata) as AccessTokenMetadata;
-    return metadata as ParticipantUsecaseDTO;
+    return metadata as ParticipantUsecaseDto;
   }
 
   public async getParticipants(
     port: GetParticipantsPort,
-  ): Promise<ParticipantUsecaseDTO[]> {
+  ): Promise<ParticipantUsecaseDto[]> {
     const { roomId, roomType, participantIds } = port;
     const psPromis = participantIds.map(async (participantId) => {
       return await this.getParticipant({

@@ -4,7 +4,7 @@ import { Nullable } from "@core/common/type/CommonTypes";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
 
 @Exclude()
-export class MeetingUsecaseDTO {
+export class MeetingUsecaseDto {
   @Expose() public id: string;
   @Expose() public startTime: Date;
   @Expose() public endTime: Nullable<Date>;
@@ -12,13 +12,13 @@ export class MeetingUsecaseDTO {
   @Expose() public description: Nullable<string>;
   @Expose() public type: MeetingType;
 
-  public static newFromEntity(entity: Meeting): MeetingUsecaseDTO {
-    return plainToClass(MeetingUsecaseDTO, entity);
+  public static newFromEntity(entity: Meeting): MeetingUsecaseDto {
+    return plainToClass(MeetingUsecaseDto, entity);
   }
 
   public static newListFromEntitys(
     listEntitys: Meeting[],
-  ): MeetingUsecaseDTO[] {
+  ): MeetingUsecaseDto[] {
     return listEntitys.map((entity) => this.newFromEntity(entity));
   }
 }

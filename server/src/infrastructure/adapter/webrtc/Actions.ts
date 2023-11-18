@@ -1,4 +1,4 @@
-import { ParticipantRequestJoinDTO, ParticipantSendMessageDTO } from "./Types";
+import { ParticipantRequestJoinDto, ParticipantSendMessageDto } from "./Types";
 
 type ActionMap = {
   [key in keyof SendMessageActionEnum]: any;
@@ -10,8 +10,8 @@ export enum SendMessageActionEnum {
 }
 
 export interface RegisterActionsType extends ActionMap {
-  [SendMessageActionEnum.ParticipantRequestJoin]: ParticipantRequestJoinDTO;
-  [SendMessageActionEnum.ParticipantSendMessage]: ParticipantSendMessageDTO;
+  [SendMessageActionEnum.ParticipantRequestJoin]: ParticipantRequestJoinDto;
+  [SendMessageActionEnum.ParticipantSendMessage]: ParticipantSendMessageDto;
 }
 
 export function createSendDataMessageAction<

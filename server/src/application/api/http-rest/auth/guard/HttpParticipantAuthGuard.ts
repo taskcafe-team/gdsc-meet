@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 
-import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDTO";
+import { ParticipantUsecaseDto } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDto";
 import ParticipantService from "@core/services/participant/ParticipantService";
 
 @Injectable()
@@ -25,7 +25,7 @@ export class HttpParticipantAuthGuard implements CanActivate {
       .catch(() => null);
     if (!tokenPayload) throw new UnauthorizedException();
 
-    let localParticipant: ParticipantUsecaseDTO | null = null;
+    let localParticipant: ParticipantUsecaseDto | null = null;
     localParticipant = await this.webRTCService.getParticipant({
       roomId: tokenPayload.room.id,
       roomType: tokenPayload.room.type,

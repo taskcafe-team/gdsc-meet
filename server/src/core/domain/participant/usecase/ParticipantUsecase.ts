@@ -1,5 +1,5 @@
 import { Participant } from "../entity/Participant";
-import { ParticipantUsecaseDTO } from "./dto/ParticipantUsecaseDTO";
+import { ParticipantUsecaseDto } from "./dto/ParticipantUsecaseDto";
 
 import { CreateParticipantPort } from "./port/CreateParticipantPort";
 import { GetOrCreateParticipantPort } from "./port/GetOrCreateParticipantPort";
@@ -11,11 +11,11 @@ export interface ParticipantUsecase {
 
   getOrCreate(
     payload: GetOrCreateParticipantPort,
-  ): Promise<ParticipantUsecaseDTO>;
+  ): Promise<ParticipantUsecaseDto>;
 
   createParticipant(
     payload: CreateParticipantPort,
-  ): Promise<ParticipantUsecaseDTO>;
+  ): Promise<ParticipantUsecaseDto>;
 
   // removeParticipant(payload: {
   //   id?: string;

@@ -1,6 +1,6 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { UserUsecase } from "@core/domain/user/usecase/UserUsecase";
-import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
+import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 
 import { GetUserPort } from "../../domain/user/port/GetUserPort";
 import { CreateUserPort } from "../../domain/user/port/CreateUserPort";
@@ -18,20 +18,20 @@ export class UserService implements UserUsecase {
     private readonly unitOfWork: UnitOfWork,
   ) {}
 
-  public async getUser(payload: GetUserPort): Promise<UserUsecaseDTO> {
+  public async getUser(payload: GetUserPort): Promise<UserUsecaseDto> {
     const user = await this.unitOfWork
       .getUserRepository()
       .findUser({ id: payload.userId });
 
     if (!user) throw new NotFoundException("User not found");
-    return UserUsecaseDTO.newFromEntity(user);
+    return UserUsecaseDto.newFromEntity(user);
   }
 
-  public async createUser(payload: CreateUserPort): Promise<UserUsecaseDTO> {
+  public async createUser(payload: CreateUserPort): Promise<UserUsecaseDto> {
     throw new Error("Not implemented");
   }
 
-  public async updateMe(payload: UpdateUserPort): Promise<UserUsecaseDTO> {
+  public async updateMe(payload: UpdateUserPort): Promise<UserUsecaseDto> {
     return await this.unitOfWork.runInTransaction(async () => {
       const userId = this.requestWithOptionalUser.user?.id || "";
       const user = await this.unitOfWork
@@ -45,7 +45,7 @@ export class UserService implements UserUsecase {
       });
 
       await this.unitOfWork.getUserRepository().updateUser(user);
-      return UserUsecaseDTO.newFromEntity(user);
+      return UserUsecaseDto.newFromEntity(user);
     });
   }
 }
