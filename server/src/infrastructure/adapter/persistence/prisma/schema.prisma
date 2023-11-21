@@ -56,6 +56,8 @@ model User {
     removedAt DateTime? @map("removed_at") @db.Timestamp()
 
     Participant Participant[]
+    UserFolder  UserFolder[]
+    UserMeeting UserMeeting[]
 
     @@map("users")
 }
@@ -93,4 +95,53 @@ model Participant {
     removedAt DateTime? @map("removed_at") @db.Timestamp()
 
     @@map("participants")
+}
+
+model Folder {
+    id               String       @id @default(uuid()) @map("Folder_id") @db.Uuid()
+    name             String       @map("folder_name") @db.VarChar(100)
+    parent_folder    Folder?      @relation("ParentFolderToFolder", fields: [parent_folder_id], references: [id])
+    parent_folder_id String?      @db.Uuid()
+    child_folders    Folder[]     @relation("ParentFolderToFolder")
+    user_meeting_id  String?      @map("user_meeting_id") @db.Uuid()
+    user_meeting     UserMeeting? @relation(fields: [user_meeting_id], references: [id])
+    files            File[]
+    created_at       DateTime?    @default(now()) @db.Timestamp()
+    updated_at       DateTime?    @updatedAt @db.Timestamp()
+    UserFolder       UserFolder[]
+
+    @@unique([parent_folder_id, name]) // Một thư mục cha không thể có nhiều thư mục con có cùng tên
+}
+
+model UserMeeting {
+    id        String @id @default(uuid()) @map("id") @db.Uuid()
+    userId    String @map("user_id") @db.Uuid()
+    meetingId String @map("meeting_id")
+    user      User   @relation(fields: [userId], references: [id])
+
+    createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp()
+    updatedAt DateTime? @map("updated_at") @db.Timestamp()
+    removedAt DateTime? @map("removed_at") @db.Timestamp()
+    Folder    Folder[]
+
+    @@map("user_meetings")
+}
+
+model File {
+    id        String    @id @default(uuid()) @map("File_id") @db.Uuid()
+    name      String    @map("file_name") @db.VarChar(100)
+    folder_id String    @db.Uuid()
+    folder    Folder    @relation(fields: [folder_id], references: [id])
+    path      String    @map("path") @db.VarChar(255)
+    type      String    @map("file_type") @db.VarChar(255)
+    createdAt DateTime  @default(now()) @db.Timestamp()
+    updatedAt DateTime? @updatedAt @db.Timestamp()
+}
+
+model UserFolder {
+    id       String @id @default(uuid()) @map("id") @db.Uuid()
+    userId   String @map("user_id") @db.Uuid()
+    folderId String @map("folder_id") @db.Uuid()
+    user     User   @relation(fields: [userId], references: [id])
+    folder   Folder @relation(fields: [folderId], references: [id])
 }

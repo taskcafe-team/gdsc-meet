@@ -115,7 +115,7 @@ export default class ParticipantService implements IParticipantService {
 
     return { ...pDTO, isOnline: s !== null };
   }
-
+ 
   async getParticipants(
     meetingId: string,
   ): Promise<(ParticipantUsecaseDTO & { isOnline: boolean })[]> {

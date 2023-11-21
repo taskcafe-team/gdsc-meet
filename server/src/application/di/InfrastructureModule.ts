@@ -10,6 +10,7 @@ import { NestHttpExceptionFilter } from "@application/api/http-rest/exception-fi
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { WebRTCModule } from "./Infrastructure/WebRTCModule";
 import { UnitOfWorkModule } from "./Infrastructure/UnitOfWorkModule";
+import { PrismaClient } from "@prisma/client";
 
 const NestHttpExceptionFilterProvider: Provider = {
   provide: APP_FILTER,

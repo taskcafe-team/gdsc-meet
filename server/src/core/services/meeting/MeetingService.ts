@@ -16,6 +16,7 @@ import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
 import { HttpResponseWithOptionalUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
+import { UserMeetingService } from "../user-meeting/UserMeetingService";
 
 @Injectable()
 export class MeetingService {
@@ -23,7 +24,8 @@ export class MeetingService {
     @Inject(REQUEST)
     private readonly requestWithOptionalUser: HttpResponseWithOptionalUser,
     private readonly unitOfWork: UnitOfWork,
-  ) {}
+    private readonly userMeetingService: UserMeetingService
+  ) { }
 
   public async createMeeting(payload: {
     title?: string;
@@ -55,6 +57,7 @@ export class MeetingService {
         .getParticipantRepository()
         .addParticipant(participant);
 
+      await this.userMeetingService.createUserMeeting(currentuser.getId(), participant.meetingId)
       return MeetingUsecaseDTO.newFromEntity(meeting);
     });
   }

@@ -6,6 +6,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   ParseArrayPipe,
   Post,
@@ -17,11 +18,13 @@ import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
 import { HttpRestApiModelCreateMeetingBody } from "./documentation/MeetingDocumentation";
 import { MeetingUsecaseDTO } from "@core/domain/meeting/usecase/MeetingUsecaseDTO";
+import { UserMeetingService } from "@core/services/user-meeting/UserMeetingService";
 
 @Controller("meetings")
 @ApiTags("meetings")
 export class MeetingController {
-  constructor(private readonly meetingService: MeetingService) {}
+  constructor(
+    private readonly meetingService: MeetingService) {}
 
   @Post("")
   @HttpUserAuth()
@@ -29,6 +32,7 @@ export class MeetingController {
   @HttpCode(HttpStatus.OK)
   @ApiBody({ type: HttpRestApiModelCreateMeetingBody })
   public async createMeeting(@Body() body: HttpRestApiModelCreateMeetingBody) {
+    
     const adapter = {
       title: body.title,
       description: body.description,

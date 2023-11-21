@@ -58,6 +58,10 @@ export default class Code {
     message: "Entity not found.",
   };
 
+  public static ENTITY_ALREADY_EXISTED_ERROR: CodeDescription<string> = {
+    code: "ENTITY_ALREADY_EXISTED_ERROR",
+    message: "Entity is already existed.",
+  };
   public static ENTITY_VALIDATION_ERROR: CodeDescription<string> = {
     code: "ENTITY_VALIDATION_ERROR",
     message: "Entity validation error.",
