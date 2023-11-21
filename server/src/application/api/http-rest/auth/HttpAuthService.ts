@@ -17,12 +17,12 @@ import {
 
 import { User } from "@core/domain/user/entity/User";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
-import { Exception } from "@core/common/exception/Exception";
-import Code from "@core/common/constants/Code";
 import { CreateUserPort } from "@core/domain/user/port/CreateUserPort";
 import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { Nullable } from "@core/common/type/CommonTypes";
+import { AppException } from "@core/common/exception/AppException";
+import { AppErrors } from "@core/common/exception/AppErrors";
 
 @Injectable()
 export class HttpAuthService {
@@ -164,7 +164,7 @@ export class HttpAuthService {
       .getUserRepository()
       .findUser({ email: email });
 
-    if (!userExist) throw new Exception(Code.ENTITY_NOT_FOUND_ERROR);
+    if (!userExist) throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR);
 
     const resut = await this.sendVerificationEmail(userExist);
     return { expiresIn: resut.expiresIn };
@@ -180,7 +180,7 @@ export class HttpAuthService {
       .getUserRepository()
       .findUser({ id: payload.id });
 
-    if (!user) throw new Exception(Code.ENTITY_NOT_FOUND_ERROR);
+    if (!user) throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR);
 
     if (user.isValid) return;
 
@@ -231,7 +231,7 @@ export class HttpAuthService {
     const user = await this.unitOfWork
       .getUserRepository()
       .findUser({ id: userPayload.id });
-    if (!user) throw new Exception(Code.ENTITY_NOT_FOUND_ERROR);
+    if (!user) throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR);
 
     await user.changePassword(payload.newPassword);
     await this.unitOfWork.getUserRepository().updateUser(user);

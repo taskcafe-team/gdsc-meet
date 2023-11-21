@@ -8,8 +8,6 @@ import {
 import { REQUEST } from "@nestjs/core";
 
 import { Meeting } from "@core/domain/meeting/entity/Meeting";
-import { Exception } from "@core/common/exception/Exception";
-import Code from "@core/common/constants/Code";
 import { Participant } from "@core/domain/participant/entity/Participant";
 import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
@@ -18,6 +16,9 @@ import { MeetingType } from "@core/common/enums/MeetingEnums";
 import { HttpResponseWithOptionalUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 import { WebRTCLivekitService } from "@infrastructure/adapter/webrtc/WebRTCLivekitManagement";
 import { RoomType } from "@infrastructure/adapter/webrtc/Types";
+import { AppCode } from "@core/common/constants/AppCode";
+import { AppException } from "@core/common/exception/AppException";
+import { AppErrors } from "@core/common/exception/AppErrors";
 
 @Injectable()
 export class MeetingService {
@@ -42,7 +43,8 @@ export class MeetingService {
         .getUserRepository()
         .findUser({ id: userId });
 
-      if (!currentuser) throw new Exception(Code.ENTITY_NOT_FOUND_ERROR);
+      if (!currentuser)
+        throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR);
 
       const meeting = await Meeting.new(payload);
 

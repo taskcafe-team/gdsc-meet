@@ -1,16 +1,10 @@
-import Code from "@core/common/constants/Code";
-import { Exception } from "@core/common/exception/Exception";
+import { AppErrors } from "@core/common/exception/AppErrors";
+import { AppException } from "@core/common/exception/AppException";
 import { ClassValidator } from "@core/common/util/class-validator/ClassValidator";
 
 export class UseCaseValidatableAdapter {
   public async validate(): Promise<void> {
     const details = await ClassValidator.validate(this);
-    if (details)
-      throw new Exception(
-        Code.USE_CASE_PORT_VALIDATION_ERROR,
-        undefined,
-        undefined,
-        details,
-      );
+    if (details) throw new AppException(AppErrors.VALIDATION_FAILURE, details);
   }
 }

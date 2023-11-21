@@ -62,9 +62,9 @@ export class ParticipantController {
   // public getParticipants(@Param("meetingId") meetingId: string) {}
 
   @Patch("respond-join-request")
+  @HttpCode(HttpStatus.NO_CONTENT)
   @HttpParticipantAuth(ParticipantRole.HOST)
   @ApiBearerAuth()
-  @HttpCode(HttpStatus.NO_CONTENT)
   public async resultRequestJoinMeeting(
     @Param("meetingId") meetingId: string,
     @Body() body: { participantIds: string[]; status: RespondJoinStatus },
@@ -75,7 +75,7 @@ export class ParticipantController {
       participantIds,
       status,
     );
-    return;
+    return CoreApiResponse.success();
   }
 
   @Post("send-message")

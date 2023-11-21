@@ -6,8 +6,6 @@ import {
   HttpJwtPayload,
   HttpUserPayload,
 } from "@application/api/http-rest/auth/type/HttpAuthTypes";
-import { Exception } from "@core/common/exception/Exception";
-import Code from "@core/common/constants/Code";
 import {
   Injectable,
   OnModuleInit,

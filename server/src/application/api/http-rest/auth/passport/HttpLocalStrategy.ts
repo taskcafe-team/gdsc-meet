@@ -1,7 +1,5 @@
 import { HttpAuthService } from "@application/api/http-rest/auth/HttpAuthService";
 import { HttpUserPayload } from "@application/api/http-rest/auth/type/HttpAuthTypes";
-import Code from "@core/common/constants/Code";
-import { Exception } from "@core/common/exception/Exception";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import {
   Injectable,

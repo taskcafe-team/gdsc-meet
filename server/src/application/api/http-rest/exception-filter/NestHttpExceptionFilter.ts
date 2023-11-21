@@ -1,6 +1,6 @@
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
-import Code from "@core/common/constants/Code";
-import { Exception } from "@core/common/exception/Exception";
+import { ErrorDto } from "@core/common/dtos/ErrorDto";
+import { AppException } from "@core/common/exception/AppException";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import {
   ArgumentsHost,
@@ -33,7 +33,11 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
       const message: string =
         `Method: ${request.method}; ` +
         `Path: ${request.path}; ` +
-        `Error: ${errorResponse.error?.message ?? error.message}`;
+        `Error: ${
+          errorResponse.metadata.error
+            ? errorResponse.getErrorDisplay()
+            : error.message
+        }`;
 
       Logger.error(message);
     }
@@ -47,12 +51,9 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
     response: Response,
   ): CoreApiResponse<unknown> {
     if (error instanceof HttpException) {
-      errorResponse = CoreApiResponse.error({
-        code: error.getStatus(),
-        message: error.message,
-      });
+      response.status(error.getStatus());
+      return CoreApiResponse.error(error.getStatus(), error.message);
     }
-
     return errorResponse;
   }
 
@@ -61,18 +62,23 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
     errorResponse: CoreApiResponse<unknown>,
     response: Response,
   ): CoreApiResponse<unknown> {
-    if (error instanceof Exception) {
-      response.status(error.status);
-
-      errorResponse = CoreApiResponse.error({
-        code: error.name,
-        message: error.message,
-      });
+    if (error instanceof AppException) {
+      response.status(error.getHttpStatus());
+      const errorDto = new ErrorDto(
+        error.getCode(),
+        error.getMessage(),
+        error.getAcction(),
+        error.getTitle(),
+        error.getErrorType(),
+      );
+      return CoreApiResponse.error(error.getHttpStatus(), errorDto);
     } else if (error.name === "TokenExpiredError") {
       response.status(HttpStatus.UNAUTHORIZED);
-      errorResponse = CoreApiResponse.error(Code.JWT_EXPIRED);
+      return CoreApiResponse.error(
+        HttpStatus.UNAUTHORIZED,
+        "Token expired error",
+      );
     }
-
     return errorResponse;
   }
 }

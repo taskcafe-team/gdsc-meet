@@ -28,6 +28,8 @@ import {
 } from "./documentation/AuthDocumentation";
 import { HttpUser } from "../auth/decorator/HttpUser";
 import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
+import { AppException } from "@core/common/exception/AppException";
+import { AppErrors } from "@core/common/exception/AppErrors";
 
 @Controller("auth")
 @ApiTags("auth")
@@ -96,7 +98,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   public async forgotPassword(
     @Query("email") email: string,
-  ): Promise<CoreApiResponse<void>> {
+  ): Promise<CoreApiResponse> {
     const result = await this.authService.forgotPassword(email);
     return CoreApiResponse.success(result);
   }
@@ -106,7 +108,7 @@ export class AuthController {
   public async resetPassword(
     @Body() body: HttpRestApiModelResetPasswordBody,
   ): Promise<CoreApiResponse<void>> {
-    await this.authService.resetPassword(body);
+    const result = await this.authService.resetPassword(body);
     return CoreApiResponse.success();
   }
 

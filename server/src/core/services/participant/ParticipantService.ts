@@ -1,5 +1,10 @@
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { MeetingService } from "../meeting/MeetingService";
 import {
   CreateTokenDto,
@@ -142,6 +147,31 @@ export default class ParticipantService implements IParticipantService {
     });
 
     return await Promise.all(psPromise);
+  }
+
+  async kickParticipant(meetingId: string, participantId: string) {
+    const meeting = await this.meetingService.getMeeting({ meetingId });
+    const p = await this.getParticipant({ meetingId, participantId });
+    if (!p) throw new NotFoundException(`Participant not found!`);
+    if (p.role === ParticipantRole.HOST)
+      throw new BadRequestException(`You can't kick host!`);
+
+    // await this.unitOfWork.runInTransaction(async () => {
+    //   await this.unitOfWork
+    //     .getParticipantRepository()
+    //     .removeParticipant({ id: participantId, meetingId });
+
+    //   const action = createSendDataMessageAction(
+    //     SendMessageActionEnum.ParticipantKick,
+    //     { participantId },
+    //   );
+
+    //   const adapter: SendDataMessagePort = {
+    //     sendto: { roomId: meeting.id, roomType: RoomType.MEETING },
+    //     action,
+    //   };
+    //   await this.webRTCService.sendDataMessage(adapter);
+    // });
   }
 
   // async updateParticipants(port: {}) {

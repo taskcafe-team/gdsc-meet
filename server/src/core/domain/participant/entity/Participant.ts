@@ -13,10 +13,10 @@ import { User } from "@core/domain/user/entity/User";
 
 import { CreateParticipantEntityPayload } from "./type/CreateParticipantEntityPayload";
 import { EditParticipantEntityPayload } from "./type/EditParticipantEntityPayload";
-import { Exception } from "@core/common/exception/Exception";
-import Code from "@core/common/constants/Code";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { Meeting } from "@core/domain/meeting/entity/Meeting";
+import { AppException } from "@core/common/exception/AppException";
+import { AppErrors } from "@core/common/exception/AppErrors";
 
 export class Participant extends Entity<string> {
   @IsString() public meetingId: string;
@@ -75,11 +75,7 @@ export class Participant extends Entity<string> {
 
   public async validate(): Promise<void> {
     if (!this.name && !this.userId)
-      throw new Exception(
-        Code.ENTITY_VALIDATION_ERROR,
-        "At least one of name or userId must exist.",
-      );
-
+      throw new AppException(AppErrors.VALIDATION_FAILURE);
     await super.validate();
   }
 }
