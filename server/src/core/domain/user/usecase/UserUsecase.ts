@@ -1,8 +1,10 @@
-import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
-import { GetUserPort } from "@core/domain/user/port/GetUserPort";
-import { CreateUserPort } from "@core/domain/user/port/CreateUserPort";
+import { UserUsecaseDto } from "./dto/UserUsecaseDto";
+import { CreateUserPort } from "./port/CreateUserPort";
+import { GetUserPort } from "./port/GetUserPort";
+import { UpdateUserPort } from "./port/UpdateUserPort";
 
 export interface UserUsecase {
-  getUser(payload: GetUserPort): Promise<UserUsecaseDto>;
-  createUser(payload: CreateUserPort): Promise<UserUsecaseDto>;
+  getUser(port: GetUserPort): Promise<UserUsecaseDto>;
+  createUser(port: CreateUserPort): Promise<UserUsecaseDto>;
+  updateMe(port: UpdateUserPort): Promise<UserUsecaseDto>;
 }

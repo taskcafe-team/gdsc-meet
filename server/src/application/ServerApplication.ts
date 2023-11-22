@@ -10,6 +10,7 @@ import {
   ValidationPipe,
 } from "@nestjs/common";
 import helmet from "helmet";
+import * as cookieParser from "cookie-parser";
 
 import { RootModule } from "./di/.RootModule";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
@@ -22,6 +23,7 @@ export class ServerApplication {
     this.app = await NestFactory.create(RootModule);
     this.configService = this.app.get(ConfigService);
 
+    this.app.use(cookieParser("dangnhatminh")); //TODO: change security key
     this.buildCORS();
     this.app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
     this.buildValidatorPipe();

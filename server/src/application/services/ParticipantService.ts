@@ -5,7 +5,6 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { MeetingService } from "../meeting/MeetingService";
 import {
   CreateTokenDto,
   WebRTCLivekitService,
@@ -27,9 +26,10 @@ import { REQUEST } from "@nestjs/core";
 import { HttpRequestWithUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { Participant } from "@core/domain/participant/entity/Participant";
-import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
+import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/dto/MeetingUsecaseDto";
 import { VideoGrant } from "livekit-server-sdk";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
+import { MeetingService } from "./MeetingService";
 
 type ParticipantSendMessagePort = {
   roomId: string;
@@ -63,7 +63,7 @@ export type IParticipantService = {
 };
 
 @Injectable()
-export default class ParticipantService implements IParticipantService {
+export class ParticipantService implements IParticipantService {
   constructor(
     @Inject(REQUEST)
     private readonly requestWithParticipant: HttpRequestWithParticipant,

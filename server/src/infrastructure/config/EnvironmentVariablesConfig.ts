@@ -1,3 +1,5 @@
+import { AppErrors } from "@core/common/exception/AppErrors";
+import { AppException } from "@core/common/exception/AppException";
 import { plainToClass } from "class-transformer";
 import { IsNotEmpty, IsNumber, validateSync, IsBoolean } from "class-validator";
 
@@ -58,8 +60,8 @@ export class EnvironmentVariablesConfig {
 
     const errors = validateSync(finalConfig, { skipMissingProperties: false });
 
-    if (errors.length > 0) throw new Error(errors.toString());
-
+    if (errors.length > 0)
+      throw new AppException(AppErrors.VALIDATION_FAILURE, errors);
     return finalConfig;
   }
 }

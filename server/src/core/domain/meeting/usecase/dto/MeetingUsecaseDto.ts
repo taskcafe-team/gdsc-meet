@@ -1,5 +1,5 @@
 import { Exclude, Expose, plainToClass } from "class-transformer";
-import { Meeting } from "../entity/Meeting";
+import { Meeting } from "../../entity/Meeting";
 import { Nullable } from "@core/common/type/CommonTypes";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
 

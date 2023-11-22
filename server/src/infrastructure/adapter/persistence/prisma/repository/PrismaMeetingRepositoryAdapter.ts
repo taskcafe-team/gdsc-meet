@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import { PrismaMeetingMapper } from "../entity/meeting/PrismaMeetingMapper";
 import { PrismaMeeting } from "../entity/meeting/PrismaMeeting";
 import { Nullable } from "@core/common/type/CommonTypes";
-import { MeetingRepositoryPort } from "@core/domain/meeting/port/MeetingRepositoryPort";
+import { MeetingRepositoryPort } from "@core/domain/meeting/usecase/port/MeetingRepositoryPort";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
 
 export class PrismaMeetingRepositoryAdapter

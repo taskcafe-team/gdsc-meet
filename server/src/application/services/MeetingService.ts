@@ -9,19 +9,19 @@ import { REQUEST } from "@nestjs/core";
 
 import { Meeting } from "@core/domain/meeting/entity/Meeting";
 import { Participant } from "@core/domain/participant/entity/Participant";
-import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
+import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/dto/MeetingUsecaseDto";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
 import { HttpResponseWithOptionalUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 import { WebRTCLivekitService } from "@infrastructure/adapter/webrtc/WebRTCLivekitManagement";
 import { RoomType } from "@infrastructure/adapter/webrtc/Types";
-import { AppCode } from "@core/common/constants/AppCode";
 import { AppException } from "@core/common/exception/AppException";
 import { AppErrors } from "@core/common/exception/AppErrors";
+import { MeetingUsecase } from "@core/domain/meeting/usecase/MeetingUsecase";
 
 @Injectable()
-export class MeetingService {
+export class MeetingService implements MeetingUsecase {
   constructor(
     @Inject(REQUEST)
     private readonly requestWithOptionalUser: HttpResponseWithOptionalUser,

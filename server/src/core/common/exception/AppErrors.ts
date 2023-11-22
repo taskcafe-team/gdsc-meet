@@ -8,6 +8,14 @@ export type TAppErrorCode = Omit<
   "SUCCESS"
 >;
 export const AppErrors: TAppErrorCode = {
+  INVALID_PARAMETER: new AppError(
+    400,
+    AppCode.INVALID_PARAMETER,
+    "Please enter a valid parameter {0}.",
+    AppErrorAction.DEFAULT,
+    "Invalid parameter",
+    ErrorType.AUTHENTICATION_ERROR,
+  ),
   VALIDATION_FAILURE: new AppError(
     402,
     AppCode.VALIDATION_FAILURE,
@@ -16,13 +24,21 @@ export const AppErrors: TAppErrorCode = {
     "Validation failed",
     ErrorType.INTERNAL_ERROR,
   ),
+  UNAUTHORIZED_ACCESS: new AppError(
+    403,
+    AppCode.UNAUTHORIZED_ACCESS,
+    "Unauthorized access",
+    AppErrorAction.DEFAULT,
+    "Unauthorized access",
+    ErrorType.AUTHENTICATION_ERROR,
+  ),
   INTERNAL_SERVER_ERROR: new AppError(
     500,
     AppCode.INTERNAL_SERVER_ERROR,
     "Internal server error while processing request",
     AppErrorAction.DEFAULT,
     "Internal server error",
-    ErrorType.ARGUMENT_ERROR,
+    ErrorType.INTERNAL_ERROR,
   ),
   ENTITY_NOT_FOUND_ERROR: new AppError(
     500,
@@ -30,6 +46,6 @@ export const AppErrors: TAppErrorCode = {
     "Entity not found: {0}",
     AppErrorAction.DEFAULT,
     "Entity not found",
-    ErrorType.INTERNAL_ERROR,
+    ErrorType.ARGUMENT_ERROR,
   ),
 };

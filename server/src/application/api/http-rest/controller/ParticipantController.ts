@@ -1,4 +1,3 @@
-import ParticipantService from "@core/services/participant/ParticipantService";
 import {
   Body,
   Controller,
@@ -24,6 +23,7 @@ import {
   RespondJoinStatus,
 } from "@infrastructure/adapter/webrtc/Types";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
+import { ParticipantService } from "@application/services/ParticipantService";
 
 @Controller("meetings/:meetingId/participants")
 @ApiTags("participants")

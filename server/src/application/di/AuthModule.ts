@@ -7,7 +7,7 @@ import { AuthController } from "@application/api/http-rest/controller/AuthContro
 import { HttpAuthService } from "@application/api/http-rest/auth/HttpAuthService";
 import { HttpLocalStrategy } from "@application/api/http-rest/auth/passport/HttpLocalStrategy";
 import { HttpGoogleStrategy } from "@application/api/http-rest/auth/passport/HttpGoogleStrategy";
-import { HttpJwtStrategy } from "@application/api/http-rest/auth/passport/HttpJwtStrategy";
+import { HttpAccessTokenStrategy } from "@application/api/http-rest/auth/passport/HttpAccessTokenStrategy";
 
 import { InfrastructureModule } from "./InfrastructureModule";
 import { UserModule } from "./UserModule";
@@ -18,7 +18,7 @@ import { UserModule } from "./UserModule";
   providers: [
     ConfigService,
     HttpAuthService,
-    HttpJwtStrategy,
+    HttpAccessTokenStrategy,
     HttpLocalStrategy,
     HttpGoogleStrategy,
   ],

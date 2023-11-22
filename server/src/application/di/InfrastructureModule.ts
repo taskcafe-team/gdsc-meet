@@ -8,8 +8,8 @@ import * as redisStore from "cache-manager-redis-store";
 import { NestHttpExceptionFilter } from "@application/api/http-rest/exception-filter/NestHttpExceptionFilter";
 
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
-import { WebRTCModule } from "./Infrastructure/WebRTCModule";
-import { UnitOfWorkModule } from "./Infrastructure/UnitOfWorkModule";
+import { WebRTCModule } from "./WebRTCModule";
+import { UnitOfWorkModule } from "./UnitOfWorkModule";
 
 const NestHttpExceptionFilterProvider: Provider = {
   provide: APP_FILTER,

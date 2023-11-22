@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 
 import { ParticipantUsecaseDto } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDto";
-import ParticipantService from "@core/services/participant/ParticipantService";
+import { ParticipantService } from "@application/services/ParticipantService";
 
 @Injectable()
 export class HttpParticipantAuthGuard implements CanActivate {

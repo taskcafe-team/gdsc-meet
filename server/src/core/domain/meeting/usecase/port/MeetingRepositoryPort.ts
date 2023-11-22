@@ -1,7 +1,7 @@
 import { Nullable } from "@core/common/type/CommonTypes";
-import { Meeting } from "../entity/Meeting";
+import { Meeting } from "../../entity/Meeting";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
-import { EditMeetingEntityPayload } from "../entity/type/EditMeetingEntityPayload";
+import { EditMeetingEntityPayload } from "../../entity/type/EditMeetingEntityPayload";
 
 export interface MeetingRepositoryPort {
   findMeeting(by: { id: string }): Promise<Nullable<Meeting>>;

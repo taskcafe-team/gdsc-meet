@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 
-import { UserRepositoryPort } from "@core/domain/user/port/UserRepositoryPort";
+import { UserRepositoryPort } from "@core/domain/user/usecase/port/UserRepositoryPort";
 import { RepositoryFindOptions } from "@core/common/persistence/RepositoryOptions";
 import { User } from "@core/domain/user/entity/User";
 

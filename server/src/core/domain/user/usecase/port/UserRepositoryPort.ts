@@ -1,4 +1,4 @@
-import { User } from "../entity/User";
+import { User } from "../../entity/User";
 import { Nullable } from "@core/common/type/CommonTypes";
 
 export interface UserRepositoryPort {

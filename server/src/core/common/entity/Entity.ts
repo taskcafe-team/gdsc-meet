@@ -10,7 +10,7 @@ export class Entity<TIdentifier extends string | number> {
   protected id: Nullable<TIdentifier>;
 
   public getId(): TIdentifier {
-    if (!this.id) throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR);
+    if (!this.id) throw new AppException(AppErrors.VALIDATION_FAILURE);
 
     return this.id;
   }
@@ -20,7 +20,7 @@ export class Entity<TIdentifier extends string | number> {
       await ClassValidator.validate(this);
 
     if (details) {
-      throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR, details);
+      throw new AppException(AppErrors.VALIDATION_FAILURE, details);
     }
   }
 }

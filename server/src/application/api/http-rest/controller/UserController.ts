@@ -1,13 +1,13 @@
 import * as path from "path";
-import { createReadStream, createWriteStream, existsSync, mkdirSync } from "fs";
+import { createReadStream } from "fs";
 import {
   Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
-  ParseFilePipeBuilder,
   Put,
   Res,
   StreamableFile,
@@ -22,15 +22,15 @@ import { HttpUserPayload } from "../auth/type/HttpAuthTypes";
 import { GetUserAdapter } from "@infrastructure/adapter/usecase/user/GetUserAdapter";
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
 import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
-import { UserService } from "@core/services/user/UserService";
 import { HttpRestApiModelUpdateUser } from "./documentation/UserDocumentation";
-// import { avatarStoragePath } from "src/data/path";
 import { Response } from "express";
 import LocalFilesInterceptor from "@core/common/interceptor/LocalFilesInterceptor ";
 import { ConfigService } from "@nestjs/config";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
-import * as mime from "mime-types";
 import { fileStoragePath } from "@infrastructure/adapter/persistence/data/path";
+import { UserUsecase } from "@core/domain/user/usecase/UserUsecase";
+import * as mime from "mime-types";
+import { UserService } from "@application/services/UserService";
 
 const MAX_PROFILE_PICTURE_SIZE_IN_BYTES = 2 * 1024 * 1024; // 2MB
 
@@ -41,7 +41,8 @@ export class UserController {
   private readonly destination: string;
 
   constructor(
-    private readonly userService: UserService,
+    @Inject(UserService)
+    private readonly userService: UserUsecase,
     configService: ConfigService<EnvironmentVariablesConfig, true>,
   ) {
     this.endpointAvatarUrl = configService.get("FILE_STORAGE_AVATAR_ENDPOINT");
@@ -49,9 +50,7 @@ export class UserController {
   }
 
   @Get("me")
-  @HttpCode(HttpStatus.OK)
   @HttpUserAuth()
-  @ApiBearerAuth()
   public async getMe(
     @HttpUser() httpUser: HttpUserPayload,
   ): Promise<CoreApiResponse<UserUsecaseDto>> {
@@ -94,11 +93,8 @@ export class UserController {
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body() body: Omit<HttpRestApiModelUpdateUser, "avatar">,
   ) {
-    const adapter = {
-      firstName: body.firstName || undefined,
-      lastName: body.lastName || undefined,
-      avatar: file?.filename,
-    };
+    const { firstName, lastName } = body;
+    const adapter = { firstName, lastName, avatar: file?.filename };
 
     if (adapter.avatar)
       adapter.avatar = this.endpointAvatarUrl + adapter.avatar;

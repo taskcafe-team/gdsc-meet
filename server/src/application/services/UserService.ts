@@ -1,14 +1,12 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { UserUsecase } from "@core/domain/user/usecase/UserUsecase";
 import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
-
-import { GetUserPort } from "../../domain/user/port/GetUserPort";
-import { CreateUserPort } from "../../domain/user/port/CreateUserPort";
-
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
-import { UpdateUserPort } from "@core/domain/user/port/UpdateUserPort";
+import { UpdateUserPort } from "@core/domain/user/usecase/port/UpdateUserPort";
 import { REQUEST } from "@nestjs/core";
 import { HttpResponseWithOptionalUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
+import { UserUsecase } from "@core/domain/user/usecase/UserUsecase";
+import { CreateUserPort } from "@core/domain/user/usecase/port/CreateUserPort";
+import { GetUserPort } from "@core/domain/user/usecase/port/GetUserPort";
 
 @Injectable()
 export class UserService implements UserUsecase {

@@ -1,5 +1,5 @@
 import { UseCaseValidatableAdapter } from "@core/common/adapter/usecase/UseCaseValidatableAdapter";
-import { GetUserPort } from "@core/domain/user/port/GetUserPort";
+import { GetUserPort } from "@core/domain/user/usecase/port/GetUserPort";
 import { Exclude, Expose, plainToClass } from "class-transformer";
 import { IsUUID } from "class-validator";
 

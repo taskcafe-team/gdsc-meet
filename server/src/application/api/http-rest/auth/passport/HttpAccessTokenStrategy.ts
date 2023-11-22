@@ -15,7 +15,7 @@ import { HttpAuthService } from "../HttpAuthService";
 import { ModuleRef } from "@nestjs/core";
 
 @Injectable()
-export class HttpJwtStrategy
+export class HttpAccessTokenStrategy
   extends PassportStrategy(Strategy, "jwt")
   implements OnModuleInit
 {

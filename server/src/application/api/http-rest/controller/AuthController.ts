@@ -7,6 +7,8 @@ import {
   HttpStatus,
   Post,
   Query,
+  Req,
+  UnauthorizedException,
   UseGuards,
   ValidationPipe,
 } from "@nestjs/common";
@@ -28,8 +30,7 @@ import {
 } from "./documentation/AuthDocumentation";
 import { HttpUser } from "../auth/decorator/HttpUser";
 import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
-import { AppException } from "@core/common/exception/AppException";
-import { AppErrors } from "@core/common/exception/AppErrors";
+import { Request } from "express";
 
 @Controller("auth")
 @ApiTags("auth")
@@ -70,11 +71,14 @@ export class AuthController {
     //
   }
 
-  @Post("access-token")
-  public async getAccessToken(
-    @Body(new ValidationPipe()) body: HttpRestApiModelGetAccessTokenBody,
+  @Post("refresh-token")
+  public async refreshToken(
+    @Req() req: Request,
   ): Promise<CoreApiResponse<{ accessToken: string }>> {
-    const result = await this.authService.getAccessToken(body.refreshToken);
+    const apiRefreshTokenHeader = "gdscmeet-refresh-token";
+    const refreshToken = req.cookies[apiRefreshTokenHeader];
+
+    const result = await this.authService.createAccessToken(refreshToken);
     return CoreApiResponse.success(result);
   }
 

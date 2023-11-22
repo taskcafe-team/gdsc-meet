@@ -1,7 +1,7 @@
 import { UseCaseValidatableAdapter } from "@core/common/adapter/usecase/UseCaseValidatableAdapter";
 import { AuthProviderName } from "@core/common/enums/AuthEnum";
 import { UserRole } from "@core/common/enums/UserEnums";
-import { CreateUserPort } from "@core/domain/user/port/CreateUserPort";
+import { CreateUserPort } from "@core/domain/user/usecase/port/CreateUserPort";
 import { Exclude, Expose, plainToClass } from "class-transformer";
 import { IsEmail, IsEnum, IsOptional, IsString } from "class-validator";
 

@@ -17,7 +17,7 @@ import {
 
 import { User } from "@core/domain/user/entity/User";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
-import { CreateUserPort } from "@core/domain/user/port/CreateUserPort";
+import { CreateUserPort } from "@core/domain/user/usecase/port/CreateUserPort";
 import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { Nullable } from "@core/common/type/CommonTypes";
@@ -58,14 +58,16 @@ export class HttpAuthService {
     };
   }
 
-  public async getAccessToken(
-    refreshToken: string,
+  public async createAccessToken(
+    refreshToken: any,
   ): Promise<{ accessToken: string }> {
+    if (!refreshToken || typeof refreshToken !== "string")
+      throw new UnauthorizedException("Invalid token");
+
+    const secret = this.configService.get("API_REFRESH_TOKEN_SECRET");
     const httpUser = await this.jwtService.verifyAsync<HttpUserPayload>(
       refreshToken,
-      {
-        secret: this.configService.get("API_REFRESH_TOKEN_SECRET"),
-      },
+      { secret },
     );
     const payload: HttpUserPayload = httpUser;
 

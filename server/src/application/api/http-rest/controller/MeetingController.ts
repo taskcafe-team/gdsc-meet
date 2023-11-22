@@ -1,4 +1,3 @@
-import { MeetingService } from "@core/services/meeting/MeetingService";
 import {
   Body,
   Controller,
@@ -6,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   ParseArrayPipe,
   Post,
@@ -14,14 +14,20 @@ import {
 import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
 
 import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
-import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
 import { HttpRestApiModelCreateMeetingBody } from "./documentation/MeetingDocumentation";
-import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/MeetingUsecaseDto";
+
+import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
+import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/dto/MeetingUsecaseDto";
+import { MeetingUsecase } from "@core/domain/meeting/usecase/MeetingUsecase";
+import { MeetingService } from "@application/services/MeetingService";
 
 @Controller("meetings")
 @ApiTags("meetings")
 export class MeetingController {
-  constructor(private readonly meetingService: MeetingService) {}
+  constructor(
+    @Inject(MeetingService)
+    private readonly meetingService: MeetingUsecase,
+  ) {}
 
   @Post("")
   @HttpUserAuth()
