@@ -1,40 +1,103 @@
-import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
+import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
+import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
-import { Cache } from "cache-manager";
+
+type JwtVerifyDto = {
+  iat: number; // issued at
+  exp: number; // expiration time
+};
+
+type UserJwtDto = { userId: string };
+
+type JwtDto = {
+  token: string;
+  expiresIn: string;
+};
+
+export interface JwtUsecase {
+  // generateToken(userId: string): Promise<string>;
+  // verifyToken(token: string): Promise<string>;
+
+  generateUserAccessToken(payload: UserJwtDto): JwtDto;
+  verifyUserAccessToken(token: string): UserJwtDto & JwtVerifyDto;
+
+  generateUserRefreshToken(payload: UserJwtDto): JwtDto;
+  verifyUserRefreshToken(token: string): UserJwtDto & JwtVerifyDto;
+
+  generateEmailVerificationToken(payload: UserJwtDto): JwtDto;
+  verifyEmailVerificationToken(token: string): UserJwtDto & JwtVerifyDto;
+}
 
 @Injectable()
-export class CustomJwtService {
+export class CustomJwtService implements JwtUsecase {
+  // private readonly baseSercet: string;
+
+  private readonly userAccessTokenSecret: string;
+  private readonly userAccessTokenTtl: string; // in minutes
+
+  private readonly userRefreshTokenSecret: string;
+  private readonly userRefreshTokenTtl: string; // in minutes
+
+  private readonly emailVerificationTokenSecret: string;
+  private readonly emailVerificationTokenTtl: string; // in minutes
+
   constructor(
+    configService: ConfigService<EnvironmentVariablesConfig, true>,
     private readonly jwtService: JwtService,
-    private readonly cacheManager: Cache,
-  ) {}
+  ) {
+    // User credentials
+    this.userAccessTokenSecret = configService.get("API_ACCESS_TOKEN_SECRET");
+    this.userAccessTokenTtl = configService.get(
+      "API_ACCESS_TOKEN_TTL_IN_MINUTES",
+    );
 
-  async generateTokens(userId: string) {
-    const accessToken = this.jwtService.sign({ userId });
-    const refreshToken = this.jwtService.sign({ userId }, { expiresIn: "7d" }); // Refresh token with longer expiry
+    this.userRefreshTokenSecret = configService.get("API_REFRESH_TOKEN_SECRET");
+    this.userRefreshTokenTtl = configService.get(
+      "API_REFRESH_TOKEN_TTL_IN_MINUTES",
+    );
 
-    // Store the refresh token in cache
-    await this.cacheManager.set(userId, refreshToken);
-
-    return { accessToken, refreshToken };
+    this.emailVerificationTokenSecret = configService.get(
+      "EMAIL_VERIFICATION_TOKEN_SECRET",
+    );
+    this.emailVerificationTokenTtl = configService.get(
+      "EMAIL_VERIFICATION_TOKEN_SECRET_TTL_IN_MINUTES",
+    );
   }
 
-  async refreshToken(oldRefreshToken: string) {
-    try {
-      const { userId } = this.jwtService.verify(oldRefreshToken);
+  generateUserAccessToken(payload: UserJwtDto): JwtDto {
+    const secret = this.userAccessTokenSecret;
+    const expiresIn = this.userAccessTokenTtl + "m";
+    const token = this.jwtService.sign(payload, { secret, expiresIn });
+    return { token, expiresIn };
+  }
 
-      // Check if the refresh token is in cache
-      const storedRefreshToken = await this.cacheManager.get(userId);
-      if (storedRefreshToken !== oldRefreshToken) {
-        throw new UnauthorizedException("Invalid refresh token");
-      }
+  verifyUserAccessToken(token: string): UserJwtDto & JwtVerifyDto {
+    const secret = this.userAccessTokenSecret;
+    return this.jwtService.verify(token, { secret });
+  }
 
-      // Generate new tokens
-      const newTokens = await this.generateTokens(userId);
+  generateUserRefreshToken(payload: UserJwtDto): JwtDto {
+    const secret = this.userRefreshTokenSecret;
+    const expiresIn = this.userRefreshTokenTtl + "m";
+    const token = this.jwtService.sign(payload, { secret, expiresIn });
+    return { token, expiresIn };
+  }
 
-      return newTokens;
-    } catch (error) {
-      throw new UnauthorizedException("Invalid refresh token");
-    }
+  verifyUserRefreshToken(token: string): UserJwtDto & JwtVerifyDto {
+    const secret = this.userAccessTokenSecret;
+    return this.jwtService.verify(token, { secret });
+  }
+
+  generateEmailVerificationToken(payload: UserJwtDto): JwtDto {
+    const secret = this.emailVerificationTokenSecret;
+    const expiresIn = this.emailVerificationTokenTtl + "m";
+    const token = this.jwtService.sign(payload, { secret, expiresIn });
+    return { token, expiresIn };
+  }
+
+  verifyEmailVerificationToken(token: string): UserJwtDto & JwtVerifyDto {
+    const secret = this.emailVerificationTokenSecret;
+    return this.jwtService.verify(token, { secret });
   }
 }

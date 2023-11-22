@@ -25,12 +25,12 @@ export class HttpAccessTokenStrategy
     configService: ConfigService<EnvironmentVariablesConfig, true>,
     private readonly moduleRef: ModuleRef,
   ) {
+    const headerKey = configService.get("API_ACCESS_TOKEN_HEADER");
+    const secertKey = configService.get("API_ACCESS_TOKEN_SECRET");
     super({
-      jwtFromRequest: ExtractJwt.fromHeader(
-        configService.get("API_ACCESS_TOKEN_HEADER"),
-      ),
+      jwtFromRequest: ExtractJwt.fromHeader(headerKey),
       ignoreExpiration: false,
-      secretOrKey: configService.get("API_ACCESS_TOKEN_SECRET"),
+      secretOrKey: secertKey,
     });
   }
 

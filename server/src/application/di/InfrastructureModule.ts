@@ -10,6 +10,9 @@ import { NestHttpExceptionFilter } from "@application/api/http-rest/exception-fi
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { WebRTCModule } from "./WebRTCModule";
 import { UnitOfWorkModule } from "./UnitOfWorkModule";
+import { CustomJwtService } from "@application/services/JwtService";
+import { EmailService } from "@application/services/EmailService";
+import { JwtModule } from "@nestjs/jwt";
 
 const NestHttpExceptionFilterProvider: Provider = {
   provide: APP_FILTER,
@@ -50,8 +53,16 @@ const NestHttpExceptionFilterProvider: Provider = {
     }),
     UnitOfWorkModule,
     WebRTCModule,
+    JwtModule,
   ],
-  providers: [NestHttpExceptionFilterProvider],
-  exports: [MailerModule, CacheModule, UnitOfWorkModule, WebRTCModule],
+  providers: [NestHttpExceptionFilterProvider, CustomJwtService, EmailService],
+  exports: [
+    MailerModule,
+    CacheModule,
+    UnitOfWorkModule,
+    WebRTCModule,
+    CustomJwtService,
+    EmailService,
+  ],
 })
 export class InfrastructureModule {}

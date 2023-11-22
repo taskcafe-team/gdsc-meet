@@ -23,12 +23,10 @@ export class HttpGoogleStrategy
     configService: ConfigService<EnvironmentVariablesConfig>,
     private readonly moduleRef: ModuleRef,
   ) {
-    super({
-      clientID: configService.get("GOOGLE_CLIENT_ID"),
-      clientSecret: configService.get("GOOGLE_CLIENT_SECRET"),
-      callbackURL: configService.get("GOOGLE_CALLBACK_URL"),
-      scope: ["email", "profile"],
-    });
+    const clientID = configService.get("GOOGLE_CLIENT_ID");
+    const clientSecret = configService.get("GOOGLE_CLIENT_SECRET");
+    const callbackURL = configService.get("GOOGLE_CALLBACK_URL");
+    super({ clientID, clientSecret, callbackURL, scope: ["email", "profile"] });
   }
 
   async onModuleInit() {

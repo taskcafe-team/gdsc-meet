@@ -1,5 +1,4 @@
 import { ConfigService } from "@nestjs/config";
-import { JwtService } from "@nestjs/jwt";
 import {
   BadRequestException,
   ConflictException,
@@ -7,10 +6,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { MailerService } from "@nestjs-modules/mailer";
-
 import {
-  HttpJwtPayload,
   HttpLoggedInUser,
   HttpUserPayload,
 } from "@application/api/http-rest/auth/type/HttpAuthTypes";
@@ -23,6 +19,8 @@ import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVa
 import { Nullable } from "@core/common/type/CommonTypes";
 import { AppException } from "@core/common/exception/AppException";
 import { AppErrors } from "@core/common/exception/AppErrors";
+import { CustomJwtService } from "@application/services/JwtService";
+import { EmailService } from "@application/services/EmailService";
 
 @Injectable()
 export class HttpAuthService {
@@ -32,29 +30,22 @@ export class HttpAuthService {
       true
     >,
     private readonly unitOfWork: UnitOfWork,
-    private readonly jwtService: JwtService,
-    private readonly mailerService: MailerService,
+    private readonly jwtService: CustomJwtService,
+    private readonly emailService: EmailService,
   ) {}
 
   public async createToken(
     payload: HttpUserPayload,
   ): Promise<HttpLoggedInUser> {
-    const accessToken: string = this.jwtService.sign(payload, {
-      secret: this.configService.get("API_ACCESS_TOKEN_SECRET"),
-      expiresIn:
-        this.configService.get("API_ACCESS_TOKEN_TTL_IN_MINUTES") + "m",
-    });
+    const userId = payload.id;
 
-    const refreshToken: string = this.jwtService.sign(payload, {
-      secret: this.configService.get("API_REFRESH_TOKEN_SECRET"),
-      expiresIn:
-        this.configService.get("API_REFRESH_TOKEN_TTL_IN_MINUTES") + "m",
-    });
+    const accessToken = this.jwtService.generateUserAccessToken({ userId });
+    const refreshToken = this.jwtService.generateUserRefreshToken({ userId });
 
     return {
       id: payload.id,
-      accessToken,
-      refreshToken,
+      accessToken: accessToken.token,
+      refreshToken: refreshToken.token,
     };
   }
 
@@ -64,19 +55,10 @@ export class HttpAuthService {
     if (!refreshToken || typeof refreshToken !== "string")
       throw new UnauthorizedException("Invalid token");
 
-    const secret = this.configService.get("API_REFRESH_TOKEN_SECRET");
-    const httpUser = await this.jwtService.verifyAsync<HttpUserPayload>(
-      refreshToken,
-      { secret },
-    );
-    const payload: HttpUserPayload = httpUser;
-
-    const accessToken: string = this.jwtService.sign(payload, {
-      secret: this.configService.get("API_ACCESS_TOKEN_SECRET"),
-      expiresIn:
-        this.configService.get("API_ACCESS_TOKEN_TTL_IN_MINUTES") + "m",
-    });
-    return { accessToken };
+    const userJwt = this.jwtService.verifyUserRefreshToken(refreshToken);
+    const { userId } = userJwt;
+    const accessToken = this.jwtService.generateUserAccessToken({ userId });
+    return { accessToken: accessToken.token };
   }
 
   public async getUser(by: {
@@ -96,7 +78,6 @@ export class HttpAuthService {
       const userRepo = this.unitOfWork.getUserRepository();
 
       const userExist = await userRepo.findUser({ email: payload.email });
-
       if (userExist) throw new ConflictException("Email is already in use.");
 
       const newUser: User = await User.new({
@@ -130,42 +111,26 @@ export class HttpAuthService {
 
   private async sendVerificationEmail(
     user: User,
-  ): Promise<{ token: string; expiresIn: number }> {
+  ): Promise<{ token: string; expiresIn: string }> {
     if (user.isValid) throw new BadRequestException();
     if (!user.email) throw new BadRequestException();
 
-    const payload: HttpJwtPayload = { id: user.getId() };
-
-    const expiresIn = this.configService.get(
-      "EMAIL_VERIFICATION_TOKEN_SECRET_TTL_IN_MINUTES",
-    );
-
-    const token = this.jwtService.sign(payload, {
-      secret: this.configService.get("EMAIL_VERIFICATION_TOKEN_SECRET"),
-      expiresIn: `${expiresIn}m`,
-    });
+    const userId = user.getId();
+    const token = this.jwtService.generateEmailVerificationToken({ userId });
 
     const confirmEmailURL = this.configService.get("API_CONFIRM_EMAIL_URL");
     const url = `${confirmEmailURL}?token=${token}`;
-
-    await this.mailerService.sendMail({
-      to: user.email,
-      from: this.configService.get("EMAIL_AUTH_USER"),
-      subject: "Xác thực email",
-      text: "welcome",
-      html: `<a href="${url}" target="_blank">Xác Thực</a>`,
-    });
-
-    return { token, expiresIn };
+    const html = `<a href="${url}" target="_blank">Xác Thực</a>`;
+    await this.emailService.sendEmail(user.email, "Xác thực email", html);
+    return token;
   }
 
   public async resendVerification(
     email: string,
-  ): Promise<{ expiresIn: number }> {
+  ): Promise<{ expiresIn: string }> {
     const userExist = await this.unitOfWork
       .getUserRepository()
-      .findUser({ email: email });
-
+      .findUser({ email });
     if (!userExist) throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR);
 
     const resut = await this.sendVerificationEmail(userExist);
@@ -173,50 +138,36 @@ export class HttpAuthService {
   }
 
   public async confirmEmail(token: string): Promise<void> {
-    const secret = this.configService.get("EMAIL_VERIFICATION_TOKEN_SECRET");
-    const payload: HttpUserPayload = await this.jwtService
-      .verifyAsync(token, { secret })
-      .catch((error) => error);
+    const userJwt = this.jwtService.verifyEmailVerificationToken(token);
 
     const user = await this.unitOfWork
       .getUserRepository()
-      .findUser({ id: payload.id });
-
+      .findUser({ id: userJwt.userId });
     if (!user) throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR);
 
     if (user.isValid) return;
-
     await user.edit({ isValid: true });
     await this.unitOfWork.getUserRepository().updateUser(user);
   }
 
-  public async forgotPassword(email: string): Promise<any> {
+  public async forgotPassword(
+    email: string,
+  ): Promise<{ email: string; expiresIn: string }> {
     const user = await this.unitOfWork.getUserRepository().findUser({ email });
     if (!user) throw new NotFoundException("Email does not exist");
 
-    const payload: HttpJwtPayload = { id: user.getId() };
-
-    const secret = this.configService.get("EMAIL_VERIFICATION_TOKEN_SECRET");
-    const expiresIn = this.configService.get(
-      "EMAIL_VERIFICATION_TOKEN_SECRET_TTL_IN_MINUTES",
-    );
-    const token = this.jwtService.sign(payload, {
-      expiresIn: expiresIn + "m",
-      secret,
-    });
+    const userId = user.getId();
+    const token = this.jwtService.generateEmailVerificationToken({ userId }); //TODO: error
 
     const resetPasswordURL = this.configService.get("API_RESET_PASSWORD_URL");
     const url = `${resetPasswordURL}?token=${token}`;
+    const html = `<a href="${url}" target="_blank">Doi mat khau</a>`;
+    await this.emailService.sendEmail(email, "Quen Mat Khau", html);
 
-    await this.mailerService.sendMail({
-      to: email, // list of receivers
-      from: this.configService.get("EMAIL_AUTH_USER"), // sender address
-      subject: "Quen Mat Khau", // Subject line
-      text: "welcome", // plaintext body
-      html: `<a href="${url}" target="_blank">Doi mat khau</a>`, // HTML body content
-    });
-
-    return { email: email, expiresIn };
+    return {
+      email: email,
+      expiresIn: token.expiresIn,
+    };
   }
 
   public async resetPassword(payload: {
@@ -224,15 +175,11 @@ export class HttpAuthService {
     newPassword: string;
   }): Promise<HttpUserPayload> {
     const secret = this.configService.get("EMAIL_VERIFICATION_TOKEN_SECRET");
-
-    const userPayload: HttpJwtPayload = await this.jwtService.verifyAsync(
-      payload.token,
-      { secret },
-    );
+    const userJwt = await this.jwtService.verifyEmailVerificationToken(secret);
 
     const user = await this.unitOfWork
       .getUserRepository()
-      .findUser({ id: userPayload.id });
+      .findUser({ id: userJwt.userId });
     if (!user) throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR);
 
     await user.changePassword(payload.newPassword);

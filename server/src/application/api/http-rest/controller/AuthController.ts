@@ -8,17 +8,14 @@ import {
   Post,
   Query,
   Req,
-  UnauthorizedException,
+  Res,
   UseGuards,
   ValidationPipe,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-
 import { CreateUserAdapter } from "@infrastructure/adapter/usecase/user/CreateUserAdapter";
-
 import { UserRole } from "@core/common/enums/UserEnums";
 import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
-
 import { HttpAuthService } from "../auth/HttpAuthService";
 import { HttpLoggedInUser, HttpUserPayload } from "../auth/type/HttpAuthTypes";
 import { HttpGoogleOAuthGuard } from "../auth/guard/HttpGoogleOAuthGuard";
@@ -26,11 +23,10 @@ import {
   HttpRestApiModelRegisterBody,
   HttpRestApiModelLogInBody,
   HttpRestApiModelResetPasswordBody,
-  HttpRestApiModelGetAccessTokenBody,
 } from "./documentation/AuthDocumentation";
 import { HttpUser } from "../auth/decorator/HttpUser";
 import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
-import { Request } from "express";
+import { Request, Response } from "express";
 
 @Controller("auth")
 @ApiTags("auth")
@@ -38,14 +34,21 @@ export class AuthController {
   constructor(private readonly authService: HttpAuthService) {}
 
   @Post("email/login")
+  @HttpCode(HttpStatus.CREATED)
   public async loginWithEmail(
     @Body() body: HttpRestApiModelLogInBody,
+    @Res({ passthrough: true }) response: Response,
   ): Promise<CoreApiResponse<HttpLoggedInUser>> {
     const result = await this.authService.login(body.email, body.password);
-    return CoreApiResponse.success(result);
+    response.cookie("gdscmeet-refresh-token", result.refreshToken, {
+      httpOnly: true,
+      path: "/auth/refresh-token",
+    });
+    return CoreApiResponse.success(result, HttpStatus.CREATED);
   }
 
   @Post("email/register")
+  @HttpCode(HttpStatus.CREATED)
   public async registerWithEmail(
     @Body(new ValidationPipe()) body: HttpRestApiModelRegisterBody,
   ): Promise<CoreApiResponse<UserUsecaseDto>> {
@@ -61,10 +64,11 @@ export class AuthController {
     });
     const result = await this.authService.register(adapter);
 
-    return CoreApiResponse.success(result);
+    return CoreApiResponse.success(result, HttpStatus.CREATED);
   }
 
   @Post("verify/access-token")
+  @HttpCode(HttpStatus.OK)
   @HttpUserAuth()
   @ApiBearerAuth()
   public async verifyAccessToken() {
@@ -72,30 +76,32 @@ export class AuthController {
   }
 
   @Post("refresh-token")
+  @HttpCode(HttpStatus.CREATED)
   public async refreshToken(
     @Req() req: Request,
   ): Promise<CoreApiResponse<{ accessToken: string }>> {
     const apiRefreshTokenHeader = "gdscmeet-refresh-token";
     const refreshToken = req.cookies[apiRefreshTokenHeader];
-
     const result = await this.authService.createAccessToken(refreshToken);
-    return CoreApiResponse.success(result);
+    return CoreApiResponse.success(result, HttpStatus.CREATED);
   }
 
   @Get("email/confirm-email")
+  @HttpCode(HttpStatus.OK)
   public async confirmEmail(
     @Query("token") token: string,
   ): Promise<CoreApiResponse<void>> {
     const res = await this.authService.confirmEmail(token);
-    return CoreApiResponse.success(res);
+    return CoreApiResponse.success(res, HttpStatus.OK);
   }
 
   @Get("email/resend-verification")
+  @HttpCode(HttpStatus.OK)
   public async resendVerification(
     @Query("email") email: string,
   ): Promise<CoreApiResponse> {
     await this.authService.resendVerification(email);
-    return CoreApiResponse.success();
+    return CoreApiResponse.success(undefined, HttpStatus.OK);
   }
 
   @Get("email/forgot-password")
@@ -103,8 +109,8 @@ export class AuthController {
   public async forgotPassword(
     @Query("email") email: string,
   ): Promise<CoreApiResponse> {
-    const result = await this.authService.forgotPassword(email);
-    return CoreApiResponse.success(result);
+    await this.authService.forgotPassword(email);
+    return CoreApiResponse.success(undefined, HttpStatus.OK);
   }
 
   @Post("email/reset-password")
@@ -112,15 +118,15 @@ export class AuthController {
   public async resetPassword(
     @Body() body: HttpRestApiModelResetPasswordBody,
   ): Promise<CoreApiResponse<void>> {
-    const result = await this.authService.resetPassword(body);
-    return CoreApiResponse.success();
+    await this.authService.resetPassword(body);
+    return CoreApiResponse.success(undefined, HttpStatus.NO_CONTENT);
   }
 
   @Get("google/login")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(HttpGoogleOAuthGuard)
   public async loginWithGoogleOAuth() {
-    return;
+    return CoreApiResponse.success(undefined, HttpStatus.NO_CONTENT);
   }
 
   @Get("google/verify")
@@ -130,6 +136,6 @@ export class AuthController {
     @HttpUser() user: HttpUserPayload,
   ): Promise<CoreApiResponse<HttpLoggedInUser>> {
     const result = await this.authService.createToken(user);
-    return CoreApiResponse.success(result);
+    return CoreApiResponse.success(result, HttpStatus.OK);
   }
 }

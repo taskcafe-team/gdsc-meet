@@ -21,10 +21,9 @@ export class HttpLocalStrategy
     configService: ConfigService<EnvironmentVariablesConfig>,
     private readonly moduleRef: ModuleRef,
   ) {
-    super({
-      usernameField: configService.get("API_LOGIN_USERNAME_FIELD"),
-      passwordField: configService.get("API_LOGIN_PASSWORD_FIELD"),
-    });
+    const usernameField = configService.get("API_LOGIN_USERNAME_FIELD");
+    const passwordField = configService.get("API_LOGIN_PASSWORD_FIELD");
+    super({ usernameField, passwordField });
   }
 
   async onModuleInit() {
