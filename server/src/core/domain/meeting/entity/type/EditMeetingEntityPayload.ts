@@ -1,3 +1,4 @@
+import { MeetingType } from "@core/common/enums/MeetingEnums";
 import { Nullable } from "@core/common/type/CommonTypes";
 
 export type EditMeetingEntityPayload = {
@@ -5,4 +6,5 @@ export type EditMeetingEntityPayload = {
   endTime?: Nullable<Date>;
   title?: Nullable<string>;
   description?: Nullable<string>;
+  type?: MeetingType;
 };

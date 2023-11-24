@@ -1,60 +1,94 @@
 import {
-  BadRequestException,
   Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from "@nestjs/common";
-import { REQUEST } from "@nestjs/core";
 
 import { Meeting } from "@core/domain/meeting/entity/Meeting";
 import { Participant } from "@core/domain/participant/entity/Participant";
 import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/dto/MeetingUsecaseDto";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
-import { MeetingType } from "@core/common/enums/MeetingEnums";
-import { HttpResponseWithOptionalUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 import { WebRTCLivekitService } from "@infrastructure/adapter/webrtc/WebRTCLivekitManagement";
 import { RoomType } from "@infrastructure/adapter/webrtc/Types";
-import { AppException } from "@core/common/exception/AppException";
-import { AppErrors } from "@core/common/exception/AppErrors";
 import { MeetingUsecase } from "@core/domain/meeting/usecase/MeetingUsecase";
+import { CreateMeetingPort } from "@core/domain/meeting/usecase/port/CreateMeetingPort";
+import { UserUsecase } from "@core/domain/user/usecase/UserUsecase";
+import { UserService } from "./UserService";
+import { HttpParticipantPayload } from "@application/api/http-rest/auth/type/HttpParticipantTypes";
+import { UpdateMeetingPort } from "@core/domain/meeting/usecase/port/UpdateMeetingPort";
 
 @Injectable()
 export class MeetingService implements MeetingUsecase {
   constructor(
-    @Inject(REQUEST)
-    private readonly requestWithOptionalUser: HttpResponseWithOptionalUser,
+    @Inject(UserService)
+    private readonly userService: UserUsecase,
     private readonly unitOfWork: UnitOfWork,
     private readonly webRTCService: WebRTCLivekitService,
   ) {}
 
-  public async createMeeting(payload: {
-    title?: string;
-    description?: string;
-    startDate?: Date;
-    endDate?: Date;
-    type?: MeetingType;
-  }): Promise<MeetingUsecaseDto> {
+  getAllMeetings(): Promise<Meeting[]> {
+    throw new Error("Method not implemented.");
+  }
+  async deleteMeetingById(id: string): Promise<string> {
+    await this.unitOfWork.getMeetingRepository().deleteMeeting({ id });
+    await this.webRTCService
+      .deleteRoom({
+        roomId: id,
+        roomType: RoomType.MEETING,
+      })
+      .catch(() => null);
+    return id;
+  }
+
+  async deleteMeetings(ids: string[]): Promise<string[]> {
     return await this.unitOfWork.runInTransaction(async () => {
-      const userId = this.requestWithOptionalUser.user?.id;
+      const deletePromies = ids.map((id) => this.deleteMeetingById(id));
+      const res = await Promise.all(deletePromies);
+      return res;
+    });
+  }
 
-      const currentuser = await this.unitOfWork
-        .getUserRepository()
-        .findUser({ id: userId });
+  getMeetingsByUserId(payload: { userId: string }): Promise<Meeting[]> {
+    throw new Error("Method not implemented.");
+  }
 
-      if (!currentuser)
-        throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR);
+  public async getMeetingById(id: string): Promise<MeetingUsecaseDto> {
+    const res = await this.unitOfWork
+      .getMeetingRepository()
+      .findMeeting({ id });
+    if (!res) throw new NotFoundException("Meeting not found!");
+    return MeetingUsecaseDto.newFromEntity(res);
+  }
+
+  public async createMeeting(
+    createrId: string,
+    payload: CreateMeetingPort,
+  ): Promise<MeetingUsecaseDto> {
+    return await this.unitOfWork.runInTransaction(async () => {
+      const user = await this.userService.getUserById(createrId);
 
       const meeting = await Meeting.new(payload);
-
+      const fullName = user.firstName ?? "" + " " + user.lastName ?? "";
       const participant = await Participant.new({
-        meetingId: meeting.getId(),
-        name: currentuser.fullName(),
-        userId: currentuser.getId(),
+        meetingId: meeting.id,
+        name: fullName.trim(),
+        userId: user.id,
         role: ParticipantRole.HOST,
       });
 
+      let roomttlSecond: number | undefined;
+      if (meeting.endTime)
+        roomttlSecond =
+          (meeting.endTime.getTime() - new Date().getTime()) / 1000;
+
+      await this.webRTCService.createRoom({
+        roomId: meeting.id,
+        roomType: RoomType.MEETING,
+        emptyTimeout: roomttlSecond,
+      });
       await this.unitOfWork.getMeetingRepository().addMeeting(meeting);
       await this.unitOfWork
         .getParticipantRepository()
@@ -64,8 +98,16 @@ export class MeetingService implements MeetingUsecase {
     });
   }
 
-  public async getMyMeetings(): Promise<Meeting[]> {
-    const userId = this.requestWithOptionalUser.user?.id;
+  public async getMeeting(id: string): Promise<MeetingUsecaseDto> {
+    const meeting = await this.unitOfWork
+      .getMeetingRepository()
+      .findMeeting({ id });
+    if (!meeting) throw new NotFoundException("Meeting not found!");
+    return MeetingUsecaseDto.newFromEntity(meeting);
+  }
+
+  public async getMyMeetings(getter: string): Promise<MeetingUsecaseDto[]> {
+    const userId = getter;
     if (!userId) throw new InternalServerErrorException("User not found!");
     const participantWithMyHost = await this.unitOfWork
       .getParticipantRepository()
@@ -73,57 +115,29 @@ export class MeetingService implements MeetingUsecase {
         userId: userId,
         role: ParticipantRole.HOST,
       });
-    const myMeetings = participantWithMyHost.map((p) => p.meeting!);
+    const myMeetings = participantWithMyHost.map((p) =>
+      MeetingUsecaseDto.newFromEntity(p.meeting!),
+    );
     return myMeetings;
   }
 
-  public async deleteMeetings(payload: { ids: string[] }) {
-    return await this.unitOfWork.runInTransaction(async () => {
-      const userId = this.requestWithOptionalUser.user?.id;
-      if (!userId) throw new InternalServerErrorException("User not found!");
-      const meetings = await this.unitOfWork
-        .getParticipantRepository()
-        .findManyParticipants({
-          userId: userId,
-          role: ParticipantRole.HOST,
-          meetingIds: payload.ids,
-        })
-        .then((participants) => participants.map((p) => p.meeting!))
-        .catch(() => []);
-      if (meetings.length !== payload.ids.length)
-        throw new BadRequestException("Invalid argument");
-      const result = await this.unitOfWork
-        .getMeetingRepository()
-        .deleteMeetings({ ids: payload.ids });
+  async updateMeeting(
+    updater: HttpParticipantPayload,
+    updateId: string,
+    payload: UpdateMeetingPort,
+  ): Promise<void> {
+    const isHost =
+      updater.role === ParticipantRole.HOST && updater.meetingId === updateId;
+    if (!isHost) throw new UnauthorizedException("Not host of meeting");
 
-      const deleteRoomPromise = result.map(async (id) => {
-        await this.webRTCService
-          .deleteRoom({
-            roomId: id,
-            roomType: RoomType.MEETING,
-          })
-          .catch(() => null);
-        await this.webRTCService
-          .deleteRoom({
-            roomId: id,
-            roomType: RoomType.WAITING,
-          })
-          .catch(() => null);
-      });
-      await Promise.all(deleteRoomPromise);
-
-      return result;
-    });
-  }
-
-  public async getMeeting(payload: {
-    meetingId: string;
-  }): Promise<MeetingUsecaseDto> {
-    const { meetingId } = payload;
     const meeting = await this.unitOfWork
       .getMeetingRepository()
-      .findMeeting({ id: meetingId });
+      .findMeeting({ id: updateId });
     if (!meeting) throw new NotFoundException("Meeting not found!");
-    return MeetingUsecaseDto.newFromEntity(meeting);
+
+    await meeting.edit(payload);
+    await this.unitOfWork
+      .getMeetingRepository()
+      .updateMeeting({ id: meeting.id }, meeting);
   }
 }

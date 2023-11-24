@@ -52,7 +52,7 @@ export class PrismaUserRepositoryAdapter
 
   public async updateUser(user: User): Promise<void> {
     await this.context.user.update({
-      where: { id: user.getId() },
+      where: { id: user.id },
       data: PrismaUserMapper.toOrmEntity(user),
     });
   }

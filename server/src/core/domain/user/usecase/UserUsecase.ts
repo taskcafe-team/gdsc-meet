@@ -1,10 +1,20 @@
+import { User } from "../entity/User";
 import { UserUsecaseDto } from "./dto/UserUsecaseDto";
 import { CreateUserPort } from "./port/CreateUserPort";
-import { GetUserPort } from "./port/GetUserPort";
 import { UpdateUserPort } from "./port/UpdateUserPort";
 
 export interface UserUsecase {
-  getUser(port: GetUserPort): Promise<UserUsecaseDto>;
-  createUser(port: CreateUserPort): Promise<UserUsecaseDto>;
-  updateMe(port: UpdateUserPort): Promise<UserUsecaseDto>;
+  createUser(payload: CreateUserPort): Promise<UserUsecaseDto>;
+
+  getUserById(id: string): Promise<UserUsecaseDto>;
+  findUserByEmail(email: string): Promise<UserUsecaseDto | null>;
+
+  getUsers(): Promise<UserUsecaseDto[]>;
+  updateUser(user: User): Promise<void>;
+  updateProfile(
+    updaterId: string,
+    payload: UpdateUserPort,
+  ): Promise<UserUsecaseDto>;
+
+  deleteUserById(id: string): Promise<UserUsecaseDto>;
 }

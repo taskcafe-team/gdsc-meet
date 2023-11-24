@@ -6,12 +6,20 @@ import { PrismaMeetingMapper } from "../meeting/PrismaMeetingMapper";
 
 export class PrismaParticipantMapper {
   public static toOrmEntity(domain: Participant): PrismaParticipant {
-    const orm: PrismaParticipant = new PrismaParticipant();
+    const orm = new PrismaParticipant();
 
-    Object.assign(orm, { ...domain });
-    orm.user = domain.user && PrismaUserMapper.toOrmEntity(domain.user);
-    orm.meeting =
-      domain.meeting && PrismaMeetingMapper.toOrmEntity(domain.meeting);
+    orm.userId = domain.userId;
+    orm.meetingId = domain.meetingId;
+    orm.name = domain.name;
+    orm.role = domain.role;
+
+    orm.id = domain.id;
+    orm.createdAt = domain.createdAt;
+    orm.updatedAt = domain.updatedAt ?? null;
+    orm.removedAt = domain.removedAt ?? null;
+
+    orm.user = domain.user;
+    orm.meeting = domain.meeting;
 
     return orm;
   }
@@ -23,7 +31,7 @@ export class PrismaParticipantMapper {
   }
 
   public static toDomainEntity(orm: PrismaParticipant): Participant {
-    const domain: Participant = new Participant({
+    const domain = new Participant({
       id: orm.id,
       userId: orm.userId,
       meetingId: orm.meetingId,

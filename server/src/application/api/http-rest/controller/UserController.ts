@@ -19,7 +19,6 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from "@nestjs/swagger";
 import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
 import { HttpUser } from "../auth/decorator/HttpUser";
 import { HttpUserPayload } from "../auth/type/HttpAuthTypes";
-import { GetUserAdapter } from "@infrastructure/adapter/usecase/user/GetUserAdapter";
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
 import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 import { HttpRestApiModelUpdateUser } from "./documentation/UserDocumentation";
@@ -54,11 +53,7 @@ export class UserController {
   public async getMe(
     @HttpUser() httpUser: HttpUserPayload,
   ): Promise<CoreApiResponse<UserUsecaseDto>> {
-    const adapter: GetUserAdapter = await GetUserAdapter.new({
-      userId: httpUser.id,
-    });
-
-    const result = await this.userService.getUser(adapter);
+    const result = await this.userService.getUserById(httpUser.id);
     return CoreApiResponse.success<UserUsecaseDto>(result);
   }
 
@@ -92,6 +87,7 @@ export class UserController {
   public async updateMe(
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body() body: Omit<HttpRestApiModelUpdateUser, "avatar">,
+    @HttpUser() httpUser: HttpUserPayload,
   ) {
     const { firstName, lastName } = body;
     const adapter = { firstName, lastName, avatar: file?.filename };
@@ -99,7 +95,7 @@ export class UserController {
     if (adapter.avatar)
       adapter.avatar = this.endpointAvatarUrl + adapter.avatar;
 
-    await this.userService.updateMe(adapter);
+    await this.userService.updateProfile(httpUser.id, adapter);
   }
 
   @Get("avatar/:fileName")

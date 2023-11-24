@@ -1,15 +1,17 @@
 import { Nullable } from "@core/common/type/CommonTypes";
 import { Meeting, MeetingType } from "@prisma/client";
+import { Exclude, Expose } from "class-transformer";
 
+@Exclude()
 export class PrismaMeeting implements Meeting {
-  public id: string;
-  public startTime: Date;
-  public endTime: Nullable<Date>;
-  public title: Nullable<string>;
-  public description: Nullable<string>;
-  public type: MeetingType;
+  @Expose() public id: string;
+  @Expose() public startTime: Date;
+  @Expose() public endTime: Nullable<Date>;
+  @Expose() public title: Nullable<string>;
+  @Expose() public description: Nullable<string>;
+  @Expose() public type: MeetingType;
 
-  public createdAt: Date;
-  public updatedAt: Nullable<Date>;
-  public removedAt: Nullable<Date>;
+  @Expose() public createdAt: Date;
+  @Expose() public updatedAt: Nullable<Date>;
+  @Expose() public removedAt: Nullable<Date>;
 }

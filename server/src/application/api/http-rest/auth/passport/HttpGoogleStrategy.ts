@@ -47,7 +47,7 @@ export class HttpGoogleStrategy
     const userExit = await this.authService.getUser({ email });
     if (userExit) {
       const userPayload: HttpUserPayload = {
-        id: userExit.getId(),
+        id: userExit.id,
         role: userExit.role,
         isValid: userExit.isValid,
       };
@@ -68,7 +68,7 @@ export class HttpGoogleStrategy
 
     await this.authService.registerWithGoogle(newUser);
     const userPayload: HttpUserPayload = {
-      id: newUser.getId(),
+      id: newUser.id,
       role: newUser.role,
       isValid: newUser.isValid,
     };

@@ -7,7 +7,7 @@ import { MeetingService } from "@application/services/MeetingService";
 
 @Module({
   controllers: [MeetingController],
-  imports: [InfrastructureModule, JwtModule, UserModule],
+  imports: [InfrastructureModule, UserModule, JwtModule, UserModule],
   providers: [MeetingService],
 })
 export class MeetingModule {}

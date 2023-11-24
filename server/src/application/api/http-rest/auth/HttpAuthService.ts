@@ -70,7 +70,8 @@ export class HttpAuthService {
 
   public async registerWithGoogle(user: User): Promise<{ id: string }> {
     const result = await this.unitOfWork.getUserRepository().addUser(user);
-    return { id: result.getId() };
+    const id = result.id;
+    return { id };
   }
 
   public async register(payload: CreateUserPort): Promise<UserUsecaseDto> {
@@ -103,7 +104,7 @@ export class HttpAuthService {
       throw new UnauthorizedException("Email or password is invalid");
 
     return this.createToken({
-      id: user.getId(),
+      id: user.id,
       role: user.role,
       isValid: user.isValid,
     });
@@ -115,7 +116,7 @@ export class HttpAuthService {
     if (user.isValid) throw new BadRequestException();
     if (!user.email) throw new BadRequestException();
 
-    const userId = user.getId();
+    const userId = user.id;
     const token = this.jwtService.generateEmailVerificationToken({ userId });
 
     const confirmEmailURL = this.configService.get("API_CONFIRM_EMAIL_URL");
@@ -156,7 +157,7 @@ export class HttpAuthService {
     const user = await this.unitOfWork.getUserRepository().findUser({ email });
     if (!user) throw new NotFoundException("Email does not exist");
 
-    const userId = user.getId();
+    const userId = user.id;
     const token = this.jwtService.generateEmailVerificationToken({ userId }); //TODO: error
 
     const resetPasswordURL = this.configService.get("API_RESET_PASSWORD_URL");
@@ -186,7 +187,7 @@ export class HttpAuthService {
     await this.unitOfWork.getUserRepository().updateUser(user);
 
     return {
-      id: user.getId(),
+      id: user.id,
       isValid: user.isValid,
       role: user.role,
     };

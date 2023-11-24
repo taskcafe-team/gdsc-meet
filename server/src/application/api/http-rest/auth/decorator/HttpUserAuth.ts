@@ -3,12 +3,26 @@ import { HttpUserRoleAuthGuard } from "@application/api/http-rest/auth/guard/Htt
 import { UserRole } from "@core/common/enums/UserEnums";
 import { applyDecorators, SetMetadata, UseGuards } from "@nestjs/common";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type HttpUserAuthPermission = {
+  required?: boolean; //Default: true
+  roles?: UserRole[]; //Default: []
+};
 export const HttpUserAuth = (
-  ...roles: UserRole[]
+  permission?: HttpUserAuthPermission,
 ): ((...args: any) => void) => {
-  return applyDecorators(
-    SetMetadata("roles", roles),
-    UseGuards(HttpJwtAuthGuard, HttpUserRoleAuthGuard),
-  );
+  if (!permission)
+    return applyDecorators(
+      SetMetadata("roles", null),
+      UseGuards(HttpJwtAuthGuard, HttpUserRoleAuthGuard),
+    );
+  else {
+    const { required, roles } = permission;
+    const isRequired = required === undefined ? true : required;
+    if (!isRequired) return applyDecorators();
+    const rolesMeta = roles === undefined ? [] : roles;
+    return applyDecorators(
+      SetMetadata("roles", rolesMeta),
+      UseGuards(HttpJwtAuthGuard, HttpUserRoleAuthGuard),
+    );
+  }
 };

@@ -24,24 +24,25 @@ import {
 } from "@infrastructure/adapter/webrtc/Types";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { ParticipantService } from "@application/services/ParticipantService";
+import { HttpParticipantPayload } from "../auth/type/HttpParticipantTypes";
 
 @Controller("meetings/:meetingId/participants")
 @ApiTags("participants")
 export class ParticipantController {
   constructor(private readonly participantService: ParticipantService) {}
 
+  @ApiBearerAuth()
   @Get("access-token")
   @HttpUserAuth()
-  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   public async getAccessToken(
     @Param("meetingId") meetingId: string,
     @Query() query: HttpResetApiModelGetAccessToken,
-    // @Query("roomType") roomType?: RoomType,
-    // @Query("participantName") participantName?: string,
   ) {
-    const adapter = { meetingId, customName: query.customName };
-    const result = await this.participantService.getAccessToken(adapter);
+    const result = await this.participantService.getAccessToken({
+      meetingId,
+      participantName: query.customName,
+    });
 
     return CoreApiResponse.success(result);
   }
@@ -68,9 +69,11 @@ export class ParticipantController {
   public async resultRequestJoinMeeting(
     @Param("meetingId") meetingId: string,
     @Body() body: { participantIds: string[]; status: RespondJoinStatus },
+    @HttpParticipant() httpParticipant: HttpParticipantPayload,
   ) {
     const { participantIds, status } = body;
     await this.participantService.respondJoinRequest(
+      httpParticipant.id,
       meetingId,
       participantIds,
       status,
@@ -84,7 +87,7 @@ export class ParticipantController {
   @HttpParticipantAuth()
   @ApiBody({ type: HttpRestApiModelSendMessage })
   public async sendMessage(
-    @HttpParticipant() sender: AccessTokenMetadata,
+    @HttpParticipant() sender: HttpParticipantPayload,
     @Param("meetingId") meetingId: string,
     @Body() body: HttpRestApiModelSendMessage,
   ) {

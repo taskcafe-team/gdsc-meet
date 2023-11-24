@@ -1,9 +1,11 @@
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import {
   BadRequestException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from "@nestjs/common";
 import {
   CreateTokenDto,
@@ -11,17 +13,13 @@ import {
 } from "@infrastructure/adapter/webrtc/WebRTCLivekitManagement";
 import { ParticipantUsecaseDto } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDto";
 import {
-  SendMessageActionEnum,
-  createSendDataMessageAction,
-} from "@infrastructure/adapter/webrtc/Actions";
-import {
   AccessTokenMetadata,
   Message,
   RespondJoinStatus,
   RoomType,
   SendDataMessagePort,
 } from "@infrastructure/adapter/webrtc/Types";
-import { HttpRequestWithParticipant } from "@application/api/http-rest/auth/type/HttpParticipantTypes";
+import { HttpParticipantPayload } from "@application/api/http-rest/auth/type/HttpParticipantTypes";
 import { REQUEST } from "@nestjs/core";
 import { HttpRequestWithUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
@@ -30,59 +28,93 @@ import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/dto/MeetingUseca
 import { VideoGrant } from "livekit-server-sdk";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
 import { MeetingService } from "./MeetingService";
-
-type ParticipantSendMessagePort = {
-  roomId: string;
-  roomType: RoomType;
-  senderId: string;
-  content: string;
-};
-
-export type GetParticipantPort = {
-  meetingId: string;
-  participantId: string;
-};
-
-export type GetAccessTokenDto = {
-  participant: ParticipantUsecaseDto;
-  tokens: CreateTokenDto[];
-};
-
-export type IParticipantService = {
-  getAccessToken: (port: {
-    meetingId: string;
-    customName: string;
-  }) => Promise<GetAccessTokenDto>;
-  getParticipant: (
-    port: GetParticipantPort,
-  ) => Promise<ParticipantUsecaseDto & { isOnline: boolean }>;
-  getParticipants: (
-    meetingId: string,
-  ) => Promise<(ParticipantUsecaseDto & { isOnline: boolean })[]>;
-  sendMessage: (port: ParticipantSendMessagePort) => Promise<void>;
-};
+import { Meeting } from "@core/domain/meeting/entity/Meeting";
+import { UserService } from "./UserService";
+import {
+  GetAccessTokenDto,
+  ParticipantSendMessagePort,
+  ParticipantUsecase,
+} from "@core/domain/participant/usecase/ParticipantUsecase";
+import { AppException } from "@core/common/exception/AppException";
+import { AppErrors } from "@core/common/exception/AppErrors";
+import {
+  SendMessageActionEnum,
+  createSendDataMessageAction,
+} from "@infrastructure/adapter/webrtc/Actions";
 
 @Injectable()
-export class ParticipantService implements IParticipantService {
+export class ParticipantService implements ParticipantUsecase {
   constructor(
-    @Inject(REQUEST)
-    private readonly requestWithParticipant: HttpRequestWithParticipant,
+    private readonly unitOfWork: UnitOfWork,
     @Inject(REQUEST)
     private readonly requestWithUser: HttpRequestWithUser,
-    private readonly unitOfWork: UnitOfWork,
     private readonly meetingService: MeetingService,
     private readonly webRTCService: WebRTCLivekitService,
   ) {}
+  createParticipant(): Promise<ParticipantUsecaseDto> {
+    throw new Error("Method not implemented.");
+  }
 
-  async getAccessToken(payload: { meetingId: string; customName: string }) {
-    const userId = this.requestWithUser.user?.id;
-    const { meetingId, customName } = payload;
-    const currentUser = await this.unitOfWork
-      .getUserRepository()
-      .findUser({ id: userId });
-    if (!currentUser) throw new NotFoundException("User not found!");
+  async getParticipantById(
+    id: string,
+  ): Promise<ParticipantUsecaseDto & { isOnline: boolean }> {
+    const participant = await this.unitOfWork
+      .getParticipantRepository()
+      .findParticipant({ id });
+    if (!participant) throw new NotFoundException("Participant not found!");
 
-    const meeting = await this.meetingService.getMeeting({ meetingId });
+    const participantOnline = await this.webRTCService
+      .getParticipant({
+        roomId: participant.meetingId,
+        participantId: participant.id,
+        roomType: RoomType.MEETING,
+      })
+      .catch(() => null);
+
+    const isOnline = Boolean(participantOnline);
+    return { ...ParticipantUsecaseDto.newFromEntity(participant), isOnline };
+  }
+
+  async getParticipantsInMeeting(
+    meetingId: string,
+  ): Promise<(ParticipantUsecaseDto & { isOnline: boolean })[]> {
+    const meeting = await this.meetingService.getMeetingById(meetingId);
+
+    const listParticipants = await this.unitOfWork
+      .getParticipantRepository()
+      .findManyParticipants({ meetingId: meeting.id });
+
+    const listParticipantsAwait = listParticipants.map(async (p) => {
+      const participantDto = ParticipantUsecaseDto.newFromEntity(p);
+      const is = await this.webRTCService
+        .getParticipant({
+          roomId: p.meetingId,
+          participantId: p.id,
+          roomType: RoomType.MEETING,
+        })
+        .catch(() => null);
+      if (!is) return { ...participantDto, isOnline: false };
+      else return { ...participantDto, isOnline: true };
+    });
+
+    return await Promise.all(listParticipantsAwait);
+  }
+
+  async deleteParticipantById(id: string): Promise<ParticipantUsecaseDto> {
+    throw new Error("Method not implemented.");
+  }
+
+  async getAccessToken(payload: {
+    meetingId: string;
+    participantName: string;
+  }): Promise<GetAccessTokenDto> {
+    const userId = this.requestWithUser.user.id;
+    if (!userId) throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR);
+    const { meetingId, participantName } = payload;
+
+    const meeting = await this.meetingService.getMeetingById(meetingId);
+    if (meeting.endTime && meeting.endTime < new Date())
+      throw new BadRequestException(`Meeting has ended!`);
 
     // Get Or Create Participant
     const participant = await this.unitOfWork
@@ -93,100 +125,20 @@ export class ParticipantService implements IParticipantService {
         else
           return await Participant.new({
             meetingId: meeting.id,
-            name: currentUser.fullName(),
+            name: participantName,
             role: ParticipantRole.PARTICIPANT,
-            userId: currentUser.getId(),
+            userId,
           });
       });
 
     const participantDto = ParticipantUsecaseDto.newFromEntity(participant);
-    participantDto.name = customName; // overwrite name
     const tokens = await this.createAccessToken(meeting, participantDto);
     return { participant: participantDto, tokens };
   }
 
-  async getParticipant(
-    port: GetParticipantPort,
-  ): Promise<ParticipantUsecaseDto & { isOnline: boolean }> {
-    const { meetingId, participantId } = port;
-    const p = await this.unitOfWork
-      .getParticipantRepository()
-      .findParticipant({ id: participantId, meetingId });
-    if (!p) throw new NotFoundException(`Participant not found!`);
-    const s = await this.webRTCService
-      .getParticipant({
-        roomId: p.meetingId,
-        participantId: p.getId(),
-        roomType: RoomType.MEETING,
-      })
-      .catch(() => null);
-
-    const pDto = ParticipantUsecaseDto.newFromEntity(p);
-
-    return { ...pDto, isOnline: s !== null };
-  }
-
-  async getParticipants(
-    meetingId: string,
-  ): Promise<(ParticipantUsecaseDto & { isOnline: boolean })[]> {
-    const p = await this.unitOfWork
-      .getParticipantRepository()
-      .findManyParticipants({ meetingId });
-
-    const psPromise = p.map(async (_p) => {
-      const _pDto = ParticipantUsecaseDto.newFromEntity(_p);
-      const is = await this.webRTCService
-        .getParticipant({
-          roomId: _p.meetingId,
-          participantId: _p.getId(),
-          roomType: RoomType.MEETING,
-        })
-        .catch(() => null);
-      if (!is) return { ..._pDto, isOnline: false };
-      else return { ..._pDto, isOnline: true };
-    });
-
-    return await Promise.all(psPromise);
-  }
-
-  async kickParticipant(meetingId: string, participantId: string) {
-    const meeting = await this.meetingService.getMeeting({ meetingId });
-    const p = await this.getParticipant({ meetingId, participantId });
-    if (!p) throw new NotFoundException(`Participant not found!`);
-    if (p.role === ParticipantRole.HOST)
-      throw new BadRequestException(`You can't kick host!`);
-
-    // await this.unitOfWork.runInTransaction(async () => {
-    //   await this.unitOfWork
-    //     .getParticipantRepository()
-    //     .removeParticipant({ id: participantId, meetingId });
-
-    //   const action = createSendDataMessageAction(
-    //     SendMessageActionEnum.ParticipantKick,
-    //     { participantId },
-    //   );
-
-    //   const adapter: SendDataMessagePort = {
-    //     sendto: { roomId: meeting.id, roomType: RoomType.MEETING },
-    //     action,
-    //   };
-    //   await this.webRTCService.sendDataMessage(adapter);
-    // });
-  }
-
-  // async updateParticipants(port: {}) {
-  //   //
-  // }
-
-  async sendMessage(port: ParticipantSendMessagePort) {
-    const { roomId, roomType, content, senderId } = port;
-
-    const message: Message = {
-      roomId,
-      roomType,
-      content,
-      senderId,
-    };
+  async sendMessage(payload: ParticipantSendMessagePort): Promise<void> {
+    const { roomId, roomType, content, senderId } = payload;
+    const message: Message = { roomId, roomType, content, senderId };
 
     const action = createSendDataMessageAction(
       SendMessageActionEnum.ParticipantSendMessage,
@@ -201,28 +153,33 @@ export class ParticipantService implements IParticipantService {
   }
 
   async respondJoinRequest(
+    responderId: string,
     meetingId: string,
     participantIds: string[],
     status: RespondJoinStatus,
-  ) {
+  ): Promise<void> {
     await this.unitOfWork.runInTransaction(async () => {
       // Just for HOST
-      const meeting = await this.meetingService.getMeeting({ meetingId });
+      const meeting = await this.meetingService.getMeetingById(meetingId);
+      const responder = await this.getParticipantById(responderId);
+      if (responder.role !== ParticipantRole.HOST)
+        throw new ForbiddenException("Not host of meeting"); //TODO: check all Unauthorized
+
       const sendPromise = participantIds.map(async (participantId) => {
-        let participant = await this.getParticipant({
-          participantId,
-          meetingId,
-        }).catch(() => null);
-        if (!participant) {
-          participant = await this.webRTCService
-            .getParticipant({
-              roomId: meeting.id,
-              roomType: RoomType.WAITING,
-              participantId,
-            })
-            .then((p) => ({ ...p, isOnline: true }));
-        }
+        const participant = await this.getParticipantById(participantId)
+          .then((res) => (res.meetingId === meeting.id ? res : null))
+          .catch(async () => {
+            return await this.webRTCService
+              .getParticipant({
+                roomId: meeting.id,
+                roomType: RoomType.WAITING,
+                participantId,
+              })
+              .then((p) => ({ ...p, isOnline: true }))
+              .catch(() => null);
+          });
         if (!participant) return;
+
         if (status === RespondJoinStatus.REJECTED) {
           return await this.webRTCService.sendDataMessage({
             sendto: {
@@ -271,6 +228,64 @@ export class ParticipantService implements IParticipantService {
   }
 
   // Private methods
+  private validateMeetingTime(meeting: Meeting) {
+    if (meeting.endTime && meeting.endTime < new Date()) {
+      throw new BadRequestException(`Meeting has ended!`);
+    }
+  }
+
+  private prepareParticipantDto(
+    participant: Participant,
+    customName: string,
+  ): ParticipantUsecaseDto {
+    const participantDto = ParticipantUsecaseDto.newFromEntity(participant);
+    participantDto.name = customName; // overwrite name
+    return participantDto;
+  }
+
+  // private async getOrCreateParticipant(
+  //   userId: string,
+  //   meeting: MeetingUsecaseDto,
+  // ): Promise<ParticipantUsecaseDto> {
+  //   const participant = await this.findParticipant(userId, meeting.id);
+  //   if (participant) return participant;
+  //   return await this.createParticipant();
+  // }
+
+  private async findParticipant(
+    userId: string,
+    meetingId: string,
+  ): Promise<Participant | null> {
+    return await this.unitOfWork
+      .getParticipantRepository()
+      .findParticipant({ userId, meetingId });
+  }
+
+  // private async createParticipantEntity(
+  //   getter: HttpParticipantPayload,
+  // ): Promise<Participant> {
+  //   let participant: Participant;
+  //   if (!getter.userId) {
+  //     // This is Anonymous Participant
+  //     participant = await Participant.new({
+  //       meetingId: getter.meetingId,
+  //       name: "Anonymous",
+  //       role: ParticipantRole.PARTICIPANT,
+  //     });
+  //   } else {
+  //     const currentUser = await this.userService.getUserById(getter.userId);
+  //     const fullName = currentUser.firstName ?? "" + " " + currentUser.lastName;
+  //     participant = await Participant.new({
+  //       meetingId: getter.userId,
+  //       name: fullName.trim(),
+  //       role: ParticipantRole.PARTICIPANT,
+  //       userId: currentUser.id,
+  //     });
+  //   }
+
+  //   return participant;
+  // }
+
   private async createAccessToken(
     meeting: MeetingUsecaseDto,
     participant: ParticipantUsecaseDto,

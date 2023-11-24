@@ -6,10 +6,11 @@ import { ParticipantController } from "@application/api/http-rest/controller/Par
 import { HttpParticipantRoleAuthGuard } from "@application/api/http-rest/auth/guard/HttpParticipantRoleAuthGuard";
 import { MeetingService } from "@application/services/MeetingService";
 import { ParticipantService } from "@application/services/ParticipantService";
+import { UserModule } from "./UserModule";
 
 @Module({
   controllers: [ParticipantController],
-  imports: [InfrastructureModule],
+  imports: [InfrastructureModule, UserModule],
   providers: [
     MeetingService,
     ConfigService,

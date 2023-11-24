@@ -5,7 +5,7 @@ import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 
 @Exclude()
-export class ParticipantUsecaseDto {
+export class ParticipantUsecaseDto implements Partial<Participant> {
   @Expose() public id: string;
   @Expose() public name: string;
   @Expose() public userId: string;

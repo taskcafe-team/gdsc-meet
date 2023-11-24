@@ -1,26 +1,53 @@
-import { Participant } from "../entity/Participant";
+import {
+  RespondJoinStatus,
+  RoomType,
+} from "@infrastructure/adapter/webrtc/Types";
 import { ParticipantUsecaseDto } from "./dto/ParticipantUsecaseDto";
+import { CreateTokenDto } from "@infrastructure/adapter/webrtc/WebRTCLivekitManagement";
+import { HttpParticipantPayload } from "@application/api/http-rest/auth/type/HttpParticipantTypes";
 
-import { CreateParticipantPort } from "./port/CreateParticipantPort";
-import { GetOrCreateParticipantPort } from "./port/GetOrCreateParticipantPort";
-import { GetParticipantPort } from "./port/GetParticipantPort";
-import { UpdateParticipantPort } from "./port/UpdateParticipantPort";
+export type ParticipantSendMessagePort = {
+  roomId: string;
+  roomType: RoomType;
+  senderId: string;
+  content: string;
+};
 
-export interface ParticipantUsecase {
-  getParticipant(payload: GetParticipantPort): Promise<Participant>;
+export type GetParticipantPort = {
+  meetingId: string;
+  participantId: string;
+};
 
-  getOrCreate(
-    payload: GetOrCreateParticipantPort,
-  ): Promise<ParticipantUsecaseDto>;
+export type GetAccessTokenDto = {
+  participant: ParticipantUsecaseDto;
+  tokens: CreateTokenDto[];
+};
 
-  createParticipant(
-    payload: CreateParticipantPort,
-  ): Promise<ParticipantUsecaseDto>;
+export type getAccessTokenPort = {
+  meetingId: string;
+  participantId: string;
+};
 
-  // removeParticipant(payload: {
-  //   id?: string;
-  //   userId?: string;
-  // }): Promise<{ id: string }>;
+export type ParticipantUsecase = {
+  createParticipant(): Promise<ParticipantUsecaseDto>;
+  deleteParticipantById(id: string): Promise<ParticipantUsecaseDto>;
+  getParticipantById(
+    id: string,
+  ): Promise<ParticipantUsecaseDto & { isOnline: boolean }>;
 
-  // updateParticipant(payload: UpdateParticipantPort): Promise<{ id: string }>;
-}
+  getParticipantsInMeeting(
+    meetingId: string,
+  ): Promise<(ParticipantUsecaseDto & { isOnline: boolean })[]>;
+
+  getAccessToken(payload: {
+    meetingId: string;
+    participantName: string;
+  }): Promise<GetAccessTokenDto>;
+  sendMessage(payload: ParticipantSendMessagePort): Promise<void>;
+  respondJoinRequest(
+    responderId: string,
+    meetingId: string,
+    participantIds: string[],
+    status: RespondJoinStatus,
+  ): Promise<void>;
+};

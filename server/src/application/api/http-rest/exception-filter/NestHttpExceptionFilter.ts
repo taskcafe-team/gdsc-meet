@@ -28,9 +28,9 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
     const response: Response = host.switchToHttp().getResponse<Response>();
     let errorResponse = CoreApiResponse.error();
 
-    errorResponse = this.handleCoreException(error, errorResponse, response);
-    errorResponse = this.handleNestError(error, errorResponse, response);
-    errorResponse = this.hanlderJwtError(error, errorResponse, response);
+    errorResponse = this.handleCoreException(error, errorResponse);
+    errorResponse = this.handleNestError(error, errorResponse);
+    errorResponse = this.hanlderJwtError(error, errorResponse);
 
     if (this.configService.get("API_LOG_ENABLE")) {
       const message: string =
@@ -44,17 +44,15 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
 
       Logger.error(message);
     }
-
+    response.status(errorResponse.metadata.status);
     response.json(errorResponse);
   }
 
   private handleCoreException(
     error: Error,
     errorResponse: CoreApiResponse<unknown>,
-    response: Response,
   ): CoreApiResponse<unknown> {
     if (error instanceof AppException) {
-      response.status(error.getHttpStatus());
       const errorDto = new ErrorDto(
         error.getCode(),
         error.getMessage(),
@@ -70,10 +68,8 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
   private handleNestError(
     error: Error,
     errorResponse: CoreApiResponse<unknown>,
-    response: Response,
   ): CoreApiResponse<unknown> {
     if (error instanceof HttpException) {
-      response.status(error.getStatus());
       return CoreApiResponse.error(error.getStatus(), error.message);
     }
     return errorResponse;
@@ -82,11 +78,9 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
   private hanlderJwtError(
     error: Error,
     errorResponse: CoreApiResponse<unknown>,
-    response: Response,
   ) {
     if (error instanceof JsonWebTokenError) {
       if (error instanceof TokenExpiredError) {
-        response.status(HttpStatus.UNAUTHORIZED);
         return CoreApiResponse.error(HttpStatus.UNAUTHORIZED, "Token expired");
       }
       return CoreApiResponse.error(HttpStatus.UNAUTHORIZED, "Invalid token");

@@ -1,5 +1,4 @@
 import { IsDate, IsEnum, IsOptional, IsString } from "class-validator";
-import { v4 } from "uuid";
 
 import { Entity } from "@core/common/entity/Entity";
 import { Nullable } from "@core/common/type/CommonTypes";
@@ -7,32 +6,41 @@ import { CreateMeetingEntityPayload } from "./type/CreateMeetingEntityPayload";
 import { EditMeetingEntityPayload } from "./type/EditMeetingEntityPayload";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
 
-export class Meeting extends Entity<string> {
-  @IsDate() public startTime: Date;
-  @IsOptional() @IsDate() public endTime: Nullable<Date>;
-  @IsOptional() @IsString() public title: Nullable<string>;
-  @IsOptional() @IsString() public description: Nullable<string>;
-  @IsEnum(MeetingType) public type: MeetingType;
-
-  @IsDate() public readonly createdAt: Date;
-  @IsOptional() @IsDate() public updatedAt: Nullable<Date>;
-  @IsOptional() @IsDate() public removedAt: Nullable<Date>;
+export class Meeting extends Entity {
+  @IsDate() private _startTime: Date;
+  @IsOptional() @IsDate() private _endTime: Nullable<Date>;
+  @IsOptional() @IsString() private _title: Nullable<string>;
+  @IsOptional() @IsString() private _description: Nullable<string>;
+  @IsEnum(MeetingType) private _type: MeetingType;
 
   constructor(payload: CreateMeetingEntityPayload) {
-    super();
+    super(payload.id, payload.createdAt, payload.updatedAt, payload.removedAt);
 
-    this.startTime = payload.startTime || new Date();
-    this.endTime = payload.endTime || null;
-    this.title = payload.title || null;
-    this.description = payload.description || null;
-    this.type = payload.type || MeetingType.PRIVATE;
-
-    this.id = payload.id || v4();
-    this.createdAt = payload.createdAt || new Date();
-    this.updatedAt = payload.updatedAt || null;
-    this.removedAt = payload.removedAt || null;
+    this._startTime = payload.startTime ?? new Date();
+    this._endTime = payload.endTime ?? null;
+    this._title = payload.title ?? null;
+    this._description = payload.description ?? null;
+    this._type = payload.type ?? MeetingType.PRIVATE;
   }
 
+  //Getter
+  public get startTime(): Date {
+    return this._startTime;
+  }
+  public get endTime(): Nullable<Date> {
+    return this._endTime;
+  }
+  public get title(): Nullable<string> {
+    return this._title;
+  }
+  public get description(): Nullable<string> {
+    return this._description;
+  }
+  public get type(): MeetingType {
+    return this._type;
+  }
+
+  // Method
   public static generatorFriendlyId(): string {
     const str =
       Math.random().toString(36).substring(2, 9) +
@@ -49,20 +57,26 @@ export class Meeting extends Entity<string> {
   ): Promise<Meeting> {
     const meeting: Meeting = new Meeting(payload);
     await meeting.validate();
-
     return meeting;
   }
 
   public async edit(payload: EditMeetingEntityPayload): Promise<void> {
-    let isUpdated = false;
-    Object.entries(payload).forEach(([key, value]) => {
-      if (value !== undefined) {
-        this[key] = value;
-        isUpdated = true;
-      }
-    });
+    if (payload.startTime !== undefined) this._startTime = payload.startTime;
+    if (payload.endTime !== undefined) this._endTime = payload.endTime;
+    if (payload.title !== undefined) this._title = payload.title;
+    if (payload.description !== undefined)
+      this._description = payload.description;
+    if (payload.type !== undefined) this._type = payload.type;
 
-    if (isUpdated) this.updatedAt = new Date();
+    if (
+      payload.startTime !== undefined ||
+      payload.endTime !== undefined ||
+      payload.title !== undefined ||
+      payload.description !== undefined ||
+      payload.type !== undefined
+    )
+      this._updatedAt = new Date();
+
     await this.validate();
   }
 }

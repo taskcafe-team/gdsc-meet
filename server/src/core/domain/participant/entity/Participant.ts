@@ -1,8 +1,7 @@
-import { v4 } from "uuid";
 import {
-  IsDate,
   IsEnum,
   IsInstance,
+  IsNotEmpty,
   IsOptional,
   IsString,
 } from "class-validator";
@@ -15,53 +14,57 @@ import { CreateParticipantEntityPayload } from "./type/CreateParticipantEntityPa
 import { EditParticipantEntityPayload } from "./type/EditParticipantEntityPayload";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { Meeting } from "@core/domain/meeting/entity/Meeting";
-import { AppException } from "@core/common/exception/AppException";
-import { AppErrors } from "@core/common/exception/AppErrors";
 
-export class Participant extends Entity<string> {
-  @IsString() public meetingId: string;
-  @IsOptional() @IsString() public name: string;
-  @IsOptional() @IsString() public userId: Nullable<string>;
-  @IsEnum(ParticipantRole) public role: ParticipantRole;
+export class Participant extends Entity {
+  @IsNotEmpty() @IsString() private _meetingId: string;
+  @IsNotEmpty() @IsString() private _name: string;
+  @IsOptional() @IsString() private _userId: Nullable<string>;
+  @IsEnum(ParticipantRole) private _role: ParticipantRole;
 
-  @IsOptional() @IsInstance(User) public user: Nullable<User>;
-  @IsOptional() @IsInstance(Meeting) public meeting: Nullable<Meeting>;
-
-  @IsDate() public createdAt: Date;
-  @IsOptional() @IsDate() public updatedAt: Nullable<Date>;
-  @IsOptional() @IsDate() public removedAt: Nullable<Date>;
+  @IsOptional() @IsInstance(User) private _user: Nullable<User>;
+  @IsOptional() @IsInstance(Meeting) private _meeting: Nullable<Meeting>;
 
   constructor(payload: CreateParticipantEntityPayload) {
-    super();
+    super(payload.id, payload.createdAt, payload.updatedAt, payload.removedAt);
 
-    this.meetingId = payload.meetingId;
-    this.userId = payload.userId || null;
-    this.name = payload.name || "";
-    this.role = payload.role || ParticipantRole.PARTICIPANT;
+    this._meetingId = payload.meetingId;
+    this._name = payload.name;
+    this._userId = payload.userId ?? null;
+    this._role = payload.role ?? ParticipantRole.PARTICIPANT;
 
-    this.user = payload.user || null;
-    this.meeting = payload.meeting || null;
-
-    this.id = payload.id || v4();
-    this.createdAt = payload.createdAt || new Date();
-    this.updatedAt = payload.updatedAt || null;
-    this.removedAt = payload.removedAt || null;
+    this._user = payload.user ?? null;
+    this._meeting = payload.meeting ?? null;
   }
 
+  //Getter
+  public get meetingId(): string {
+    return this._meetingId;
+  }
+  public get name(): string {
+    return this._name;
+  }
+  public get userId(): Nullable<string> {
+    return this._userId;
+  }
+  public get role(): ParticipantRole {
+    return this._role;
+  }
+  public get user(): Nullable<User> {
+    return this._user;
+  }
+  public get meeting(): Nullable<Meeting> {
+    return this._meeting;
+  }
+
+  // Method
   public async edit(payload: EditParticipantEntityPayload): Promise<void> {
-    const updatedKeys: string[] = [];
+    if (payload.name !== undefined) this._name = payload.name;
+    if (payload.role !== undefined) this._role = payload.role;
 
-    Object.entries(payload).forEach(([key, value]) => {
-      if (value !== undefined) {
-        this[key] = value;
-        updatedKeys.push(key);
-      }
-    });
+    if (payload.name !== undefined || payload.role !== undefined)
+      this._updatedAt = new Date();
 
-    if (updatedKeys.length > 0) {
-      this.updatedAt = new Date();
-      await this.validate();
-    }
+    await this.validate();
   }
 
   public static async new(
@@ -69,13 +72,6 @@ export class Participant extends Entity<string> {
   ): Promise<Participant> {
     const participant: Participant = new Participant(payload);
     await participant.validate();
-
     return participant;
-  }
-
-  public async validate(): Promise<void> {
-    if (!this.name && !this.userId)
-      throw new AppException(AppErrors.VALIDATION_FAILURE);
-    await super.validate();
   }
 }

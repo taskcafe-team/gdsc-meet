@@ -44,9 +44,8 @@ export class PrismaMeetingRepositoryAdapter
   }
 
   public async addMeeting(meeting: Meeting): Promise<Meeting> {
-    const orm: PrismaMeeting = await this.context.meeting.create({
-      data: PrismaMeetingMapper.toOrmEntity(meeting),
-    });
+    const data = PrismaMeetingMapper.toOrmEntity(meeting);
+    const orm: PrismaMeeting = await this.context.meeting.create({ data });
 
     return PrismaMeetingMapper.toDomainEntity(orm);
   }
@@ -64,7 +63,7 @@ export class PrismaMeetingRepositoryAdapter
     if (!meeting) return null;
 
     meeting.edit(data);
-    const id = meeting.getId();
+    const id = meeting.id;
     await this.context.meeting.update({
       where: { id },
       data: PrismaMeetingMapper.toOrmEntity(meeting),
@@ -78,8 +77,8 @@ export class PrismaMeetingRepositoryAdapter
   }): Promise<Nullable<{ id: string }>> {
     const meeting = await this.findMeeting(by);
     if (!meeting) return null;
-    await this.context.meeting.delete({ where: { id: meeting.getId() } });
-    return { id: meeting.getId() };
+    await this.context.meeting.delete({ where: { id: meeting.id } });
+    return { id: meeting.id };
   }
 
   public async deleteMeetings(by: { ids: string[] }): Promise<string[]> {

@@ -7,6 +7,8 @@ export type HttpUserPayload = {
   isValid: boolean;
 };
 
+export type HttpUserOptionalPayload = HttpUserPayload | null;
+
 export type HttpJwtPayload = {
   id: string;
 };
@@ -18,6 +20,4 @@ export type HttpLoggedInUser = {
 };
 
 export type HttpRequestWithUser = Request & { user: HttpUserPayload };
-export type HttpResponseWithOptionalUser = Request & {
-  user?: HttpUserPayload;
-};
+export type HttpRequestWithUserOptional = Request & { user?: HttpUserPayload };
