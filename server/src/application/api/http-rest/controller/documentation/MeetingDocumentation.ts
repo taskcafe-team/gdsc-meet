@@ -19,7 +19,7 @@ export class HttpRestApiModelCreateMeetingBody {
   @IsOptional()
   @Transform(({ value }) => (value ? new Date(value) : null))
   @IsDate()
-  @MinDate(new Date(Date.now() - 60 * 1000)) // Now - 1 minute
+  @MinDate(new Date(Date.now() - 5 * 60 * 1000)) // Now - 5 minute
   @ApiProperty({ type: Date, nullable: true, default: null })
   public startDate?: Date;
 
@@ -41,33 +41,7 @@ export class HttpRestApiModelCreateMeetingBody {
   public type: MeetingType;
 }
 
-export class ModelBodyUpdateMeeting {
-  @IsString()
-  @IsOptional()
-  @ApiProperty({ type: "string", nullable: true, default: null })
-  public title?: string;
-
-  @IsString()
-  @IsOptional()
-  @ApiProperty({ type: "string", nullable: true, default: null })
-  public description?: string;
-
-  @IsOptional()
-  @Transform(({ value }) => (value ? new Date(value) : null))
-  @IsDate()
-  @MinDate(new Date(Date.now() - 60 * 1000)) // Now - 1 minute
-  @ApiProperty({ type: Date, nullable: true, default: null })
-  public startDate?: Date;
-
-  @IsOptional()
-  @Transform(({ value }) => (value ? new Date(value) : null))
-  @IsDate()
-  @IsBiggerThan("startDate", {
-    message: "End date must be bigger than start date",
-  })
-  @ApiProperty({ type: Date, nullable: true, default: null })
-  public endDate?: Date;
-}
+export class UpdateMeetingBodyModel extends HttpRestApiModelCreateMeetingBody {}
 
 export class HttpRestApiModelDeleteMeetingsBody {
   @Transform((params: TransformFnParams) => {

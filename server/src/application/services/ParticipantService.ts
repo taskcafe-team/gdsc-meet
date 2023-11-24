@@ -5,7 +5,6 @@ import {
   Inject,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from "@nestjs/common";
 import {
   CreateTokenDto,
@@ -19,9 +18,11 @@ import {
   RoomType,
   SendDataMessagePort,
 } from "@infrastructure/adapter/webrtc/Types";
-import { HttpParticipantPayload } from "@application/api/http-rest/auth/type/HttpParticipantTypes";
 import { REQUEST } from "@nestjs/core";
-import { HttpRequestWithUser } from "@application/api/http-rest/auth/type/HttpAuthTypes";
+import {
+  HttpRequestWithUser,
+  HttpUserPayload,
+} from "@application/api/http-rest/auth/type/HttpAuthTypes";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { Participant } from "@core/domain/participant/entity/Participant";
 import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/dto/MeetingUsecaseDto";
@@ -29,7 +30,6 @@ import { VideoGrant } from "livekit-server-sdk";
 import { MeetingType } from "@core/common/enums/MeetingEnums";
 import { MeetingService } from "./MeetingService";
 import { Meeting } from "@core/domain/meeting/entity/Meeting";
-import { UserService } from "./UserService";
 import {
   GetAccessTokenDto,
   ParticipantSendMessagePort,
@@ -41,6 +41,10 @@ import {
   SendMessageActionEnum,
   createSendDataMessageAction,
 } from "@infrastructure/adapter/webrtc/Actions";
+import { UserService } from "./UserService";
+import { MeetingUsecase } from "@core/domain/meeting/usecase/MeetingUsecase";
+import { UpdateMeetingPort } from "@core/domain/meeting/usecase/port/UpdateMeetingPort";
+import { HttpParticipantPayload } from "@application/api/http-rest/auth/type/HttpParticipantTypes";
 
 @Injectable()
 export class ParticipantService implements ParticipantUsecase {
@@ -48,7 +52,9 @@ export class ParticipantService implements ParticipantUsecase {
     private readonly unitOfWork: UnitOfWork,
     @Inject(REQUEST)
     private readonly requestWithUser: HttpRequestWithUser,
-    private readonly meetingService: MeetingService,
+    @Inject(MeetingService)
+    private readonly meetingService: MeetingUsecase,
+    private readonly userService: UserService,
     private readonly webRTCService: WebRTCLivekitService,
   ) {}
   createParticipant(): Promise<ParticipantUsecaseDto> {
@@ -104,11 +110,33 @@ export class ParticipantService implements ParticipantUsecase {
     throw new Error("Method not implemented.");
   }
 
+  async getParticipantByUserIdAndMeetingId(
+    userId: string,
+    meetingId: string,
+  ): Promise<ParticipantUsecaseDto & { isOnline: boolean }> {
+    const participant = await this.unitOfWork
+      .getParticipantRepository()
+      .findParticipant({ userId, meetingId });
+    if (!participant) throw new NotFoundException("Participant not found!");
+
+    const participantOnline = await this.webRTCService
+      .getParticipant({
+        roomId: participant.meetingId,
+        participantId: participant.id,
+        roomType: RoomType.MEETING,
+      })
+      .catch(() => null);
+
+    const isOnline = Boolean(participantOnline);
+    return { ...ParticipantUsecaseDto.newFromEntity(participant), isOnline };
+  }
+
   async getAccessToken(payload: {
     meetingId: string;
     participantName: string;
   }): Promise<GetAccessTokenDto> {
     const userId = this.requestWithUser.user.id;
+    const user = await this.userService.getUserById(userId);
     if (!userId) throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR);
     const { meetingId, participantName } = payload;
 
@@ -130,6 +158,8 @@ export class ParticipantService implements ParticipantUsecase {
             userId,
           });
       });
+    //Overwrite name
+    participant.edit({ name: participantName });
 
     const participantDto = ParticipantUsecaseDto.newFromEntity(participant);
     const tokens = await this.createAccessToken(meeting, participantDto);
@@ -225,6 +255,30 @@ export class ParticipantService implements ParticipantUsecase {
 
       return await Promise.all(sendPromise);
     });
+  }
+
+  async updateMyMeeting(
+    updater: HttpUserPayload,
+    updateId: string,
+    payload: UpdateMeetingPort,
+  ): Promise<void> {
+    const participant = await this.getParticipantByUserIdAndMeetingId(
+      updater.id,
+      updateId,
+    );
+    const isHost = participant.role === ParticipantRole.HOST;
+    if (!isHost) throw new ForbiddenException("Not host of meeting");
+    await this.meetingService.updateMeeting(updateId, payload);
+
+    const meeting = await this.unitOfWork
+      .getMeetingRepository()
+      .findMeeting({ id: updateId });
+    if (!meeting) throw new NotFoundException("Meeting not found!");
+
+    await meeting.edit(payload);
+    await this.unitOfWork
+      .getMeetingRepository()
+      .updateMeeting({ id: meeting.id }, meeting);
   }
 
   // Private methods

@@ -1,5 +1,4 @@
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
-import { WebRTCLivekitService } from "@infrastructure/adapter/webrtc/WebRTCLivekitManagement";
 import {
   CanActivate,
   ExecutionContext,
@@ -25,7 +24,7 @@ export class HttpParticipantRoleAuthGuard implements CanActivate {
       participantRoles.length > 0
         ? participantRoles.includes(request.participant.role)
         : true;
-    if (!isPassRolesAuth) throw new UnauthorizedException();
+    if (!isPassRolesAuth) throw new UnauthorizedException("Unauthorized");
     return true;
   }
 }

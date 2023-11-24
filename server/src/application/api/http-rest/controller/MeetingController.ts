@@ -15,7 +15,10 @@ import {
 import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
 
 import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
-import { HttpRestApiModelCreateMeetingBody } from "./documentation/MeetingDocumentation";
+import {
+  HttpRestApiModelCreateMeetingBody,
+  UpdateMeetingBodyModel,
+} from "./documentation/MeetingDocumentation";
 
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
 import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/dto/MeetingUsecaseDto";
@@ -23,8 +26,6 @@ import { MeetingUsecase } from "@core/domain/meeting/usecase/MeetingUsecase";
 import { MeetingService } from "@application/services/MeetingService";
 import { HttpUserPayload } from "../auth/type/HttpAuthTypes";
 import { HttpUser } from "../auth/decorator/HttpUser";
-import { Meeting } from "@core/domain/meeting/entity/Meeting";
-import { instanceToPlain, plainToClass } from "class-transformer";
 
 @Controller("meetings")
 @ApiTags("meetings")
@@ -86,18 +87,5 @@ export class MeetingController {
   ): Promise<CoreApiResponse<MeetingUsecaseDto>> {
     const result = await this.meetingService.getMeetingById(meetingId);
     return CoreApiResponse.success(result);
-  }
-
-  @ApiBearerAuth()
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @Put(":meetingId")
-  public async updateMeeting(
-    @Param("meetingId") meetingId: string,
-    // @Body() updateMeetingDto: {},
-  ): Promise<CoreApiResponse> {
-    throw new Error("Method not implemented.");
-    // const adapter = {};
-    // await this.meetingService.updateMeeting(adapter, meetingId, {});
-    // return CoreApiResponse.success(undefined, HttpStatus.NO_CONTENT);
   }
 }

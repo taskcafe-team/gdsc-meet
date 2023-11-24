@@ -40,7 +40,7 @@ export class HttpAccessTokenStrategy
 
   public async validate(payload: HttpJwtPayload): Promise<HttpUserPayload> {
     const user = await this.authService.getUser({ id: payload.id });
-    if (!user) throw new UnauthorizedException();
+    if (!user) throw new UnauthorizedException("Unauthorized");
     return { id: user.id, role: user.role, isValid: user.isValid };
   }
 }

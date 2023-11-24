@@ -26,7 +26,7 @@ export class AppException extends BaseException {
   }
 
   getCode(): string {
-    return this.error ? this.error.getCode() : AppCode.INTERNAL_SERVER_ERROR; //TODO: CHECK
+    return this.error ? this.error.getCode() : AppCode.INTERNAL_SERVER_ERROR;
   }
 
   getTitle(): string {

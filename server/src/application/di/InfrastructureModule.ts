@@ -55,8 +55,14 @@ const NestHttpExceptionFilterProvider: Provider = {
     WebRTCModule,
     JwtModule,
   ],
-  providers: [NestHttpExceptionFilterProvider, CustomJwtService, EmailService],
+  providers: [
+    ConfigService,
+    NestHttpExceptionFilterProvider,
+    CustomJwtService,
+    EmailService,
+  ],
   exports: [
+    ConfigService,
     MailerModule,
     CacheModule,
     UnitOfWorkModule,

@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
@@ -18,13 +19,13 @@ import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
 import { HttpParticipantAuth } from "../auth/decorator/HttpParticipantAuth";
 import { HttpParticipant } from "../auth/decorator/HttpParticipant";
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
-import {
-  AccessTokenMetadata,
-  RespondJoinStatus,
-} from "@infrastructure/adapter/webrtc/Types";
+import { RespondJoinStatus } from "@infrastructure/adapter/webrtc/Types";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { ParticipantService } from "@application/services/ParticipantService";
 import { HttpParticipantPayload } from "../auth/type/HttpParticipantTypes";
+import { UpdateMeetingBodyModel } from "./documentation/MeetingDocumentation";
+import { HttpUserPayload } from "../auth/type/HttpAuthTypes";
+import { HttpUser } from "../auth/decorator/HttpUser";
 
 @Controller("meetings/:meetingId/participants")
 @ApiTags("participants")
@@ -45,6 +46,23 @@ export class ParticipantController {
     });
 
     return CoreApiResponse.success(result);
+  }
+
+  @ApiBearerAuth()
+  @HttpUserAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Put("meeting-permission")
+  public async updateMeeting(
+    @Param("meetingId") meetingId: string,
+    @Body() updateMeetingDto: UpdateMeetingBodyModel,
+    @HttpUser() httpUser: HttpUserPayload,
+  ): Promise<CoreApiResponse> {
+    await this.participantService.updateMyMeeting(
+      httpUser,
+      meetingId,
+      updateMeetingDto,
+    );
+    return CoreApiResponse.success(undefined, HttpStatus.NO_CONTENT);
   }
 
   // @Get(":participantId")
