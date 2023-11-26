@@ -14,7 +14,7 @@ export const AppErrors: TAppErrorCode = {
     "Please enter a valid parameter {0}.",
     AppErrorAction.DEFAULT,
     "Invalid parameter",
-    ErrorType.AUTHENTICATION_ERROR,
+    ErrorType.AUTHENTICATION_ERROR
   ),
   VALIDATION_FAILURE: new AppError(
     402,
@@ -22,7 +22,7 @@ export const AppErrors: TAppErrorCode = {
     "Validation Failure(s): {0}",
     AppErrorAction.DEFAULT,
     "Validation failed",
-    ErrorType.INTERNAL_ERROR,
+    ErrorType.INTERNAL_ERROR
   ),
   UNAUTHORIZED_ACCESS: new AppError(
     403,
@@ -30,7 +30,7 @@ export const AppErrors: TAppErrorCode = {
     "Unauthorized access",
     AppErrorAction.DEFAULT,
     "Unauthorized access",
-    ErrorType.AUTHENTICATION_ERROR,
+    ErrorType.AUTHENTICATION_ERROR
   ),
   INTERNAL_SERVER_ERROR: new AppError(
     500,
@@ -38,7 +38,7 @@ export const AppErrors: TAppErrorCode = {
     "Internal server error while processing request",
     AppErrorAction.DEFAULT,
     "Internal server error",
-    ErrorType.INTERNAL_ERROR,
+    ErrorType.INTERNAL_ERROR
   ),
   ENTITY_NOT_FOUND_ERROR: new AppError(
     500,
@@ -46,6 +46,14 @@ export const AppErrors: TAppErrorCode = {
     "Entity not found: {0}",
     AppErrorAction.DEFAULT,
     "Entity not found",
-    ErrorType.ARGUMENT_ERROR,
+    ErrorType.ARGUMENT_ERROR
+  ),
+  ENTITY_ALREADY_EXISTED_ERROR: new AppError(
+    409,
+    AppCode.ENTITY_ALREADY_EXISTED_ERROR,
+    "Entity exit found: {0} asdf {1} {2}",
+    AppErrorAction.DEFAULT,
+    "Conflic ...",
+    ErrorType.BAD_REQUEST
   ),
 };

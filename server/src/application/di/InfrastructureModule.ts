@@ -13,6 +13,7 @@ import { UnitOfWorkModule } from "./UnitOfWorkModule";
 import { CustomJwtService } from "@application/services/JwtService";
 import { EmailService } from "@application/services/EmailService";
 import { JwtModule } from "@nestjs/jwt";
+import { PrismaClient } from "@prisma/client";
 
 const NestHttpExceptionFilterProvider: Provider = {
   provide: APP_FILTER,
@@ -59,7 +60,7 @@ const NestHttpExceptionFilterProvider: Provider = {
     ConfigService,
     NestHttpExceptionFilterProvider,
     CustomJwtService,
-    EmailService,
+    EmailService
   ],
   exports: [
     ConfigService,
@@ -68,7 +69,7 @@ const NestHttpExceptionFilterProvider: Provider = {
     UnitOfWorkModule,
     WebRTCModule,
     CustomJwtService,
-    EmailService,
+    EmailService, 
   ],
 })
 export class InfrastructureModule {}

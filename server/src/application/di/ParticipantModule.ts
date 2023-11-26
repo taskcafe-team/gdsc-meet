@@ -7,11 +7,13 @@ import { ParticipantService } from "@application/services/ParticipantService";
 import { UserModule } from "./UserModule";
 import { MeetingModule } from "./MeetingModule";
 import { MeetingService } from "@application/services/MeetingService";
+import { PrismaClient } from "@prisma/client";
+import { UserMeetingService } from "@application/services/UserMeetingService";
 
 @Module({
   controllers: [ParticipantController],
   imports: [InfrastructureModule, UserModule, MeetingModule],
-  providers: [MeetingService, ParticipantService, HttpParticipantRoleAuthGuard],
+  providers: [MeetingService, ParticipantService, HttpParticipantRoleAuthGuard, PrismaClient,UserMeetingService],
   exports: [ParticipantService],
 })
-export class ParticipantModule {}
+export class ParticipantModule { }

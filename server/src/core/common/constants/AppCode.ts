@@ -1,7 +1,10 @@
+
+
 export enum AppCode {
   SUCCESS = "APP-2000", //* success
   UNAUTHORIZED_ACCESS = "AE-APP-4003", //* unauthorized access
   INVALID_PARAMETER = "AE-APP-4000", //* invalid parameter
+  ENTITY_ALREADY_EXISTED_ERROR = "AE-APP-4090", //* invalid parameterasdfads
   VALIDATION_FAILURE = "AE-APP-4021", //* validation failure
   INTERNAL_SERVER_ERROR = "AE-APP-5000", //* internal server error
   ENTITY_NOT_FOUND_ERROR = "AE-APP-5001", //* entity not found error

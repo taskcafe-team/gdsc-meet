@@ -3,6 +3,7 @@ import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { PrismaUnitOfWork } from "@infrastructure/adapter/persistence/prisma/unit-of-work/PrismaUnitOfWork";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "@infrastructure/adapter/persistence/prisma/PrismaService";
+import { PrismaClient } from "@prisma/client";
 
 const UnitOfWorkProvider: Provider = {
   provide: UnitOfWork,

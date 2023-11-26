@@ -9,11 +9,11 @@ import { MeetingType } from "@core/common/enums/MeetingEnums";
 
 export class PrismaMeetingRepositoryAdapter
   extends PrismaBaseRepository
-  implements MeetingRepositoryPort
-{
+  implements MeetingRepositoryPort {
   constructor(context: Prisma.TransactionClient) {
     super(context);
   }
+
 
   public async findMeetings(by: {
     id?: string;

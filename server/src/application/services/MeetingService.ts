@@ -18,6 +18,7 @@ import { CreateMeetingPort } from "@core/domain/meeting/usecase/port/CreateMeeti
 import { UserUsecase } from "@core/domain/user/usecase/UserUsecase";
 import { UserService } from "./UserService";
 import { UpdateMeetingPort } from "@core/domain/meeting/usecase/port/UpdateMeetingPort";
+import { UserMeetingService } from "./UserMeetingService";
 
 @Injectable()
 export class MeetingService implements MeetingUsecase {
@@ -58,7 +59,6 @@ export class MeetingService implements MeetingUsecase {
       await this.unitOfWork
         .getParticipantRepository()
         .addParticipant(participant);
-
       return MeetingUsecaseDto.newFromEntity(meeting);
     });
   }

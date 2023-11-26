@@ -7,12 +7,13 @@ const passValidatorModel = {
     min: 4,
     max: 20,
     message: "Password must be between 4 and 20 characters long",
-  },
-  matches: {
-    pattern: /^(?=.*[A-Z])(?=.*d)(?=.*[@#$%^&+=!]).*$/,
-    message:
-      "Password must contain at least 1 uppercase character, one number and one special character. Exam MyP@ssw0rd",
-  },
+  }
+  // ,
+  // matches: {
+  //   pattern: /^(?=.*[A-Z])(?=.*d)(?=.*[@#$%^&+=!]).*$/,
+  //   message:
+  //     "Password must contain at least 1 uppercase character, one number and one special character. Exam MyP@ssw0rd",
+  // },
 };
 
 // Validation
@@ -26,9 +27,9 @@ export class HttpRestApiModelLogInBody {
     message: passValidatorModel.length.message,
   })
   @ApiProperty({ type: "string" })
-  @Matches(passValidatorModel.matches.pattern, {
-    message: passValidatorModel.matches.message,
-  })
+  // @Matches(passValidatorModel.matches.pattern, {
+  //   message: passValidatorModel.matches.message,
+  // })
   public password: string;
 }
 
@@ -42,9 +43,9 @@ export class HttpRestApiModelResetPasswordBody {
   @IsJWT() @ApiProperty({ type: "string" }) public token: string;
 
   @ApiProperty({ type: "string" })
-  @Matches(passValidatorModel.matches.pattern, {
-    message: passValidatorModel.matches.message,
-  })
+  // @Matches(passValidatorModel.matches.pattern, {
+  //   message: passValidatorModel.matches.message,
+  // })
   public newPassword: string;
 }
 

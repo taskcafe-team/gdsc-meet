@@ -73,4 +73,5 @@ export class PrismaUnitOfWork implements UnitOfWork {
       () => new PrismaParticipantRepositoryAdapter(this.context),
     );
   }
+
 }
