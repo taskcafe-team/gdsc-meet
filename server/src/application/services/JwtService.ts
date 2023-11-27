@@ -1,16 +1,15 @@
+import { HttpUserJwtPayload } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 
-type JwtVerifyDto = {
+export type JwtVerifyDto = {
   iat: number; // issued at
   exp: number; // expiration time
 };
 
-type UserJwtDto = { userId: string };
-
-type JwtDto = {
+export type JwtDto = {
   token: string;
   expiresIn: string;
 };
@@ -19,14 +18,16 @@ export interface JwtUsecase {
   // generateToken(userId: string): Promise<string>;
   // verifyToken(token: string): Promise<string>;
 
-  generateUserAccessToken(payload: UserJwtDto): JwtDto;
-  verifyUserAccessToken(token: string): UserJwtDto & JwtVerifyDto;
+  generateUserAccessToken(payload: HttpUserJwtPayload): JwtDto;
+  verifyUserAccessToken(token: string): HttpUserJwtPayload & JwtVerifyDto;
 
-  generateUserRefreshToken(payload: UserJwtDto): JwtDto;
-  verifyUserRefreshToken(token: string): UserJwtDto & JwtVerifyDto;
+  generateUserRefreshToken(payload: HttpUserJwtPayload): JwtDto;
+  verifyUserRefreshToken(token: string): HttpUserJwtPayload & JwtVerifyDto;
 
-  generateEmailVerificationToken(payload: UserJwtDto): JwtDto;
-  verifyEmailVerificationToken(token: string): UserJwtDto & JwtVerifyDto;
+  generateEmailVerificationToken(payload: HttpUserJwtPayload): JwtDto;
+  verifyEmailVerificationToken(
+    token: string,
+  ): HttpUserJwtPayload & JwtVerifyDto;
 }
 
 @Injectable()
@@ -65,38 +66,40 @@ export class CustomJwtService implements JwtUsecase {
     );
   }
 
-  generateUserAccessToken(payload: UserJwtDto): JwtDto {
+  generateUserAccessToken(payload: HttpUserJwtPayload): JwtDto {
     const secret = this.userAccessTokenSecret;
     const expiresIn = this.userAccessTokenTtl + "m";
     const token = this.jwtService.sign(payload, { secret, expiresIn });
     return { token, expiresIn };
   }
 
-  verifyUserAccessToken(token: string): UserJwtDto & JwtVerifyDto {
+  verifyUserAccessToken(token: string): HttpUserJwtPayload & JwtVerifyDto {
     const secret = this.userAccessTokenSecret;
     return this.jwtService.verify(token, { secret });
   }
 
-  generateUserRefreshToken(payload: UserJwtDto): JwtDto {
+  generateUserRefreshToken(payload: HttpUserJwtPayload): JwtDto {
     const secret = this.userRefreshTokenSecret;
     const expiresIn = this.userRefreshTokenTtl + "m";
     const token = this.jwtService.sign(payload, { secret, expiresIn });
     return { token, expiresIn };
   }
 
-  verifyUserRefreshToken(token: string): UserJwtDto & JwtVerifyDto {
+  verifyUserRefreshToken(token: string): HttpUserJwtPayload & JwtVerifyDto {
     const secret = this.userAccessTokenSecret;
     return this.jwtService.verify(token, { secret });
   }
 
-  generateEmailVerificationToken(payload: UserJwtDto): JwtDto {
+  generateEmailVerificationToken(payload: HttpUserJwtPayload): JwtDto {
     const secret = this.emailVerificationTokenSecret;
     const expiresIn = this.emailVerificationTokenTtl + "m";
     const token = this.jwtService.sign(payload, { secret, expiresIn });
     return { token, expiresIn };
   }
 
-  verifyEmailVerificationToken(token: string): UserJwtDto & JwtVerifyDto {
+  verifyEmailVerificationToken(
+    token: string,
+  ): HttpUserJwtPayload & JwtVerifyDto {
     const secret = this.emailVerificationTokenSecret;
     return this.jwtService.verify(token, { secret });
   }

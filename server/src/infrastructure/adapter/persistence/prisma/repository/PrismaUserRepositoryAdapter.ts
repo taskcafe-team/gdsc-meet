@@ -27,7 +27,9 @@ export class PrismaUserRepositoryAdapter
     id?: string;
     email?: string;
   }): Promise<Nullable<User>> {
-    const findOptions: Prisma.UserFindFirstArgs = { where: by };
+    const findOptions: Prisma.UserFindFirstArgs = { where: {} };
+    if (by.id) findOptions.where!.id = by.id;
+    if (by.email) findOptions.where!.email = by.email;
 
     const user: Nullable<PrismaUser> = await this.context.user
       .findFirst(findOptions)

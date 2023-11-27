@@ -3,7 +3,7 @@ import { ExtractJwt, Strategy } from "passport-jwt";
 import { ConfigService } from "@nestjs/config";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import {
-  HttpJwtPayload,
+  HttpUserJwtPayload,
   HttpUserPayload,
 } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 import {
@@ -38,9 +38,10 @@ export class HttpAccessTokenStrategy
     this.authService = await this.moduleRef.resolve(HttpAuthService);
   }
 
-  public async validate(payload: HttpJwtPayload): Promise<HttpUserPayload> {
-    const user = await this.authService.getUser({ id: payload.id });
+  public async validate(payload: HttpUserJwtPayload): Promise<HttpUserPayload> {
+    const user = await this.authService.getUser({ id: `${payload.id}` });
     if (!user) throw new UnauthorizedException("Unauthorized");
-    return { id: user.id, role: user.role, isValid: user.isValid };
+    const { id, role, isValid } = user;
+    return { id, role, isValid };
   }
 }

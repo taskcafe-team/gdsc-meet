@@ -1,16 +1,12 @@
 import { Prisma } from "@prisma/client";
 
 import { Participant } from "@core/domain/participant/entity/Participant";
-import { RepositoryFindOptions } from "@core/common/persistence/RepositoryOptions";
 import { Nullable } from "@core/common/type/CommonTypes";
 
 import { PrismaBaseRepository } from "./PrismaBaseRepository";
 import { PrismaParticipant } from "../entity/participant/PrismaParticipant";
 import { PrismaParticipantMapper } from "../entity/participant/PrismaParticipantMapper";
-import {
-  FindFirstParticipantBy,
-  ParticipantRepositoryPort,
-} from "@core/domain/participant/usecase/port/ParticipantRepositoryPort";
+import { ParticipantRepositoryPort } from "@core/domain/participant/usecase/port/ParticipantRepositoryPort";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 
 export class PrismaParticipantRepositoryAdapter
@@ -60,15 +56,14 @@ export class PrismaParticipantRepositoryAdapter
     const context = this.context.participant;
 
     const findOptions: Prisma.ParticipantFindFirstArgs = {
-      where: {},
+      where: {
+        id: by.id,
+        meetingId: by.meetingIds ? { in: by.meetingIds } : by.meetingId,
+        userId: by.userId,
+        role: by.role,
+      },
       include: { meeting: true, user: true },
     };
-
-    if (by.id) findOptions.where!.id = by.id;
-    if (by.meetingId) findOptions.where!.meetingId = by.meetingId;
-    if (by.meetingIds) findOptions.where!.meetingId = { in: by.meetingIds };
-    if (by.role) findOptions.where!.role = by.role;
-    if (by.userId) findOptions.where!.userId = by.userId;
 
     const orm = await context.findFirst(findOptions).then((p) => p ?? null);
     const domain =

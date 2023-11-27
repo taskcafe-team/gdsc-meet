@@ -34,7 +34,7 @@ export class PrismaMeetingRepositoryAdapter
   }
 
   public async findMeeting(by: { id: string }): Promise<Nullable<Meeting>> {
-    const findOptions: Prisma.MeetingFindFirstArgs = { where: by };
+    const findOptions: Prisma.MeetingFindFirstArgs = { where: {} };
 
     const orm = await this.context.meeting
       .findFirst(findOptions)
@@ -75,10 +75,9 @@ export class PrismaMeetingRepositoryAdapter
   public async deleteMeeting(by: {
     id: string;
   }): Promise<Nullable<{ id: string }>> {
-    const meeting = await this.findMeeting(by);
-    if (!meeting) return null;
-    await this.context.meeting.delete({ where: { id: meeting.id } });
-    return { id: meeting.id };
+    const { id } = by;
+    await this.context.meeting.delete({ where: { id } });
+    return { id };
   }
 
   public async deleteMeetings(by: { ids: string[] }): Promise<string[]> {

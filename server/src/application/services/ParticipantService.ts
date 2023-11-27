@@ -44,7 +44,6 @@ import {
 import { UserService } from "./UserService";
 import { MeetingUsecase } from "@core/domain/meeting/usecase/MeetingUsecase";
 import { UpdateMeetingPort } from "@core/domain/meeting/usecase/port/UpdateMeetingPort";
-import { HttpParticipantPayload } from "@application/api/http-rest/auth/type/HttpParticipantTypes";
 
 @Injectable()
 export class ParticipantService implements ParticipantUsecase {
@@ -136,10 +135,9 @@ export class ParticipantService implements ParticipantUsecase {
     participantName: string;
   }): Promise<GetAccessTokenDto> {
     const userId = this.requestWithUser.user.id;
-    const user = await this.userService.getUserById(userId);
+    await this.userService.getUserById(userId);
     if (!userId) throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR);
     const { meetingId, participantName } = payload;
-
     const meeting = await this.meetingService.getMeetingById(meetingId);
     if (meeting.endTime && meeting.endTime < new Date())
       throw new BadRequestException(`Meeting has ended!`);
@@ -193,7 +191,7 @@ export class ParticipantService implements ParticipantUsecase {
       const meeting = await this.meetingService.getMeetingById(meetingId);
       const responder = await this.getParticipantById(responderId);
       if (responder.role !== ParticipantRole.HOST)
-        throw new ForbiddenException("Not host of meeting"); //TODO: check all Unauthorized
+        throw new ForbiddenException("Not host of meeting");
 
       const sendPromise = participantIds.map(async (participantId) => {
         const participant = await this.getParticipantById(participantId)
@@ -206,7 +204,7 @@ export class ParticipantService implements ParticipantUsecase {
                 participantId,
               })
               .then((p) => ({ ...p, isOnline: true }))
-              .catch(() => null);
+              .catch((e) => null);
           });
         if (!participant) return;
 
@@ -297,15 +295,6 @@ export class ParticipantService implements ParticipantUsecase {
     return participantDto;
   }
 
-  // private async getOrCreateParticipant(
-  //   userId: string,
-  //   meeting: MeetingUsecaseDto,
-  // ): Promise<ParticipantUsecaseDto> {
-  //   const participant = await this.findParticipant(userId, meeting.id);
-  //   if (participant) return participant;
-  //   return await this.createParticipant();
-  // }
-
   private async findParticipant(
     userId: string,
     meetingId: string,
@@ -314,31 +303,6 @@ export class ParticipantService implements ParticipantUsecase {
       .getParticipantRepository()
       .findParticipant({ userId, meetingId });
   }
-
-  // private async createParticipantEntity(
-  //   getter: HttpParticipantPayload,
-  // ): Promise<Participant> {
-  //   let participant: Participant;
-  //   if (!getter.userId) {
-  //     // This is Anonymous Participant
-  //     participant = await Participant.new({
-  //       meetingId: getter.meetingId,
-  //       name: "Anonymous",
-  //       role: ParticipantRole.PARTICIPANT,
-  //     });
-  //   } else {
-  //     const currentUser = await this.userService.getUserById(getter.userId);
-  //     const fullName = currentUser.firstName ?? "" + " " + currentUser.lastName;
-  //     participant = await Participant.new({
-  //       meetingId: getter.userId,
-  //       name: fullName.trim(),
-  //       role: ParticipantRole.PARTICIPANT,
-  //       userId: currentUser.id,
-  //     });
-  //   }
-
-  //   return participant;
-  // }
 
   private async createAccessToken(
     meeting: MeetingUsecaseDto,

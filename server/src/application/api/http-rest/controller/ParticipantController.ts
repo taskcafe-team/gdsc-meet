@@ -65,26 +65,11 @@ export class ParticipantController {
     return CoreApiResponse.success(undefined, HttpStatus.NO_CONTENT);
   }
 
-  // @Get(":participantId")
-  // @HttpAuth()
-  // @ApiBearerAuth()
-  // @HttpCode(HttpStatus.OK)
-  // public getParticipant(
-  //   @Param("meetingId") meetingId: string,
-  //   @Param("participantId") participantId: string,
-  // ) {}
-
-  // @Get("")
-  // @HttpAuth()
-  // @ApiBearerAuth()
-  // @HttpCode(HttpStatus.OK)
-  // public getParticipants(@Param("meetingId") meetingId: string) {}
-
   @Patch("respond-join-request")
   @HttpCode(HttpStatus.NO_CONTENT)
   @HttpParticipantAuth(ParticipantRole.HOST)
   @ApiBearerAuth()
-  public async resultRequestJoinMeeting(
+  public async respondJoinRequest(
     @Param("meetingId") meetingId: string,
     @Body() body: { participantIds: string[]; status: RespondJoinStatus },
     @HttpParticipant() httpParticipant: HttpParticipantPayload,
@@ -96,7 +81,7 @@ export class ParticipantController {
       participantIds,
       status,
     );
-    return CoreApiResponse.success();
+    return CoreApiResponse.success(undefined, HttpStatus.NO_CONTENT);
   }
 
   @Post("send-message")

@@ -37,10 +37,10 @@ export class HttpAuthService {
   public async createToken(
     payload: HttpUserPayload,
   ): Promise<HttpLoggedInUser> {
-    const userId = payload.id;
+    const id = payload.id;
 
-    const accessToken = this.jwtService.generateUserAccessToken({ userId });
-    const refreshToken = this.jwtService.generateUserRefreshToken({ userId });
+    const accessToken = this.jwtService.generateUserAccessToken({ id });
+    const refreshToken = this.jwtService.generateUserRefreshToken({ id });
 
     return {
       id: payload.id,
@@ -56,8 +56,8 @@ export class HttpAuthService {
       throw new UnauthorizedException("Invalid token");
 
     const userJwt = this.jwtService.verifyUserRefreshToken(refreshToken);
-    const { userId } = userJwt;
-    const accessToken = this.jwtService.generateUserAccessToken({ userId });
+    const { id } = userJwt;
+    const accessToken = this.jwtService.generateUserAccessToken({ id });
     return { accessToken: accessToken.token };
   }
 
@@ -116,8 +116,8 @@ export class HttpAuthService {
     if (user.isValid) throw new BadRequestException();
     if (!user.email) throw new BadRequestException();
 
-    const userId = user.id;
-    const token = this.jwtService.generateEmailVerificationToken({ userId });
+    const id = user.id;
+    const token = this.jwtService.generateEmailVerificationToken({ id });
 
     const confirmEmailURL = this.configService.get("API_CONFIRM_EMAIL_URL");
     const url = `${confirmEmailURL}?token=${token}`;
@@ -143,7 +143,7 @@ export class HttpAuthService {
 
     const user = await this.unitOfWork
       .getUserRepository()
-      .findUser({ id: userJwt.userId });
+      .findUser({ id: userJwt.id });
     if (!user) throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR);
 
     if (user.isValid) return;
@@ -157,8 +157,8 @@ export class HttpAuthService {
     const user = await this.unitOfWork.getUserRepository().findUser({ email });
     if (!user) throw new NotFoundException("Email does not exist");
 
-    const userId = user.id;
-    const token = this.jwtService.generateEmailVerificationToken({ userId }); //TODO: error
+    const id = user.id;
+    const token = this.jwtService.generateEmailVerificationToken({ id }); //TODO: error
 
     const resetPasswordURL = this.configService.get("API_RESET_PASSWORD_URL");
     const url = `${resetPasswordURL}?token=${token}`;
@@ -180,7 +180,7 @@ export class HttpAuthService {
 
     const user = await this.unitOfWork
       .getUserRepository()
-      .findUser({ id: userJwt.userId });
+      .findUser({ id: userJwt.id });
     if (!user) throw new AppException(AppErrors.ENTITY_NOT_FOUND_ERROR);
 
     await user.changePassword(payload.newPassword);

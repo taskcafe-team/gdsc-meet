@@ -26,9 +26,9 @@ export class HttpRestApiModelLogInBody {
     message: passValidatorModel.length.message,
   })
   @ApiProperty({ type: "string" })
-  @Matches(passValidatorModel.matches.pattern, {
-    message: passValidatorModel.matches.message,
-  })
+  // @Matches(passValidatorModel.matches.pattern, {
+  //   message: passValidatorModel.matches.message,
+  // })
   public password: string;
 }
 
@@ -42,9 +42,9 @@ export class HttpRestApiModelResetPasswordBody {
   @IsJWT() @ApiProperty({ type: "string" }) public token: string;
 
   @ApiProperty({ type: "string" })
-  @Matches(passValidatorModel.matches.pattern, {
-    message: passValidatorModel.matches.message,
-  })
+  // @Matches(passValidatorModel.matches.pattern, {
+  //   message: passValidatorModel.matches.message,
+  // })
   public newPassword: string;
 }
 

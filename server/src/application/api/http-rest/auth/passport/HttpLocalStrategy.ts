@@ -37,6 +37,7 @@ export class HttpLocalStrategy
     const user = await this.authService.getUser({ email });
     if (!user || !(await user.comparePassword(password)))
       throw new UnauthorizedException("Email or password is invalid");
+
     return { id: user.id, role: user.role, isValid: user.isValid };
   }
 }

@@ -120,19 +120,16 @@ export class MeetingService implements MeetingUsecase {
   async deleteMeetingById(id: string): Promise<string> {
     await this.unitOfWork.getMeetingRepository().deleteMeeting({ id });
     await this.webRTCService
-      .deleteRoom({
-        roomId: id,
-        roomType: RoomType.MEETING,
-      })
+      .deleteRoom({ roomId: id, roomType: RoomType.MEETING })
       .catch(() => null);
     return id;
   }
 
   async deleteMeetings(ids: string[]): Promise<string[]> {
     return await this.unitOfWork.runInTransaction(async () => {
-      const deletePromies = ids.map((id) => this.deleteMeetingById(id));
-      const res = await Promise.all(deletePromies);
-      return res;
+      return await this.unitOfWork
+        .getMeetingRepository()
+        .deleteMeetings({ ids });
     });
   }
 }

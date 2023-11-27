@@ -11,3 +11,6 @@ redis:
   db: 0
 keys:
   APIk645U8MckJHy: BRxks3fY7udezPVhloXyzSk7fVeUlenFzo0a9miKrGbE
+turn:
+  enabled: true
+  udp_port: 443

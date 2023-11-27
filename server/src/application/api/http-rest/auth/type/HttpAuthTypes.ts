@@ -6,13 +6,9 @@ export type HttpUserPayload = {
   role: UserRole;
   isValid: boolean;
 };
-
 export type HttpUserOptionalPayload = HttpUserPayload | null;
 
-export type HttpJwtPayload = {
-  id: string;
-};
-
+export type HttpUserJwtPayload = { id: string };
 export type HttpLoggedInUser = {
   id: string;
   accessToken: string;
