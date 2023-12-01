@@ -53,14 +53,14 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
     errorResponse: CoreApiResponse<unknown>,
   ): CoreApiResponse<unknown> {
     if (error instanceof AppException) {
-      const ErrorDTO = new ErrorDTO(
+      const errorDTO = new ErrorDTO(
         error.getCode(),
         error.getMessage(),
         error.getAcction(),
         error.getTitle(),
         error.getErrorType(),
       );
-      return CoreApiResponse.error(error.getHttpStatus(), ErrorDTO);
+      return CoreApiResponse.error(error.getHttpStatus(), errorDTO);
     }
     return errorResponse;
   }
