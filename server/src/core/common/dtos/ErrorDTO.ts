@@ -1,4 +1,4 @@
-export class ErrorDto {
+export class ErrorDTO {
   public readonly message: string;
   public readonly code: string;
   public readonly action: string;

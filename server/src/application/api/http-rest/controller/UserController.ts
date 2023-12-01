@@ -20,7 +20,7 @@ import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
 import { HttpUser } from "../auth/decorator/HttpUser";
 import { HttpUserPayload } from "../auth/type/HttpAuthTypes";
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
-import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
+import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
 import { HttpRestApiModelUpdateUser } from "./documentation/UserDocumentation";
 import { Response } from "express";
 import LocalFilesInterceptor from "@core/common/interceptor/LocalFilesInterceptor ";
@@ -53,9 +53,9 @@ export class UserController {
   @HttpUserAuth()
   public async getMe(
     @HttpUser() httpUser: HttpUserPayload,
-  ): Promise<CoreApiResponse<UserUsecaseDto>> {
+  ): Promise<CoreApiResponse<UserUsecaseDTO>> {
     const result = await this.userService.getUserById(httpUser.id);
-    return CoreApiResponse.success<UserUsecaseDto>(result);
+    return CoreApiResponse.success<UserUsecaseDTO>(result);
   }
 
   @Put("me")

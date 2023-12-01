@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
+import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { UpdateUserPort } from "@core/domain/user/usecase/port/UpdateUserPort";
 import { REQUEST } from "@nestjs/core";
@@ -11,23 +11,23 @@ import { User } from "@core/domain/user/entity/User";
 export class UserService implements UserUsecase {
   constructor(private readonly unitOfWork: UnitOfWork) {}
 
-  async createUser(payload: CreateUserPort): Promise<UserUsecaseDto> {
+  async createUser(payload: CreateUserPort): Promise<UserUsecaseDTO> {
     const user = await User.new(payload);
     return await this.unitOfWork.getUserRepository().addUser(user);
   }
 
-  async getUserById(id: string): Promise<UserUsecaseDto> {
+  async getUserById(id: string): Promise<UserUsecaseDTO> {
     const user = await this.unitOfWork.getUserRepository().findUser({ id });
     if (!user) throw new NotFoundException("User not found");
-    return UserUsecaseDto.newFromEntity(user);
+    return UserUsecaseDTO.newFromEntity(user);
   }
 
-  async findUserByEmail(email: string): Promise<UserUsecaseDto | null> {
+  async findUserByEmail(email: string): Promise<UserUsecaseDTO | null> {
     const user = await this.unitOfWork.getUserRepository().findUser({ email });
-    return user ? UserUsecaseDto.newFromEntity(user) : null;
+    return user ? UserUsecaseDTO.newFromEntity(user) : null;
   }
 
-  async getUsers(): Promise<UserUsecaseDto[]> {
+  async getUsers(): Promise<UserUsecaseDTO[]> {
     throw new Error("Method not implemented.");
   }
 
@@ -35,17 +35,17 @@ export class UserService implements UserUsecase {
     await this.unitOfWork.getUserRepository().updateUser(user);
   }
 
-  async deleteUserById(id: string): Promise<UserUsecaseDto> {
+  async deleteUserById(id: string): Promise<UserUsecaseDTO> {
     const user = await this.unitOfWork.getUserRepository().findUser({ id });
     if (!user) throw new NotFoundException("User not found");
     await this.unitOfWork.getUserRepository().deleteUser(id);
-    return UserUsecaseDto.newFromEntity(user);
+    return UserUsecaseDTO.newFromEntity(user);
   }
 
   async updateProfile(
     updaterId: string,
     payload: UpdateUserPort,
-  ): Promise<UserUsecaseDto> {
+  ): Promise<UserUsecaseDTO> {
     const user = await this.unitOfWork
       .getUserRepository()
       .findUser({ id: updaterId });
@@ -58,7 +58,7 @@ export class UserService implements UserUsecase {
     });
 
     await this.updateUser(user);
-    return UserUsecaseDto.newFromEntity(user);
+    return UserUsecaseDTO.newFromEntity(user);
   }
 
   // public async createUser(payload: CreateUserPort): Promise<User> {
@@ -66,29 +66,29 @@ export class UserService implements UserUsecase {
   //   return await this.unitOfWork.getUserRepository().addUser(user);
   // }
 
-  // public async getUserById(id: string): Promise<UserUsecaseDto> {
+  // public async getUserById(id: string): Promise<UserUsecaseDTO> {
   //   const user = await this.unitOfWork.getUserRepository().findUser({ id });
   //   if (!user) throw new NotFoundException("User not found");
-  //   return UserUsecaseDto.newFromEntity(user);
+  //   return UserUsecaseDTO.newFromEntity(user);
   // }
 
-  // public async findUserByEmail(email: string): Promise<UserUsecaseDto | null> {
+  // public async findUserByEmail(email: string): Promise<UserUsecaseDTO | null> {
   //   const user = await this.unitOfWork.getUserRepository().findUser({ email });
   //   if (!user) return null;
-  //   return UserUsecaseDto.newFromEntity(user);
+  //   return UserUsecaseDTO.newFromEntity(user);
   // }
 
-  // public async getUsers(): Promise<UserUsecaseDto[]> {
+  // public async getUsers(): Promise<UserUsecaseDTO[]> {
   //   throw new Error("Method not implemented.");
   // }
 
-  // public async getUser(payload: GetUserPort): Promise<UserUsecaseDto> {
+  // public async getUser(payload: GetUserPort): Promise<UserUsecaseDTO> {
   //   const user = await this.unitOfWork
   //     .getUserRepository()
   //     .findUser({ id: payload.userId });
 
   //   if (!user) throw new NotFoundException("User not found");
-  //   return UserUsecaseDto.newFromEntity(user);
+  //   return UserUsecaseDTO.newFromEntity(user);
   // }
 
   // public async updateUser(user: User): Promise<void> {
@@ -97,11 +97,11 @@ export class UserService implements UserUsecase {
 
   // public async updateProfile(
   //   payload: UpdateUserPort,
-  // ): Promise<UserUsecaseDto> {
+  // ): Promise<UserUsecaseDTO> {
 
   // }
 
-  // public async updateMe(payload: UpdateUserPort): Promise<UserUsecaseDto> {
+  // public async updateMe(payload: UpdateUserPort): Promise<UserUsecaseDTO> {
   //   return await this.unitOfWork.runInTransaction(async () => {
   //     const userId = this.requestWithOptionalUser.user?.id || "";
   //     const user = await this.unitOfWork
@@ -115,7 +115,7 @@ export class UserService implements UserUsecase {
   //     });
 
   //     await this.unitOfWork.getUserRepository().updateUser(user);
-  //     return UserUsecaseDto.newFromEntity(user);
+  //     return UserUsecaseDTO.newFromEntity(user);
   //   });
   // }
 }

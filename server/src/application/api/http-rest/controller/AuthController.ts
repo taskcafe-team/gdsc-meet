@@ -15,7 +15,7 @@ import {
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { CreateUserAdapter } from "@infrastructure/adapter/usecase/user/CreateUserAdapter";
 import { UserRole } from "@core/common/enums/UserEnums";
-import { UserUsecaseDto } from "@core/domain/user/usecase/dto/UserUsecaseDto";
+import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
 import { HttpAuthService } from "../auth/HttpAuthService";
 import { HttpLoggedInUser, HttpUserPayload } from "../auth/type/HttpAuthTypes";
 import { HttpGoogleOAuthGuard } from "../auth/guard/HttpGoogleOAuthGuard";
@@ -51,7 +51,7 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   public async registerWithEmail(
     @Body(new ValidationPipe()) body: HttpRestApiModelRegisterBody,
-  ): Promise<CoreApiResponse<UserUsecaseDto>> {
+  ): Promise<CoreApiResponse<UserUsecaseDTO>> {
     const adapter: CreateUserAdapter = await CreateUserAdapter.new({
       firstName: null,
       lastName: null,

@@ -1,5 +1,5 @@
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
-import { ErrorDto } from "@core/common/dtos/ErrorDto";
+import { ErrorDTO } from "@core/common/dtos/ErrorDTO";
 import { AppErrors } from "@core/common/exception/AppErrors";
 import { AppException } from "@core/common/exception/AppException";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
@@ -53,14 +53,14 @@ export class NestHttpExceptionFilter implements ExceptionFilter {
     errorResponse: CoreApiResponse<unknown>,
   ): CoreApiResponse<unknown> {
     if (error instanceof AppException) {
-      const errorDto = new ErrorDto(
+      const ErrorDTO = new ErrorDTO(
         error.getCode(),
         error.getMessage(),
         error.getAcction(),
         error.getTitle(),
         error.getErrorType(),
       );
-      return CoreApiResponse.error(error.getHttpStatus(), errorDto);
+      return CoreApiResponse.error(error.getHttpStatus(), ErrorDTO);
     }
     return errorResponse;
   }

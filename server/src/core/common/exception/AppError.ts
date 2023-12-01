@@ -1,9 +1,9 @@
-import { ErrorDto } from "../dtos/ErrorDto";
+import { ErrorDTO } from "../dtos/ErrorDTO";
 import { messageFormat } from "../util/text/MessageFormatUtil";
 import { AppErrorAction } from "./AppErrorAction";
 import { ErrorType } from "./ErrorType";
 
-export class AppError extends ErrorDto {
+export class AppError extends ErrorDTO {
   public readonly httpStatus: number;
   public readonly code: string;
   public readonly action: AppErrorAction;

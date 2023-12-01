@@ -1,4 +1,4 @@
-import { ParticipantUsecaseDto } from "./dto/ParticipantUsecaseDto";
+import { ParticipantUsecaseDTO } from "./dto/ParticipantUsecaseDTO";
 import { ParticipantSendMessageDTO } from "./dto/ParticipantSendMessageDTO";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { HttpParticipantPayload } from "@application/api/http-rest/auth/type/HttpParticipantTypes";
@@ -16,11 +16,11 @@ export type ParticipantUsecase = {
     userId?: string;
     meetingId: string;
     role: ParticipantRole;
-  }): Promise<ParticipantUsecaseDto>;
+  }): Promise<ParticipantUsecaseDTO>;
   getParticipantInRoomById(
     roomId: string,
     partId: string,
-  ): Promise<ParticipantUsecaseDto>;
+  ): Promise<ParticipantUsecaseDTO>;
   sendMessage(dto: ParticipantSendMessageDTO): Promise<void>;
   getParticipantAccessToken(
     roomId: string,
@@ -39,12 +39,12 @@ export type ParticipantUsecase = {
   ): Promise<void>;
   // getParticipantsInMeeting(
   //   meetingId: string,
-  // ): Promise<(ParticipantUsecaseDto & { isOnline: boolean })[]>;
+  // ): Promise<(ParticipantUsecaseDTO & { isOnline: boolean })[]>;
 
   // getParticipantByUserIdAndMeetingId(
   //   userId: string,
   //   meetingId: string,
-  // ): Promise<ParticipantUsecaseDto & { isOnline: boolean }>;
+  // ): Promise<ParticipantUsecaseDTO & { isOnline: boolean }>;
   // getAccessToken(payload: {
   //   meetingId: string;
   //   participantName: string;
@@ -55,7 +55,7 @@ export type ParticipantUsecase = {
   //   participantIds: string[],
   //   status: RespondJoinStatus,
   // ): Promise<void>;
-  // // deleteParticipantById(id: string): Promise<ParticipantUsecaseDto>;
+  // // deleteParticipantById(id: string): Promise<ParticipantUsecaseDTO>;
   // updateMyMeeting( //TODO: fix
   //   updater: HttpUserPayload,
   //   updateId: string,

@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { WebRTCLivekitService } from "@infrastructure/adapter/webrtc/WebRTCLivekitService";
-import { ParticipantUsecaseDto } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDto";
+import { ParticipantUsecaseDTO } from "@core/domain/participant/usecase/dto/ParticipantUsecaseDTO";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { Participant } from "@core/domain/participant/entity/Participant";
 import { MeetingService } from "./MeetingService";
@@ -47,33 +47,33 @@ export class ParticipantService implements ParticipantUsecase {
     userId?: string;
     meetingId: string;
     role?: ParticipantRole;
-  }): Promise<ParticipantUsecaseDto> {
+  }): Promise<ParticipantUsecaseDTO> {
     const part = await Participant.new(dto);
     await this.unitOfWork.getParticipantRepository().addParticipant(part);
-    return ParticipantUsecaseDto.newFromEntity(part);
+    return ParticipantUsecaseDTO.newFromEntity(part);
   }
 
-  async getParticipantById(id: string): Promise<ParticipantUsecaseDto> {
+  async getParticipantById(id: string): Promise<ParticipantUsecaseDTO> {
     const part = await this.unitOfWork
       .getParticipantRepository()
       .findParticipant({ id });
     if (!part) throw new NotFoundException("Participant not found!");
-    return ParticipantUsecaseDto.newFromEntity(part);
+    return ParticipantUsecaseDTO.newFromEntity(part);
   }
 
   async getParticipantInRoomById(
     roomId: string,
     partId: string,
-  ): Promise<ParticipantUsecaseDto> {
+  ): Promise<ParticipantUsecaseDTO> {
     return await this.webRTCService
       .getParticipantInRoomById(roomId, partId)
-      .then((p) => ParticipantUsecaseDto.newFromEntity(p));
+      .then((p) => ParticipantUsecaseDTO.newFromEntity(p));
   }
 
   async deleteParticipantInRoomById(
     roomId: string,
     partId: string,
-  ): Promise<ParticipantUsecaseDto> {
+  ): Promise<ParticipantUsecaseDTO> {
     const part = await this.getParticipantInRoomById(roomId, partId);
     await this.webRTCService.deleteParticipantInRoomById(roomId, partId);
     return part;
@@ -110,7 +110,7 @@ export class ParticipantService implements ParticipantUsecase {
       })
       .catch(() =>
         Participant.new({ name, userId, meetingId }).then((p) =>
-          ParticipantUsecaseDto.newFromEntity(p),
+          ParticipantUsecaseDTO.newFromEntity(p),
         ),
       );
     const { token } = this.jwtService.generateParticipantAccessToken({
@@ -203,11 +203,11 @@ export class ParticipantService implements ParticipantUsecase {
   private async getMeetingParticipantByUserId(
     meetingId: string,
     userId: string,
-  ): Promise<ParticipantUsecaseDto> {
+  ): Promise<ParticipantUsecaseDTO> {
     const participant = await this.unitOfWork
       .getParticipantRepository()
       .findParticipant({ userId, meetingId });
     if (!participant) throw new NotFoundException("Participant not found!");
-    return ParticipantUsecaseDto.newFromEntity(participant);
+    return ParticipantUsecaseDTO.newFromEntity(participant);
   }
 }

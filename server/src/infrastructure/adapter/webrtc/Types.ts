@@ -9,7 +9,7 @@ export type LivekitRoomMetaData = {
 //   id: string;
 //   type: RoomType;
 // };
-// export type AccessTokenMetadata = ParticipantUsecaseDto & {
+// export type AccessTokenMetadata = ParticipantUsecaseDTO & {
 //   room: RoomDto;
 // };
 

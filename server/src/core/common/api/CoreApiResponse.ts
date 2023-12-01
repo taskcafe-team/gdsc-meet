@@ -1,22 +1,22 @@
-import { ErrorDto } from "../dtos/ErrorDto";
+import { ErrorDTO } from "../dtos/ErrorDTO";
 import { AppError } from "../exception/AppError";
 
 export class ApiResponseMetadata {
   public readonly status: number;
   public readonly success: boolean;
   public readonly message?: string;
-  public readonly error?: ErrorDto;
+  public readonly error?: ErrorDTO;
 
   constructor(
     status: number,
-    messageOrError: string | ErrorDto,
+    messageOrError: string | ErrorDTO,
     success?: boolean,
   ) {
     this.status = status;
     if (typeof messageOrError === "string") {
       this.message = messageOrError;
       this.success = success ?? true;
-    } else if (messageOrError instanceof ErrorDto) {
+    } else if (messageOrError instanceof ErrorDTO) {
       this.error = messageOrError;
       this.success = false;
     } else this.success = true;
@@ -34,7 +34,7 @@ export class CoreApiResponse<T = undefined> implements TCoreApiResponse<T> {
 
   private constructor(
     status: number,
-    messageOrError: string | ErrorDto,
+    messageOrError: string | ErrorDTO,
     data?: T,
     success?: boolean,
   ) {
@@ -60,7 +60,7 @@ export class CoreApiResponse<T = undefined> implements TCoreApiResponse<T> {
 
   public static error<T>(
     status?: number,
-    messageOrError?: string | ErrorDto,
+    messageOrError?: string | ErrorDTO,
     data?: T,
   ) {
     return new CoreApiResponse(

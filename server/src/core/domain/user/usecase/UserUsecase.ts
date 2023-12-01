@@ -1,17 +1,17 @@
 import { User } from "../entity/User";
-import { UserUsecaseDto } from "./dto/UserUsecaseDto";
+import { UserUsecaseDTO } from "./dto/UserUsecaseDTO";
 import { CreateUserPort } from "./port/CreateUserPort";
 import { UpdateUserPort } from "./port/UpdateUserPort";
 
 export abstract class UserUsecase {
-  abstract createUser(payload: CreateUserPort): Promise<UserUsecaseDto>;
-  abstract getUserById(id: string): Promise<UserUsecaseDto>;
-  abstract findUserByEmail(email: string): Promise<UserUsecaseDto | null>;
-  abstract getUsers(): Promise<UserUsecaseDto[]>;
+  abstract createUser(payload: CreateUserPort): Promise<UserUsecaseDTO>;
+  abstract getUserById(id: string): Promise<UserUsecaseDTO>;
+  abstract findUserByEmail(email: string): Promise<UserUsecaseDTO | null>;
+  abstract getUsers(): Promise<UserUsecaseDTO[]>;
   abstract updateUser(user: User): Promise<void>;
   abstract updateProfile(
     updaterId: string,
     payload: UpdateUserPort,
-  ): Promise<UserUsecaseDto>;
-  abstract deleteUserById(id: string): Promise<UserUsecaseDto>;
+  ): Promise<UserUsecaseDTO>;
+  abstract deleteUserById(id: string): Promise<UserUsecaseDTO>;
 }
