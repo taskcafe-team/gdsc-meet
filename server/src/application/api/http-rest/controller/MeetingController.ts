@@ -7,21 +7,20 @@ import {
   HttpStatus,
   Inject,
   Param,
-  ParseArrayPipe,
   Post,
-  Put,
   Query,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
 
 import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
 import {
+  HttpDeleteMeetingsQueryModel,
+  HttpMeetingParamModel,
   HttpRestApiModelCreateMeetingBody,
-  UpdateMeetingBodyModel,
 } from "./documentation/MeetingDocumentation";
 
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
-import { MeetingUsecaseDto } from "@core/domain/meeting/usecase/dto/MeetingUsecaseDto";
+import { MeetingUsecaseDTO } from "@core/domain/meeting/usecase/dto/MeetingUsecaseDTO";
 import { MeetingUsecase } from "@core/domain/meeting/usecase/MeetingUsecase";
 import { MeetingService } from "@application/services/MeetingService";
 import { HttpUserPayload } from "../auth/type/HttpAuthTypes";
@@ -55,13 +54,33 @@ export class MeetingController {
     return CoreApiResponse.success(result);
   }
 
+  @Get(":meetingId")
+  @HttpUserAuth()
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  public async getMeeting(
+    @Param() param: HttpMeetingParamModel,
+  ): Promise<CoreApiResponse<MeetingUsecaseDTO>> {
+    const { meetingId } = param;
+    const result = await this.meetingService.getMeetingById(meetingId);
+    return CoreApiResponse.success(result);
+  }
+
+  @Get(":meetingId/rooms")
+  @HttpCode(HttpStatus.OK)
+  public async getMeetingRooms(@Param() param: HttpMeetingParamModel) {
+    const { meetingId } = param;
+    const result = await this.meetingService.getOrCreateMeetingRooms(meetingId);
+    return CoreApiResponse.success(result);
+  }
+
   @Get("")
   @HttpUserAuth()
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   public async getMyMeetings(
     @HttpUser() httpUser: HttpUserPayload,
-  ): Promise<CoreApiResponse<MeetingUsecaseDto[]>> {
+  ): Promise<CoreApiResponse<MeetingUsecaseDTO[]>> {
     const result = await this.meetingService.getMyMeetings(httpUser.id);
     return CoreApiResponse.success(result);
   }
@@ -70,22 +89,9 @@ export class MeetingController {
   @HttpUserAuth()
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  public async deleteMeetings(
-    @Query("ids", new ParseArrayPipe({ items: String, separator: "," }))
-    ids: string[],
-  ) {
+  public async deleteMeetings(@Query() query: HttpDeleteMeetingsQueryModel) {
+    const { ids } = query;
     const result = await this.meetingService.deleteMeetings(ids);
-    return CoreApiResponse.success(result);
-  }
-
-  @Get(":meetingId")
-  @HttpUserAuth()
-  @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
-  public async getMeeting(
-    @Param("meetingId") meetingId: string,
-  ): Promise<CoreApiResponse<MeetingUsecaseDto>> {
-    const result = await this.meetingService.getMeetingById(meetingId);
     return CoreApiResponse.success(result);
   }
 }

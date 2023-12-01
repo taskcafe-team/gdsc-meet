@@ -4,7 +4,6 @@ import { AppException } from "../exception/AppException";
 import { AppErrors } from "../exception/AppErrors";
 import { IsDate, IsOptional, IsUUID } from "class-validator";
 import { v4 } from "uuid";
-import { Expose } from "class-transformer";
 
 export class Entity {
   @IsUUID() protected readonly _id: string;
@@ -39,6 +38,10 @@ export class Entity {
 
   public async validate(): Promise<void> {
     const details = await ClassValidator.validate(this);
-    if (details) throw new AppException(AppErrors.VALIDATION_FAILURE, details);
+    if (details)
+      throw new AppException(
+        AppErrors.VALIDATION_FAILURE,
+        JSON.stringify(details.errors),
+      );
   }
 }

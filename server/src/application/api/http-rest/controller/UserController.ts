@@ -48,6 +48,7 @@ export class UserController {
     this.destination = configService.get("FILE_STORAGE_BASE_PATH");
   }
 
+  @ApiBearerAuth()
   @Get("me")
   @HttpUserAuth()
   public async getMe(

@@ -1,4 +1,4 @@
-import { WebRTCLivekitService } from "@infrastructure/adapter/webrtc/WebRTCLivekitManagement";
+import { WebRTCLivekitService } from "@infrastructure/adapter/webrtc/WebRTCLivekitService";
 
 // type SendTo = {
 //   chatRoomId: string;

@@ -3,18 +3,15 @@ import { UserUsecaseDto } from "./dto/UserUsecaseDto";
 import { CreateUserPort } from "./port/CreateUserPort";
 import { UpdateUserPort } from "./port/UpdateUserPort";
 
-export interface UserUsecase {
-  createUser(payload: CreateUserPort): Promise<UserUsecaseDto>;
-
-  getUserById(id: string): Promise<UserUsecaseDto>;
-  findUserByEmail(email: string): Promise<UserUsecaseDto | null>;
-
-  getUsers(): Promise<UserUsecaseDto[]>;
-  updateUser(user: User): Promise<void>;
-  updateProfile(
+export abstract class UserUsecase {
+  abstract createUser(payload: CreateUserPort): Promise<UserUsecaseDto>;
+  abstract getUserById(id: string): Promise<UserUsecaseDto>;
+  abstract findUserByEmail(email: string): Promise<UserUsecaseDto | null>;
+  abstract getUsers(): Promise<UserUsecaseDto[]>;
+  abstract updateUser(user: User): Promise<void>;
+  abstract updateProfile(
     updaterId: string,
     payload: UpdateUserPort,
   ): Promise<UserUsecaseDto>;
-
-  deleteUserById(id: string): Promise<UserUsecaseDto>;
+  abstract deleteUserById(id: string): Promise<UserUsecaseDto>;
 }

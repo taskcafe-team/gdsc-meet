@@ -19,13 +19,16 @@ import { HttpUserAuth } from "../auth/decorator/HttpUserAuth";
 import { HttpParticipantAuth } from "../auth/decorator/HttpParticipantAuth";
 import { HttpParticipant } from "../auth/decorator/HttpParticipant";
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
-import { RespondJoinStatus } from "@infrastructure/adapter/webrtc/Types";
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
 import { ParticipantService } from "@application/services/ParticipantService";
 import { HttpParticipantPayload } from "../auth/type/HttpParticipantTypes";
-import { UpdateMeetingBodyModel } from "./documentation/MeetingDocumentation";
 import { HttpUserPayload } from "../auth/type/HttpAuthTypes";
 import { HttpUser } from "../auth/decorator/HttpUser";
+import {
+  AccessPermissionsStatus,
+  ParticipantAccessTokenDTO,
+} from "@core/domain/participant/usecase/ParticipantUsecase";
+import { UpdateMeetingDTO } from "@core/domain/meeting/usecase/dto/UpdateMeetingDTO";
 
 @Controller("meetings/:meetingId/participants")
 @ApiTags("participants")
@@ -36,15 +39,17 @@ export class ParticipantController {
   @Get("access-token")
   @HttpUserAuth()
   @HttpCode(HttpStatus.OK)
-  public async getAccessToken(
+  public async getParticipantAccessToken(
     @Param("meetingId") meetingId: string,
     @Query() query: HttpResetApiModelGetAccessToken,
-  ) {
-    const result = await this.participantService.getAccessToken({
+    @HttpUser() httpUser: HttpUserPayload,
+  ): Promise<CoreApiResponse<ParticipantAccessTokenDTO>> {
+    const { customName } = query;
+    const result = await this.participantService.getParticipantAccessToken(
       meetingId,
-      participantName: query.customName,
-    });
-
+      customName,
+      httpUser.id,
+    );
     return CoreApiResponse.success(result);
   }
 
@@ -54,10 +59,10 @@ export class ParticipantController {
   @Put("meeting-permission")
   public async updateMeeting(
     @Param("meetingId") meetingId: string,
-    @Body() updateMeetingDto: UpdateMeetingBodyModel,
+    @Body() updateMeetingDto: UpdateMeetingDTO,
     @HttpUser() httpUser: HttpUserPayload,
   ): Promise<CoreApiResponse> {
-    await this.participantService.updateMyMeeting(
+    await this.participantService.updateMeeting(
       httpUser,
       meetingId,
       updateMeetingDto,
@@ -71,14 +76,14 @@ export class ParticipantController {
   @ApiBearerAuth()
   public async respondJoinRequest(
     @Param("meetingId") meetingId: string,
-    @Body() body: { participantIds: string[]; status: RespondJoinStatus },
+    @Body() body: { partIds: string[]; status: AccessPermissionsStatus },
     @HttpParticipant() httpParticipant: HttpParticipantPayload,
   ) {
-    const { participantIds, status } = body;
+    const { partIds, status } = body;
     await this.participantService.respondJoinRequest(
-      httpParticipant.id,
+      httpParticipant,
       meetingId,
-      participantIds,
+      partIds,
       status,
     );
     return CoreApiResponse.success(undefined, HttpStatus.NO_CONTENT);
@@ -91,15 +96,13 @@ export class ParticipantController {
   @ApiBody({ type: HttpRestApiModelSendMessage })
   public async sendMessage(
     @HttpParticipant() sender: HttpParticipantPayload,
-    @Param("meetingId") meetingId: string,
     @Body() body: HttpRestApiModelSendMessage,
   ) {
-    const { roomId, roomType, content } = body;
+    const { roomId, content } = body;
     const result = await this.participantService.sendMessage({
-      roomId,
-      roomType,
-      content,
       senderId: sender.id,
+      sendTo: { roomId },
+      content,
     });
     return CoreApiResponse.success(result);
   }

@@ -1,9 +1,21 @@
 import { ApiProperty } from "@nestjs/swagger";
 
 import { MeetingType } from "@core/common/enums/MeetingEnums";
-import { IsDate, IsEnum, IsOptional, IsString, MinDate } from "class-validator";
+import {
+  IsDate,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MinDate,
+} from "class-validator";
 import { Transform, TransformFnParams } from "class-transformer";
 import { IsBiggerThan } from "@core/common/util/class-validator/IsBiggerThan";
+
+export class HttpMeetingParamModel {
+  @IsNotEmpty() @IsUUID() public meetingId: string;
+}
 
 export class HttpRestApiModelCreateMeetingBody {
   @IsString()
@@ -82,5 +94,12 @@ export class HttpRestApiModelDeleteMeetingsBody {
   @Transform((params: TransformFnParams) => {
     return { ids: params.value.split(",") };
   })
+  public ids: string[];
+}
+
+export class HttpDeleteMeetingsQueryModel {
+  @IsNotEmpty()
+  @Transform((params: TransformFnParams) => `${params.value}`.split(","))
+  @IsUUID("4", { each: true })
   public ids: string[];
 }

@@ -1,4 +1,5 @@
-import { ParticipantRequestJoinDto, ParticipantSendMessageDto } from "./Types";
+import { LivekitParticipantRequestJoinDTO } from "./dtos/LivekitParticipantRequestJoinDTO";
+import { LivekitParticipantSendMessageDTO } from "./dtos/LivekitParticipantSendMessageDTO";
 
 type ActionMap = {
   [key in keyof SendMessageActionEnum]: any;
@@ -10,8 +11,8 @@ export enum SendMessageActionEnum {
 }
 
 export interface RegisterActionsType extends ActionMap {
-  [SendMessageActionEnum.ParticipantRequestJoin]: ParticipantRequestJoinDto;
-  [SendMessageActionEnum.ParticipantSendMessage]: ParticipantSendMessageDto;
+  [SendMessageActionEnum.ParticipantRequestJoin]: LivekitParticipantRequestJoinDTO;
+  [SendMessageActionEnum.ParticipantSendMessage]: LivekitParticipantSendMessageDTO;
 }
 
 export function createSendDataMessageAction<

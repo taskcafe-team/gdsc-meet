@@ -1,4 +1,5 @@
 import { HttpUserJwtPayload } from "@application/api/http-rest/auth/type/HttpAuthTypes";
+import { HttpParticipantPayload } from "@application/api/http-rest/auth/type/HttpParticipantTypes";
 import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -15,9 +16,6 @@ export type JwtDto = {
 };
 
 export interface JwtUsecase {
-  // generateToken(userId: string): Promise<string>;
-  // verifyToken(token: string): Promise<string>;
-
   generateUserAccessToken(payload: HttpUserJwtPayload): JwtDto;
   verifyUserAccessToken(token: string): HttpUserJwtPayload & JwtVerifyDto;
 
@@ -28,6 +26,11 @@ export interface JwtUsecase {
   verifyEmailVerificationToken(
     token: string,
   ): HttpUserJwtPayload & JwtVerifyDto;
+
+  generateParticipantAccessToken(payload: HttpParticipantPayload): JwtDto;
+  verifyParticipantAccessToken(
+    token: string,
+  ): HttpParticipantPayload & JwtVerifyDto;
 }
 
 @Injectable()
@@ -101,6 +104,19 @@ export class CustomJwtService implements JwtUsecase {
     token: string,
   ): HttpUserJwtPayload & JwtVerifyDto {
     const secret = this.emailVerificationTokenSecret;
+    return this.jwtService.verify(token, { secret });
+  }
+
+  generateParticipantAccessToken(payload: HttpParticipantPayload) {
+    const secret = this.userAccessTokenSecret;
+    const expiresIn = this.userAccessTokenTtl + "m";
+    const token = this.jwtService.sign(payload, { secret, expiresIn });
+    return { token, expiresIn };
+  }
+  verifyParticipantAccessToken(
+    token: string,
+  ): HttpParticipantPayload & JwtVerifyDto {
+    const secret = this.userAccessTokenSecret;
     return this.jwtService.verify(token, { secret });
   }
 }

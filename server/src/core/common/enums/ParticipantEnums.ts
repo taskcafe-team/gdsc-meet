@@ -5,12 +5,17 @@ export enum ParticipantRole {
   ANONYMOUSE = "ANONYMOUSE", // chưa thêm permission
 }
 
+// export enum ParticipantRespondJoinStatus {
+//   ACCEPTED = "ACCEPTED",
+//   REJECTED = "REJECTED",
+// }
+
 export enum PermissionAction {
   KICK,
   CHANGE_PERMISSIONS,
 }
 
-export function checkPermission(
+export function checkPermissio(
   action: PermissionAction,
   role: ParticipantRole,
   targetRole: ParticipantRole,

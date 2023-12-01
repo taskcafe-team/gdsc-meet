@@ -34,12 +34,9 @@ export class PrismaMeetingRepositoryAdapter
   }
 
   public async findMeeting(by: { id: string }): Promise<Nullable<Meeting>> {
-    const findOptions: Prisma.MeetingFindFirstArgs = { where: {} };
-
     const orm = await this.context.meeting
-      .findFirst(findOptions)
+      .findFirst({ where: { id: by.id } })
       .then((o) => o ?? null);
-
     return orm && PrismaMeetingMapper.toDomainEntity(orm);
   }
 

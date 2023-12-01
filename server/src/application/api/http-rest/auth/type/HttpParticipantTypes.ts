@@ -1,14 +1,14 @@
 import { ParticipantRole } from "@core/common/enums/ParticipantEnums";
-import { AccessTokenMetadata } from "@infrastructure/adapter/webrtc/Types";
 import { Request } from "express";
 
 export type HttpRequestWithParticipant = Request & {
-  participant?: AccessTokenMetadata;
+  participant: HttpParticipantPayload;
 };
 
 export type HttpParticipantPayload = {
   id: string;
   meetingId: string;
+  name: string;
   role: ParticipantRole;
-  userId: string;
+  userId?: string;
 };
