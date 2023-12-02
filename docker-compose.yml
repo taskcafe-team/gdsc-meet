@@ -62,7 +62,7 @@ services:
   client:
     container_name: reactjs
     build:
-      context: ./client
+      context: ../client-gdsc-meet
       dockerfile: Dockerfile
     restart: always
     networks:
@@ -103,6 +103,8 @@ services:
     image: livekit/livekit-server:v1.5
     command: --config /etc/livekit.yaml
     restart: always
+    ports:
+      - 7881:7881
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
     networks:
