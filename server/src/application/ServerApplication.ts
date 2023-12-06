@@ -23,6 +23,8 @@ export class ServerApplication {
     this.app = await NestFactory.create(RootModule);
     this.configService = this.app.get(ConfigService);
 
+    // this.app.setGlobalPrefix("api");
+
     this.app.use(cookieParser("dangnhatminh")); //TODO: change security key
     this.buildCORS();
     this.app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
@@ -76,14 +78,10 @@ export class ServerApplication {
     const originsStr: string = this.configService.get("API_CORS_ORIGIN") + "";
     const methodsStr: string = this.configService.get("API_CORS_METHOD") + "";
 
-    const originsArr = originsStr.split(",").map((o) => o.trim());
-    const methodsArr = methodsStr.split(",").map((m) => m.trim());
+    const origin = originsStr.split(",").map((o) => o.trim());
+    const methods = methodsStr.split(",").map((m) => m.trim());
 
-    this.app.enableCors({
-      origin: originsStr.split(",").map((o) => o.trim()),
-      methods: methodsStr.split(",").map((m) => m.trim()),
-      credentials: true,
-    });
+    this.app.enableCors({ origin, methods, credentials: true });
   }
 
   private log(): void {

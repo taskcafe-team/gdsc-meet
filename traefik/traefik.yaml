@@ -1,43 +1,43 @@
 global:
   checkNewVersion: true
+  sendAnonymousUsage: true
 
 log:
-  level: WARN
+  level: info
 
 api:
-  insecure: true
   dashboard: true
+  debug: true
+  insecure: true
 
-ping: {}
+certificatesResolvers:
+  gdscmeetEncrypt:
+    acme:
+      email: "dangnhatminh09032002@gmail.com"
+      storage: "/etc/config/acme.json"
+      tlsChallenge: {}
 
-providers:
-  docker:
-    exposedByDefault: false
-    watch: true
-  file:
-    fileName: /etc/traefik/traefik.yaml
-    watch: true
-
-# listen on 80/443, and redirect all 80 to 443 via 301
 entryPoints:
-  web:
+  http:
     address: :80
-    # comment out these lins if you don't want to redirect everything
     http:
       redirections:
         entryPoint:
-          to: websecure
+          to: https
           scheme: https
           permanent: true
-  websecure:
+  https:
     address: :443
-  webapi:
-    address: :5000
-  webrtcapi:
-    address: :7880
 
-
-tls:
-  certificates:
-    - certFile: /config/gdscmeet.crt
-      keyFile: /config/gdscmeet.key
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock" # Listen to the UNIX Docker socket
+    exposedByDefault: false # Only expose container that are explicitly enabled (using label traefik.enabled)
+    network: "proxy-network" # Default network to use for connections to all containers.
+    swarmMode: false # Activates the Swarm Mode (instead of standalone Docker).
+    swarmModeRefreshSeconds: "15" # Defines the polling interval (in seconds) in Swarm Mode.
+    watch: true # Watch Docker Swarm events
+  file:
+    filename: "/etc/config/dynamic.yml" # Link to the dynamic configuration
+    watch: true # Watch for modifications
+  providersThrottleDuration: "10" # Configuration reload frequency

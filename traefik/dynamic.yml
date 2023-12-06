@@ -1,0 +1,62 @@
+# Traefik dynamic configuration file
+# See https://doc.traefik.io/traefik/getting-started/configuration-overview/#the-dynamic-configuration
+http:
+  middlewares:
+    webapi-middleware:
+      stripPrefix:
+        prefixes:
+          - /api
+
+  routers:
+    webui:
+      rule: "Host(`www.gdscmeet.live`)"
+      service: webui
+      entryPoint: https
+      tls: {}
+
+    webapi:
+      rule: "Host(`www.gdscmeet.live`) && PathPrefix(`/api`)"
+      service: webapi
+      entrypoints: https
+      middlewares:
+        - webapi-middleware
+      tls: {}
+
+    webrtc-server:
+      rule: "Host(`webrtc.gdscmeet.live`)"
+      service: webrtc-server
+      entrypoints: https
+      tls: {}
+
+    webrtc-turn-server:
+      rule: "Host(`webrtc-turn.gdscmeet.live`)"
+      service: webrtc-turn-server
+      entrypoints: https
+      tls: {}
+  services:
+    webui:
+      loadBalancer:
+        servers:
+          - url: "http://webui-react:3000"
+
+    webapi:
+      loadBalancer:
+        servers:
+          - url: "http://webapi-nest:5000"
+
+    webrtc-server:
+      loadBalancer:
+        servers:
+          - url: "http://webrtc-server-livekit:7880"
+
+    webrtc-turn-server:
+      loadBalancer:
+        servers:
+          - url: "http://webrtc-server-livekit:5349"
+
+tls:
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /etc/config/gdscmeet.crt
+        keyFile: /etc/config/gdscmeet.key

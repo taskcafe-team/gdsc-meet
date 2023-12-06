@@ -5,12 +5,15 @@ rtc:
   port_range_end: 60000
   use_external_ip: true
 redis:
-  address: redis:6379
+  address: db-cache-redis:6379
   username: "default"
   password: "mypass"
   db: 0
 keys:
   APIk645U8MckJHy: BRxks3fY7udezPVhloXyzSk7fVeUlenFzo0a9miKrGbE
-# turn:
-#   enabled: true
-#   udp_port: 443
+turn:
+  enabled: true
+  domain: webrtc-turn.gdscmeet.live
+  tls_port: 5349
+  udp_port: 3478
+  external_tls: true

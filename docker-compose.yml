@@ -1,7 +1,6 @@
 version: "3.9"
 networks:
   proxy-network:
-    driver: bridge
   server-network:
     driver: bridge
 
@@ -13,36 +12,79 @@ volumes:
 services:
   reverse-proxy:
     image: traefik:v2.4
-    container_name: traefik
-    ports:
-      - 443:443
-      - 80:80
-      - 8080:8080
-      - 5000:5000
-      - 7880:7880
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik/traefik.yaml:/etc/traefik/traefik.yaml
-      - ./traefik/gdscmeet.key:/config/gdscmeet.key
-      - ./traefik/gdscmeet.crt:/config/gdscmeet.crt
+    container_name: reverse-proxy-traefik
     networks:
       - proxy-network
-    command:
-      - --api.insecure=true
-      - --api.dashboard=true
-      - --api.debug=true
-      - --log.LEVEL=DEBUG
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --providers.docker.network=proxy-network
-      - --providers.file.filename=/config/dynamic.yml
-      - --entrypoints.web.address=:80
-      - --entrypoints.web.http.redirections.entrypoint.to=websecure
-      - --entryPoints.web.http.redirections.entrypoint.scheme=https
-      - --entrypoints.websecure.address=:443
-      - --entrypoints.websecure.http.tls=true
-      - --entryPoints.webapi.address=:5000
-      - --entryPoints.webrtcapi.address=:7880
+    ports:
+      - mode: host
+        published: 80
+        target: 80
+      - mode: host
+        published: 443
+        target: 443
+      - mode: host
+        published: 8080
+        target: 8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ./traefik/dynamic.yml:/etc/config/dynamic.yml
+      - ./traefik/gdscmeet.key:/etc/config/gdscmeet.key:ro
+      - ./traefik/gdscmeet.crt:/etc/config/gdscmeet.crt:ro
+
+  webui:
+    container_name: webui-react
+    build:
+      context: ../client-gdsc-meet
+      dockerfile: Dockerfile
+    restart: always
+    networks:
+      - proxy-network
+
+  webapi:
+    container_name: webapi-nest
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    restart: always
+    networks:
+      - proxy-network
+      - server-network
+    volumes:
+      - file-data:/var/data
+    depends_on:
+      - db
+      - db-cache
+      - webrtc-server
+
+  # webrtc-egress:
+  #   container_name: livekit_egress
+  #   image: livekit/egress:latest
+  #   restart: unless-stopped
+  #   environment:
+  #     - EGRESS_CONFIG_FILE=/etc/egress.yaml
+  #   network_mode: "host"
+  #   volumes:
+  #     - ./egress.yaml:/etc/egress.yaml
+  #   cap_add:
+  #     - CAP_SYS_ADMIN
+
+  webrtc-server:
+    container_name: webrtc-server-livekit
+    image: livekit/livekit-server:v1.5
+    command: --config /etc/livekit.yaml
+    restart: unless-stopped
+    ports:
+      - 7881:7881/tcp
+      - 7882:7882/udp # If using port 7882, there is no need to open 50000/60000 udp ports
+      # - 50000-60000:50000-60000/udp
+    volumes:
+      - ./livekit/livekit.yaml:/etc/livekit.yaml
+    networks:
+      - proxy-network
+      - server-network
+    depends_on:
+      - db-cache
 
   db:
     container_name: db-postgres
@@ -59,69 +101,8 @@ services:
       - POSTGRES_PASSWORD=123456
       - POSTGRES_DB=postgres
 
-  client:
-    container_name: reactjs
-    build:
-      context: ../client-gdsc-meet
-      dockerfile: Dockerfile
-    restart: always
-    networks:
-      - proxy-network
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=proxy-network
-      - traefik.http.routers.client.rule=Host(`www.gdscmeet.live`)
-      - traefik.http.routers.client.tls=true
-      - traefik.http.routers.client.entrypoints=websecure
-      - traefik.http.services.client.loadbalancer.server.port=3000
-
-  server:
-    container_name: server-nestjs
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-    restart: always
-    networks:
-      - proxy-network
-      - server-network
-    volumes:
-      - file-data:/app/infrastructure/adapter/persistence/data
-    depends_on:
-      - db
-      - web_rtc
-      - cache_store
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=proxy-network
-      - traefik.http.routers.server.tls=true
-      - traefik.http.routers.server.rule=Host(`www.gdscmeet.live`)
-      - traefik.http.routers.server.entrypoints=webapi
-      - traefik.http.services.server.loadbalancer.server.port=5000
-
-  web_rtc:
-    container_name: livekit
-    image: livekit/livekit-server:v1.5
-    command: --config /etc/livekit.yaml
-    restart: always
-    ports:
-      - 7881:7881
-    volumes:
-      - ./livekit/livekit.yaml:/etc/livekit.yaml
-    networks:
-      - server-network
-      - proxy-network
-    depends_on:
-      - cache_store
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=proxy-network
-      - traefik.http.routers.web_rtc.tls=true
-      - traefik.http.routers.web_rtc.rule=Host(`www.gdscmeet.live`)
-      - traefik.http.routers.web_rtc.entrypoints=webrtcapi
-      - traefik.http.services.web_rtc.loadbalancer.server.port=7880
-
-  cache_store:
-    container_name: redis
+  db-cache:
+    container_name: db-cache-redis
     image: redis:7
     restart: always
     ports:

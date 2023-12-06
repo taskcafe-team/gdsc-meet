@@ -1,0 +1,9 @@
+redis:
+  address: db-cache-redis:6379
+  username: "default"
+  password: "mypass"
+  db: 0
+api_key: APIk645U8MckJHy
+api_secret: BRxks3fY7udezPVhloXyzSk7fVeUlenFzo0a9miKrGbE
+ws_url: wss://www.gdscmeet.live/webrtc
+
