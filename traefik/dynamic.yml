@@ -11,7 +11,7 @@ http:
     webui:
       rule: "Host(`www.gdscmeet.live`)"
       service: webui
-      entryPoint: https
+      entryPoints: https
       tls: {}
 
     webapi:
@@ -53,10 +53,3 @@ http:
       loadBalancer:
         servers:
           - url: "http://webrtc-server-livekit:5349"
-
-tls:
-  stores:
-    default:
-      defaultCertificate:
-        certFile: /etc/config/gdscmeet.crt
-        keyFile: /etc/config/gdscmeet.key

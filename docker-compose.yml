@@ -13,31 +13,26 @@ services:
   reverse-proxy:
     image: traefik:v2.4
     container_name: reverse-proxy-traefik
+    restart: unless-stopped
     networks:
       - proxy-network
+    environment:
+      - CF_API_EMAIL=dangnhatminh09032002@gmail.com
+      - CF_API_KEY=ND49O0mw0NxhltzJRlvRUxtfXqbs_kknVJ_uuHCf
     ports:
-      - mode: host
-        published: 80
-        target: 80
-      - mode: host
-        published: 443
-        target: 443
-      - mode: host
-        published: 8080
-        target: 8080
+      - "80:80"
+      - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
       - ./traefik/dynamic.yml:/etc/config/dynamic.yml
-      - ./traefik/gdscmeet.key:/etc/config/gdscmeet.key:ro
-      - ./traefik/gdscmeet.crt:/etc/config/gdscmeet.crt:ro
 
   webui:
     container_name: webui-react
     build:
       context: ../client-gdsc-meet
       dockerfile: Dockerfile
-    restart: always
+    restart: unless-stopped
     networks:
       - proxy-network
 
@@ -76,8 +71,7 @@ services:
     restart: unless-stopped
     ports:
       - 7881:7881/tcp
-      - 7882:7882/udp # If using port 7882, there is no need to open 50000/60000 udp ports
-      # - 50000-60000:50000-60000/udp
+      - 7882-7892:7882-7892/udp
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
     networks:

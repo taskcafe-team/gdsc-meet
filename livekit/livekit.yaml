@@ -1,9 +1,9 @@
 port: 7880
 rtc:
   tcp_port: 7881
-  port_range_start: 50000
-  port_range_end: 60000
+  udp_port: 7882-7892
   use_external_ip: true
+  enable_loopback_candidate: false
 redis:
   address: db-cache-redis:6379
   username: "default"
@@ -11,9 +11,9 @@ redis:
   db: 0
 keys:
   APIk645U8MckJHy: BRxks3fY7udezPVhloXyzSk7fVeUlenFzo0a9miKrGbE
-turn:
-  enabled: true
-  domain: webrtc-turn.gdscmeet.live
-  tls_port: 5349
-  udp_port: 3478
-  external_tls: true
+# turn:
+#   enabled: true
+#   domain: webrtc-turn.gdscmeet.live
+#   tls_port: 5349
+#   udp_port: 3478
+#   external_tls: true
