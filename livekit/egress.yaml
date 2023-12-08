@@ -5,5 +5,5 @@ redis:
   db: 0
 api_key: APIk645U8MckJHy
 api_secret: BRxks3fY7udezPVhloXyzSk7fVeUlenFzo0a9miKrGbE
-ws_url: wss://www.gdscmeet.live/webrtc
+ws_url: wss://webrtc.gdscmeet.live
 
