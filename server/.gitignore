@@ -3,6 +3,9 @@
 /node_modules
 /.vscode
 
+# security
+/env
+
 # Logs
 logs
 *.log

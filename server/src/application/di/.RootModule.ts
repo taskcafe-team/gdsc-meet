@@ -13,7 +13,7 @@ import { RoomModule } from "./RoomModule";
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: "env/local.dev.env",
+      envFilePath: ".env",
       validate: EnvironmentVariablesConfig.validate,
     }),
     InfrastructureModule,

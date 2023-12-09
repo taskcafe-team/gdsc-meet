@@ -3,7 +3,7 @@ redis:
   username: "default"
   password: "mypass"
   db: 0
-api_key: APIk645U8MckJHy
-api_secret: BRxks3fY7udezPVhloXyzSk7fVeUlenFzo0a9miKrGbE
+api_key: APP_ENV_LIVEKIT_API_KEY
+api_secret: APP_ENV_LIVEKIT_API_SECRET
 ws_url: wss://webrtc.gdscmeet.live
 
