@@ -1,6 +1,6 @@
 import { HttpAuthService } from "@application/api/http-rest/auth/HttpAuthService";
 import { HttpUserPayload } from "@application/api/http-rest/auth/type/HttpAuthTypes";
-import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
+import { AppConfig } from "@infrastructure/config/AppConfig";
 import {
   Injectable,
   OnModuleInit,
@@ -18,7 +18,7 @@ export class HttpLocalStrategy
 {
   private authService: HttpAuthService;
   constructor(
-    configService: ConfigService<EnvironmentVariablesConfig>,
+    configService: ConfigService<AppConfig>,
     private readonly moduleRef: ModuleRef,
   ) {
     const usernameField = configService.get("API_LOGIN_USERNAME_FIELD");

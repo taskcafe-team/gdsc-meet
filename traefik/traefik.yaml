@@ -16,7 +16,7 @@ serversTransport:
 certificatesResolvers:
   cloudflare:
     acme:
-      email: "dangnhatminh09032002@gmail.com"
+      email: ${APP_SECRET_CF_API_EMAIL}
       storage: "/etc/config/acme.json"
       dnsChallenge:
         provider: cloudflare

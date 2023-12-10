@@ -1,9 +1,8 @@
 redis:
-  address: db-cache-redis:6379
-  username: "default"
-  password: "mypass"
-  db: 0
-api_key: APP_ENV_LIVEKIT_API_KEY
-api_secret: APP_ENV_LIVEKIT_API_SECRET
-ws_url: wss://webrtc.gdscmeet.live
-
+  address: ${APP_SECRET_REDIS_HOST}:${APP_SECRET_REDIS_PORT}
+  username: ${APP_SECRET_REDIS_USERNAME}
+  password: ${APP_SECRET_REDIS_PASSWORD}
+  db: ${APP_SECRET_REDIS_DB}
+api_key: ${APP_SECRET_LIVEKIT_API_KEY}
+api_secret: ${APP_SECRET_LIVEKIT_API_SECRET}
+ws_url: wss://${APP_WEBRTC_DOMAIN}

@@ -4,7 +4,7 @@
 /.vscode
 
 # security
-/env
+.env
 
 # Logs
 logs

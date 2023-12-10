@@ -4,7 +4,8 @@ export enum AppCode {
   INVALID_PARAMETER = "AE-APP-4000", //* invalid parameter
   VALIDATION_FAILURE = "AE-APP-4021", //* validation failure
   INTERNAL_SERVER_ERROR = "AE-APP-5000", //* internal server error
-  ENTITY_NOT_FOUND_ERROR = "AE-APP-5001", //* entity not found error
+  CONFIGURATION_ERROR = "AE-APP-5001", //* configuration error
+  ENTITY_NOT_FOUND_ERROR = "AE-APP-5000", //* entity not found error
   // UNSUPPORTED_OPERATION = "APP-4001",
   // DEPRECATED_API = "APP-4001",
   // INVALID_ACTION = "APP-4010",

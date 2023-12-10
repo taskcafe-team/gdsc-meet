@@ -6,11 +6,16 @@ WORKDIR /app
 
 ENV PATH /app/node_modules/.bin:$PATH
 
+# Install pnpm
+RUN npm install -g pnpm
 
-COPY package.json ./
-RUN npm install
+COPY package.json ./package.json
+COPY pnpm-lock.yaml ./pnpm-lock.yaml
+
+# Install dependencies with pnpm
+RUN pnpm install
 
 COPY . ./
 
 EXPOSE 5000
-CMD npx prisma generate && npx prisma db push --accept-data-loss && npm run build && npm run start:prod
+CMD pnpx prisma generate && pnpx prisma db push --accept-data-loss && pnpm build && pnpm start:prod

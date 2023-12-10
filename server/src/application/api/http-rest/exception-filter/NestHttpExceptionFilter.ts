@@ -1,8 +1,7 @@
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
 import { ErrorDTO } from "@core/common/dtos/ErrorDTO";
-import { AppErrors } from "@core/common/exception/AppErrors";
 import { AppException } from "@core/common/exception/AppException";
-import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
+import { AppConfig } from "@infrastructure/config/AppConfig";
 import {
   ArgumentsHost,
   Catch,
@@ -19,9 +18,7 @@ import { TokenExpiredError, JsonWebTokenError } from "jsonwebtoken";
 @Injectable()
 @Catch()
 export class NestHttpExceptionFilter implements ExceptionFilter {
-  constructor(
-    private readonly configService: ConfigService<EnvironmentVariablesConfig>,
-  ) {}
+  constructor(private readonly configService: ConfigService<AppConfig>) {}
 
   public catch(error: Error, host: ArgumentsHost): void {
     const request: Request = host.switchToHttp().getRequest();

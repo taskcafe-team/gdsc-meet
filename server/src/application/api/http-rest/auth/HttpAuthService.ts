@@ -15,18 +15,19 @@ import { User } from "@core/domain/user/entity/User";
 import { UnitOfWork } from "@core/common/persistence/UnitOfWork";
 import { CreateUserPort } from "@core/domain/user/usecase/port/CreateUserPort";
 import { UserUsecaseDTO } from "@core/domain/user/usecase/dto/UserUsecaseDTO";
-import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { Nullable } from "@core/common/type/CommonTypes";
 import { AppException } from "@core/common/exception/AppException";
 import { AppErrors } from "@core/common/exception/AppErrors";
 import { CustomJwtService } from "@application/services/JwtService";
 import { EmailService } from "@application/services/EmailService";
+import { AppConfig } from "@infrastructure/config/AppConfig";
+import { MailServiceConfig } from "@infrastructure/config/MailServiceConfig";
 
 @Injectable()
 export class HttpAuthService {
   constructor(
     private readonly configService: ConfigService<
-      EnvironmentVariablesConfig,
+      AppConfig & MailServiceConfig,
       true
     >,
     private readonly unitOfWork: UnitOfWork,

@@ -13,19 +13,19 @@ import helmet from "helmet";
 import * as cookieParser from "cookie-parser";
 
 import { RootModule } from "./di/.RootModule";
-import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
+import { AppConfig } from "@infrastructure/config/AppConfig";
 
 export class ServerApplication {
-  private configService: ConfigService<EnvironmentVariablesConfig, true>;
+  private configService: ConfigService<AppConfig, true>;
   private app: NestExpressApplication;
 
   public async run(): Promise<void> {
     this.app = await NestFactory.create(RootModule);
     this.configService = this.app.get(ConfigService);
 
-    // this.app.setGlobalPrefix("api");
+    this.app.setGlobalPrefix("api");
 
-    this.app.use(cookieParser("dangnhatminh")); //TODO: change security key
+    this.app.use(cookieParser("example-secret-key")); //TODO: change security key
     this.buildCORS();
     this.app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
     this.buildValidatorPipe();

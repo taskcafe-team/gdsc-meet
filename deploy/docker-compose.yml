@@ -1,6 +1,7 @@
 version: "3.9"
 networks:
   proxy-network:
+    external: true
   server-network:
     driver: bridge
 
@@ -17,8 +18,11 @@ services:
     networks:
       - proxy-network
     environment:
-      - CF_API_EMAIL=dangnhatminh09032002@gmail.com
-      - CF_API_KEY=ND49O0mw0NxhltzJRlvRUxtfXqbs_kknVJ_uuHCf
+      - CF_API_EMAIL=${APP_SECRET_CF_API_EMAIL}
+      - CF_API_KEY=${APP_SECRET_CF_API_KEY}
+      - APP_DOMAIN=${APP_DOMAIN}
+      - APP_WEBRTC_DOMAIN=${APP_WEBRTC_DOMAIN}
+      - APP_WEBRTC_TURN_DOMAIN=${APP_WEBRTC_TURN_DOMAIN}
     ports:
       - "80:80"
       - "443:443"
@@ -41,6 +45,22 @@ services:
       context: ./server
       dockerfile: Dockerfile
     restart: unless-stopped
+    environment:
+      - DB_HOST=${APP_SECRET_DB_HOST}
+      - DB_PORT=${APP_SECRET_DB_PORT}
+      - DB_USER=${APP_SECRET_DB_USER}
+      - DB_PASSWORD=${APP_SECRET_DB_PASSWORD}
+      - DB_NAME=${APP_SECRET_DB_NAME}
+
+      - REDIS_HOST=${APP_SECRET_REDIS_HOST}
+      - REDIS_PORT=${APP_SECRET_REDIS_PORT}
+      - REDIS_PASS=${APP_SECRET_REDIS_PASSWORD}
+
+      - WEBRTC_LIVEKIT_API_HOST=${}
+      - WEBRTC_LIVEKIT_CLIENT_ID=${}
+      - WEBRTC_LIVEKIT_CLIENT_SECRET=${}
+
+      - FILE_STORAGE_BASE_PATH=
     networks:
       - proxy-network
       - server-network
@@ -51,18 +71,18 @@ services:
       - db-cache
       - webrtc-server
 
-  webrtc-egress:
-    container_name: webrtc-egress-livekit
-    image: livekit/egress:latest
-    restart: unless-stopped
-    environment:
-      - EGRESS_CONFIG_FILE=/etc/egress.yaml
-    networks:
-      - server-network
-    volumes:
-      - ./livekit/egress.yaml:/etc/egress.yaml
-    cap_add:
-      - CAP_SYS_ADMIN
+  # webrtc-egress:
+  #   container_name: webrtc-egress-livekit
+  #   image: livekit/egress:latest
+  #   restart: unless-stopped
+  #   environment:
+  #     - EGRESS_CONFIG_FILE=/etc/egress.yaml
+  #   networks:
+  #     - server-network
+  #   volumes:
+  #     - ./livekit/egress.yaml:/etc/egress.yaml
+  #   cap_add:
+  #     - CAP_SYS_ADMIN
 
   webrtc-server:
     container_name: webrtc-server-livekit
@@ -70,6 +90,7 @@ services:
     command: --config /etc/livekit.yaml
     restart: unless-stopped
     ports:
+      - 7880:7880
       - 7881:7881/tcp
       - 7882:7882/udp
     volumes:
@@ -83,7 +104,7 @@ services:
   db:
     container_name: db-postgres
     image: postgres:12
-    restart: always
+    restart: unless-stopped
     ports:
       - 5433:5432
     networks:
@@ -91,17 +112,21 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=123456
-      - POSTGRES_DB=postgres
+      - POSTGRES_USER=${APP_SECRET_DB_USER}
+      - POSTGRES_PASSWORD=${APP_SECRET_DB_PASSWORD}
+      - POSTGRES_DB=${APP_SECRET_DB_NAME}
 
   db-cache:
     container_name: db-cache-redis
     image: redis:7
-    restart: always
+    restart: unless-stopped
     ports:
-      - 6379:6379
-    command: redis-server --save 20 1 --loglevel warning --requirepass mypass
+      - ${APP_SECRET_REDIS_PORT:-6379}:6379
+    command: >
+      redis-server 
+      --save $APP_SECRET_REDIS_SAVE_INTERVAL $APP_SECRET_REDIS_SAVE_CHANGES 
+      --loglevel $APP_SECRET_REDIS_LOGLEVEL
+      --requirepass $APP_SECRET_REDIS_PASSWORD
     volumes:
       - cache-data:/data
     networks:

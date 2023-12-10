@@ -25,11 +25,11 @@ import { HttpRestApiModelUpdateUser } from "./documentation/UserDocumentation";
 import { Response } from "express";
 import LocalFilesInterceptor from "@core/common/interceptor/LocalFilesInterceptor ";
 import { ConfigService } from "@nestjs/config";
-import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { fileStoragePath } from "@infrastructure/adapter/persistence/data/path";
 import { UserUsecase } from "@core/domain/user/usecase/UserUsecase";
 import * as mime from "mime-types";
 import { UserService } from "@application/services/UserService";
+import { FileStorageConfig } from "@infrastructure/config/FileStorageConfig";
 
 const MAX_PROFILE_PICTURE_SIZE_IN_BYTES = 2 * 1024 * 1024; // 2MB
 
@@ -42,7 +42,7 @@ export class UserController {
   constructor(
     @Inject(UserService)
     private readonly userService: UserUsecase,
-    configService: ConfigService<EnvironmentVariablesConfig, true>,
+    configService: ConfigService<FileStorageConfig, true>,
   ) {
     this.endpointAvatarUrl = configService.get("FILE_STORAGE_AVATAR_ENDPOINT");
     this.destination = configService.get("FILE_STORAGE_BASE_PATH");

@@ -40,6 +40,14 @@ export const AppErrors: TAppErrorCode = {
     "Internal server error",
     ErrorType.INTERNAL_ERROR,
   ),
+  CONFIGURATION_ERROR: new AppError(
+    500,
+    AppCode.CONFIGURATION_ERROR,
+    "Configuration error: {0}",
+    AppErrorAction.LOG_EXTERNALLY,
+    "Configuration error",
+    ErrorType.INTERNAL_ERROR,
+  ),
   ENTITY_NOT_FOUND_ERROR: new AppError(
     500,
     AppCode.ENTITY_NOT_FOUND_ERROR,

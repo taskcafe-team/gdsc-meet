@@ -1,8 +1,8 @@
-import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  OnModuleInit,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { CreateRoomPort } from "@core/domain/room/usecase/ports/CreateRoomPort";
@@ -22,6 +22,7 @@ import {
   VideoGrant,
 } from "livekit-server-sdk";
 import { RoomType } from "@core/common/enums/RoomEnum";
+import { WebRTCLivekitConfig } from "@infrastructure/config/WebRTCLivekitConfig";
 
 export type IWebRTCLivekitService = {
   createRoom: (port: CreateRoomPort) => Promise<CoreRoom>;
@@ -40,16 +41,23 @@ export type IWebRTCLivekitService = {
 @Injectable()
 export class WebRTCLivekitService
   extends WebRTCLivekitServiceBase
-  implements IWebRTCLivekitService
+  implements IWebRTCLivekitService, OnModuleInit
 {
   private readonly emptyTimeout: number = 100;
   private readonly maxParticipants: number = 100;
 
-  constructor(configService: ConfigService<EnvironmentVariablesConfig, true>) {
+  constructor(configService: ConfigService<WebRTCLivekitConfig, true>) {
     const host = configService.get("WEBRTC_LIVEKIT_API_HOST");
     const clientId = configService.get("WEBRTC_LIVEKIT_CLIENT_ID");
     const clientSecret = configService.get("WEBRTC_LIVEKIT_CLIENT_SECRET");
     super(host, clientId, clientSecret);
+  }
+
+  async onModuleInit() {
+    await this.roomServiceClient.listRooms().catch((e) => {
+      console.error(`Livekit Connection Failed! ${e.message}`);
+      throw new Error(e);
+    });
   }
 
   async createRoomAccessToken(

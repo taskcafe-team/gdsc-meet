@@ -8,9 +8,9 @@ import { User } from "@core/domain/user/entity/User";
 import { UserRole } from "@core/common/enums/UserEnums";
 import { AuthProviderName } from "@core/common/enums/AuthEnum";
 import { HttpUserPayload } from "../type/HttpAuthTypes";
-import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { HttpAuthService } from "../HttpAuthService";
 import { ModuleRef } from "@nestjs/core";
+import { GoogleServiceConfig } from "@infrastructure/config/GoogleServiceConfig";
 
 @Injectable()
 export class HttpGoogleStrategy
@@ -20,7 +20,7 @@ export class HttpGoogleStrategy
   private authService: HttpAuthService;
 
   constructor(
-    configService: ConfigService<EnvironmentVariablesConfig>,
+    configService: ConfigService<GoogleServiceConfig>,
     private readonly moduleRef: ModuleRef,
   ) {
     const clientID = configService.get("GOOGLE_CLIENT_ID");

@@ -1,6 +1,7 @@
 import { HttpUserJwtPayload } from "@application/api/http-rest/auth/type/HttpAuthTypes";
 import { HttpParticipantPayload } from "@application/api/http-rest/auth/type/HttpParticipantTypes";
-import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
+import { AppConfig } from "@infrastructure/config/AppConfig";
+import { MailServiceConfig } from "@infrastructure/config/MailServiceConfig";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
@@ -47,7 +48,7 @@ export class CustomJwtService implements JwtUsecase {
   private readonly emailVerificationTokenTtl: string; // in minutes
 
   constructor(
-    configService: ConfigService<EnvironmentVariablesConfig, true>,
+    configService: ConfigService<AppConfig & MailServiceConfig, true>,
     private readonly jwtService: JwtService,
   ) {
     // User credentials

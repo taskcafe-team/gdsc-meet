@@ -1,4 +1,4 @@
-import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
+import { MailServiceConfig } from "@infrastructure/config/MailServiceConfig";
 import { MailerService } from "@nestjs-modules/mailer";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -8,7 +8,7 @@ export class EmailService {
   private readonly emailAuthUser: string;
 
   constructor(
-    configService: ConfigService<EnvironmentVariablesConfig, true>,
+    configService: ConfigService<MailServiceConfig, true>,
     private readonly mailerService: MailerService,
   ) {
     this.emailAuthUser = configService.get("EMAIL_AUTH_USER");

@@ -1,7 +1,6 @@
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { ConfigService } from "@nestjs/config";
-import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import {
   HttpUserJwtPayload,
   HttpUserPayload,
@@ -13,6 +12,7 @@ import {
 } from "@nestjs/common";
 import { HttpAuthService } from "../HttpAuthService";
 import { ModuleRef } from "@nestjs/core";
+import { AppConfig } from "@infrastructure/config/AppConfig";
 
 @Injectable()
 export class HttpAccessTokenStrategy
@@ -22,7 +22,7 @@ export class HttpAccessTokenStrategy
   private authService: HttpAuthService;
 
   constructor(
-    configService: ConfigService<EnvironmentVariablesConfig, true>,
+    configService: ConfigService<AppConfig, true>,
     private readonly moduleRef: ModuleRef,
   ) {
     const headerKey = configService.get("API_ACCESS_TOKEN_HEADER");

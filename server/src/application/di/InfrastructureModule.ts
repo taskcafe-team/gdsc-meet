@@ -7,12 +7,13 @@ import * as redisStore from "cache-manager-redis-store";
 
 import { NestHttpExceptionFilter } from "@application/api/http-rest/exception-filter/NestHttpExceptionFilter";
 
-import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { WebRTCModule } from "./WebRTCModule";
 import { UnitOfWorkModule } from "./UnitOfWorkModule";
 import { CustomJwtService } from "@application/services/JwtService";
 import { EmailService } from "@application/services/EmailService";
 import { JwtModule } from "@nestjs/jwt";
+import { MailServiceConfig } from "@infrastructure/config/MailServiceConfig";
+import { RedisConfig } from "@infrastructure/config/RedisConfig";
 
 const NestHttpExceptionFilterProvider: Provider = {
   provide: APP_FILTER,
@@ -25,9 +26,7 @@ const NestHttpExceptionFilterProvider: Provider = {
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (
-        configService: ConfigService<EnvironmentVariablesConfig>,
-      ) => ({
+      useFactory: (configService: ConfigService<MailServiceConfig>) => ({
         transport: {
           host: configService.get("EMAIL_HOST"),
           port: configService.get("EMAIL_PORT"),
@@ -41,14 +40,12 @@ const NestHttpExceptionFilterProvider: Provider = {
     CacheModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (
-        configService: ConfigService<EnvironmentVariablesConfig>,
-      ) => ({
+      useFactory: (configService: ConfigService<RedisConfig>) => ({
         isGlobal: true,
         store: redisStore,
         host: configService.get("REDIS_HOST"),
         port: configService.get("REDIS_PORT"),
-        auth_pass: configService.get("REDIS_AUTH_PASS"),
+        auth_pass: configService.get("REDIS_PASS"),
       }),
     }),
     UnitOfWorkModule,

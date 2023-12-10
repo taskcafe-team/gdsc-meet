@@ -4,8 +4,8 @@ import { Injectable, mixin, NestInterceptor, Type } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { MulterOptions } from "@nestjs/platform-express/multer/interfaces/multer-options.interface";
 import { diskStorage, DiskStorageOptions } from "multer";
-import { EnvironmentVariablesConfig } from "@infrastructure/config/EnvironmentVariablesConfig";
 import { fileStoragePath } from "@infrastructure/adapter/persistence/data/path";
+import { FileStorageConfig } from "@infrastructure/config/FileStorageConfig";
 
 interface LocalFilesInterceptorOptions {
   fieldName: string;
@@ -21,9 +21,7 @@ function LocalFilesInterceptor(
   @Injectable()
   class Interceptor implements NestInterceptor {
     fileInterceptor: NestInterceptor;
-    constructor(
-      private configService: ConfigService<EnvironmentVariablesConfig, true>,
-    ) {
+    constructor(private configService: ConfigService<FileStorageConfig, true>) {
       const destination = path.join(fileStoragePath, options.path || "");
       const filename = options.filename;
       const multerOptions: MulterOptions = {

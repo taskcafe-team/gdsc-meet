@@ -5,15 +5,15 @@ rtc:
   use_external_ip: true
   enable_loopback_candidate: false
 redis:
-  address: APP_ENV_REDIS_ADDRESS
-  username: APP_ENV_REDIS_USERNAME
-  password: APP_ENV_REDIS_PASSWORD
-  db: 0
+  address: ${APP_SECRET_REDIS_HOST}:${APP_SECRET_REDIS_PORT}
+  username: ${APP_SECRET_REDIS_USERNAME}
+  password: ${APP_SECRET_REDIS_PASSWORD}
+  db: ${APP_SECRET_REDIS_DB}
 keys:
-  APP_ENV_LIVEKIT_API_KEY: APP_ENV_LIVEKIT_API_SECRET
+  ${APP_SECRET_LIVEKIT_API_KEY}: ${APP_SECRET_LIVEKIT_API_SECRET}
 turn:
   enabled: true
-  domain: APP_ENV_LIVEKIT_TURN_DOMAIN
+  domain: ${APP_WEBRTC_TURN_DOMAIN}
   tls_port: 5349
   udp_port: 3478
   external_tls: true
