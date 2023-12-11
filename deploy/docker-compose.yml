@@ -27,6 +27,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ../traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
       - ../traefik/dynamic.yml:/etc/config/dynamic.yml
 
@@ -61,8 +62,6 @@ services:
       - WEBRTC_LIVEKIT_API_HOST=${APP_SECRET_LIVEKIT_API_HOST}
       - WEBRTC_LIVEKIT_CLIENT_ID=${APP_SECRET_LIVEKIT_API_KEY}
       - WEBRTC_LIVEKIT_CLIENT_SECRET=${APP_SECRET_LIVEKIT_API_SECRET}
-
-      - FILE_STORAGE_BASE_PATH=
     networks:
       - proxy-network
       - server-network

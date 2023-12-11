@@ -22,18 +22,15 @@ import { RedisConfig } from "@infrastructure/config/RedisConfig";
       isGlobal: true,
       envFilePath: ".env",
       expandVariables: true,
-      load: [
-        () =>
-          BaseConfig.getConfig(
-            AppConfig,
-            DatabaseConfig,
-            FileStorageConfig,
-            WebRTCLivekitConfig,
-            GoogleServiceConfig,
-            MailServiceConfig,
-            RedisConfig,
-          ),
-      ],
+      load: BaseConfig.getConfig(
+        AppConfig,
+        DatabaseConfig,
+        FileStorageConfig,
+        WebRTCLivekitConfig,
+        GoogleServiceConfig,
+        MailServiceConfig,
+        RedisConfig,
+      ),
     }),
     InfrastructureModule,
     AuthModule,

@@ -11,11 +11,12 @@ export class BaseConfig {
   }
 
   static getConfig(...args: (new () => BaseConfig)[]) {
-    const configPlain = args.map((config) => {
+    const configsPlain = args.map((config) => {
       const instance = new config();
       instance.validate();
-      return instanceToPlain(instance);
+      const plain = instanceToPlain(instance);
+      return () => plain;
     });
-    return configPlain;
+    return configsPlain;
   }
 }
