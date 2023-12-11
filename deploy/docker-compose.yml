@@ -27,13 +27,13 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
-      - ./traefik/dynamic.yml:/etc/config/dynamic.yml
+      - ../traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ../traefik/dynamic.yml:/etc/config/dynamic.yml
 
   webui:
     container_name: webui-react
     build:
-      context: ../client-gdsc-meet
+      context: ../client
       dockerfile: Dockerfile
     restart: unless-stopped
     networks:
@@ -42,9 +42,11 @@ services:
   webapi:
     container_name: webapi-nest
     build:
-      context: ./server
+      context: ../server
       dockerfile: Dockerfile
     restart: unless-stopped
+    ports:
+      - 5000:5000
     environment:
       - DB_HOST=${APP_SECRET_DB_HOST}
       - DB_PORT=${APP_SECRET_DB_PORT}
@@ -56,9 +58,9 @@ services:
       - REDIS_PORT=${APP_SECRET_REDIS_PORT}
       - REDIS_PASS=${APP_SECRET_REDIS_PASSWORD}
 
-      - WEBRTC_LIVEKIT_API_HOST=${}
-      - WEBRTC_LIVEKIT_CLIENT_ID=${}
-      - WEBRTC_LIVEKIT_CLIENT_SECRET=${}
+      - WEBRTC_LIVEKIT_API_HOST=${APP_SECRET_LIVEKIT_API_HOST}
+      - WEBRTC_LIVEKIT_CLIENT_ID=${APP_SECRET_LIVEKIT_API_KEY}
+      - WEBRTC_LIVEKIT_CLIENT_SECRET=${APP_SECRET_LIVEKIT_API_SECRET}
 
       - FILE_STORAGE_BASE_PATH=
     networks:
@@ -80,7 +82,7 @@ services:
   #   networks:
   #     - server-network
   #   volumes:
-  #     - ./livekit/egress.yaml:/etc/egress.yaml
+  #     - ../livekit/egress.yaml:/etc/egress.yaml
   #   cap_add:
   #     - CAP_SYS_ADMIN
 
@@ -94,7 +96,7 @@ services:
       - 7881:7881/tcp
       - 7882:7882/udp
     volumes:
-      - ./livekit/livekit.yaml:/etc/livekit.yaml
+      - ../livekit/livekit.yaml:/etc/livekit.yaml
     networks:
       - proxy-network
       - server-network
@@ -106,7 +108,7 @@ services:
     image: postgres:12
     restart: unless-stopped
     ports:
-      - 5433:5432
+      - ${APP_SECRET_DB_PORT}:5432
     networks:
       - server-network
     volumes:
@@ -121,7 +123,7 @@ services:
     image: redis:7
     restart: unless-stopped
     ports:
-      - ${APP_SECRET_REDIS_PORT:-6379}:6379
+      - ${APP_SECRET_REDIS_PORT}:6379
     command: >
       redis-server 
       --save $APP_SECRET_REDIS_SAVE_INTERVAL $APP_SECRET_REDIS_SAVE_CHANGES 

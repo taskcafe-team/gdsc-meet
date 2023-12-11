@@ -1,16 +1,17 @@
 #*---------------- Environment Variable Processing ----------------*#
 echo "Starting environment variable processing..."
 # Read the .env file and export the environment variables
-if [ ! -f .env ]; then
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ ! -f $DIR/.env ]; then
   # If the file doesn't exist, print an error message and exit the script
   echo "The .env file does not exist. Exiting..."
   exit 1
 fi
 
-export $(egrep -v '^#' .env | xargs)
+export $(egrep -v '^#' $DIR/.env | xargs)
 
 # List of files where environment variables need to be replaced
-files=("../livekit/livekit.yaml" "../livekit/egress.yaml" "../traefik/traefik.yaml")
+files=("$DIR/../livekit/livekit.yaml" "$DIR/../livekit/egress.yaml" "$DIR/../traefik/traefik.yaml")
 
 #* Check if environment variables exist
 echo "Checking if environment variables exist..."
@@ -96,5 +97,5 @@ fi
 
 # Run docker-compose
 echo -e "${GREEN}Running docker-compose up --build -d...${NC}"
-docker-compose up --build -d "$@"
+docker compose -f "${DIR}/docker-compose.yml" up --build -d "$@"
 echo -e "${RED}Script completed.${NC}"
