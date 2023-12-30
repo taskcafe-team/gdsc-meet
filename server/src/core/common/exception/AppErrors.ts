@@ -8,6 +8,7 @@ export type TAppErrorCode = Omit<
   "SUCCESS"
 >;
 export const AppErrors: TAppErrorCode = {
+  
   INVALID_PARAMETER: new AppError(
     400,
     AppCode.INVALID_PARAMETER,
@@ -51,6 +52,15 @@ export const AppErrors: TAppErrorCode = {
   ENTITY_NOT_FOUND_ERROR: new AppError(
     500,
     AppCode.ENTITY_NOT_FOUND_ERROR,
+    "Entity not found: {0}",
+    AppErrorAction.DEFAULT,
+    "Entity not found",
+    ErrorType.ARGUMENT_ERROR,
+  ),
+
+  ENTITY_ALREADY_EXISTED_ERROR: new AppError(
+    500,
+    AppCode.ENTITY_ALREADY_EXISTED_ERROR,
     "Entity not found: {0}",
     AppErrorAction.DEFAULT,
     "Entity not found",

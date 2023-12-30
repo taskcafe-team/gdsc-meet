@@ -15,6 +15,8 @@ import { WebRTCLivekitConfig } from "@infrastructure/config/WebRTCLivekitConfig"
 import { MailServiceConfig } from "@infrastructure/config/MailServiceConfig";
 import { GoogleServiceConfig } from "@infrastructure/config/GoogleServiceConfig";
 import { RedisConfig } from "@infrastructure/config/RedisConfig";
+import { GoogleAiModule } from "./GoogleAiModule";
+import { FileManagementModule } from "./FileManagementModule";
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { RedisConfig } from "@infrastructure/config/RedisConfig";
     MeetingModule,
     ParticipantModule,
     RoomModule,
+    GoogleAiModule,
+    FileManagementModule
   ],
 })
 export class RootModule {}

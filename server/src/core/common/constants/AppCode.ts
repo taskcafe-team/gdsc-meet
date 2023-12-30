@@ -6,6 +6,7 @@ export enum AppCode {
   INTERNAL_SERVER_ERROR = "AE-APP-5000", //* internal server error
   CONFIGURATION_ERROR = "AE-APP-5001", //* configuration error
   ENTITY_NOT_FOUND_ERROR = "AE-APP-5000", //* entity not found error
+  ENTITY_ALREADY_EXISTED_ERROR = "AE-APP-4090",
   // UNSUPPORTED_OPERATION = "APP-4001",
   // DEPRECATED_API = "APP-4001",
   // INVALID_ACTION = "APP-4010",
