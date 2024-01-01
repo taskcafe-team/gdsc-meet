@@ -10,12 +10,12 @@ export class UserFolderService {
     public async createUserFolder(userId: string, folderId: string): Promise<UserFolder> {
 
         // Check if the userFolder is exist or not
-        const userFolderExist = await this.findUserFolderById(userId,folderId);
+        const userFolderExist = await this.findUserFolderById(userId, folderId);
         // If userFolder is existed, 
-        if (userFolderExist){
+        if (userFolderExist) {
             throw new AppException(AppErrors.ENTITY_ALREADY_EXISTED_ERROR);
 
-        }  
+        }
         const createdUserFolder = await this.prismaClient.userFolder.create({
             data: {
                 userId,
@@ -29,12 +29,12 @@ export class UserFolderService {
     public async findUserFolderById(userId: string, folderId: string): Promise<UserFolder | null> {
         const result = await this.prismaClient.userFolder.findMany({
             where: {
-                 userId: userId, 
-                 folderId: folderId
+                userId: userId,
+                folderId: folderId
             },
             take: 1,
         });
-    
+
         return result !== null ? result[0] : null;;
     }
 }

@@ -19,13 +19,13 @@ export class FolderService {
     public async findAllFolder(): Promise<Folder[]> {
         return this.prismaClient.folder.findMany();
     }
-    public async getFolderIdByMeetingId(meetingId: string) : Promise<string>{
+    public async getFolderIdByMeetingId(meetingId: string): Promise<string> {
         const userFolders = await this.prismaClient.userFolder.findFirst({
             where: {
                 userId: meetingId,
             },
         });
-        if(!userFolders) throw new NotFoundException("Meeting not found!");
+        if (!userFolders) throw new NotFoundException("Meeting not found!");
         const folder = await this.findFolderRootById(userFolders.id);
         if (!folder) throw new NotFoundException("Folder not found!");
 
@@ -84,7 +84,7 @@ export class FolderService {
             throw new Error("User Meeting Id is not valid");
         }
         const meetingId = userMeeting.meetingId;
-        
+
         // Checking root folder is existed or not
         const existFolder = await this.findFolderRootById(userMeetingId);
         if (existFolder !== null) {
@@ -94,10 +94,10 @@ export class FolderService {
 
         // Using Meeting Name for Folder Name if folderName is null
         if (folderName?.length == 0 || folderName == null) {
-            const meetingTitle  = (await this.meetingService.getMeetingRoom( meetingId,RoomType.MEETING )).name;
+            const meetingTitle = (await this.meetingService.getMeetingRoom(meetingId, RoomType.MEETING)).name;
             folderName = meetingTitle || "";
         }
-        
+
         // Creating new folder
         const createFolder = await this.prismaClient.folder.create({
             data: {
@@ -106,7 +106,7 @@ export class FolderService {
                 user_meeting_id: userMeetingId,
             },
         });
-        
+
         return createFolder;
     }
 }

@@ -40,7 +40,7 @@ export class UserMeetingService {
     public async createUserMeeting(userId: string, meetingId: string): Promise<UserMeeting> {
 
         const userMeetingExist = await this.checkUserMeetingExisted(userId, meetingId);
-        
+
         if (userMeetingExist) {
             throw new AppException(AppErrors.ENTITY_ALREADY_EXISTED_ERROR);
         }

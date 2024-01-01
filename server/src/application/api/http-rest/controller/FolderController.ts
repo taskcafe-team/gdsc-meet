@@ -16,18 +16,18 @@ export class FolderController {
   @Get("")
   public async findAllFolder(@Param("userId") userId: string): Promise<CoreApiResponse<Folder[] | null>> {
     const result = await this.folderService.getAllFolderByUserId(userId);
-    return CoreApiResponse.success(result); 
+    return CoreApiResponse.success(result);
   }
-  
+
   @ApiBody({ type: InsertFolderDTO })
   @Post("")
-  public async createFolder(@Body()insertFolderDTO: InsertFolderDTO): Promise<CoreApiResponse<Folder | string>> {
+  public async createFolder(@Body() insertFolderDTO: InsertFolderDTO): Promise<CoreApiResponse<Folder | string>> {
     const result = await this.folderService.createFolder(insertFolderDTO)
     return CoreApiResponse.success(result);
   }
 
   @Get("/getFolderId")
-  public async getFolderIdByMeetingId(@Param("meetingId") meetingId: string) : Promise<CoreApiResponse<string>>{
+  public async getFolderIdByMeetingId(@Param("meetingId") meetingId: string): Promise<CoreApiResponse<string>> {
     const result = await this.folderService.getFolderIdByMeetingId(meetingId)
     return CoreApiResponse.success(result);
   }

@@ -16,10 +16,10 @@ export class FileController {
 
   @Post("")
   @UseInterceptors(FileInterceptor('file'))
-  public async createFile(@Body() insertFileDTO: InsertFileDTO, @UploadedFile() file) {
+  public async createFile(@Body() insertFileDTO: InsertFileDTO, @UploadedFile() file): Promise<CoreApiResponse<File>> {
     //console.log(insertFileDTO.userId)
     const file1 = await this.fileService.createFile(insertFileDTO.folderId, file);
-    return file1;
+    return CoreApiResponse.success(file1);
   }
 
   // This end-point for getting the content of one Doc by File ID. 

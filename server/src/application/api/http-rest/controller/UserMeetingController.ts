@@ -12,19 +12,19 @@ export class UserMeetingController {
     // Start API for User Subject
 
     @Get("")
-    public async getUserSubjects(): Promise<UserMeeting[]> {
+    public async getUserSubjects(): Promise<CoreApiResponse<UserMeeting[]>> {
         const result = await this.userSubjectService.getAllUserMeeting();
-        return result
+        return CoreApiResponse.success(result);
     }
     // This end-point to create the connection between User And Subject
     // Example for testing with postman: http://localhost:8080/subjects/create-user-subject
     // Need to input value into 2 fields: userid, subjectId in Body Tag
 
-    
+
     @Post("")
-    @ApiBody({ 
-        schema: { 
-            properties: { 
+    @ApiBody({
+        schema: {
+            properties: {
                 userId: { type: 'string' },
                 meetingId: { type: 'string' },
             },
