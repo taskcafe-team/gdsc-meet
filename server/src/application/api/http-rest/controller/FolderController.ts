@@ -3,7 +3,7 @@ import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
 import { InsertFolderDTO } from "@core/domain/folder/usecase/dto/FolderUseCaseDto";
 
 import { Body, Controller, Delete, Get, Param, Post, Put, Res, StreamableFile } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiTags } from "@nestjs/swagger";
 import { Folder, UserFolder } from "@prisma/client";
 import { createReadStream } from 'fs';
 import { join } from 'path';
@@ -14,19 +14,22 @@ export class FolderController {
   constructor(private folderService: FolderService) { }
 
   @Get("")
-  public async findAllFolder(@Param("userId") userId: string,): Promise<Folder[]> {
-    return this.folderService.getAllFolderByUserId(userId);
+  public async findAllFolder(@Param("userId") userId: string): Promise<CoreApiResponse<Folder[] | null>> {
+    const result = await this.folderService.getAllFolderByUserId(userId);
+    return CoreApiResponse.success(result); 
+  }
+  
+  @ApiBody({ type: InsertFolderDTO })
+  @Post("")
+  public async createFolder(@Body()insertFolderDTO: InsertFolderDTO): Promise<CoreApiResponse<Folder | string>> {
+    const result = await this.folderService.createFolder(insertFolderDTO)
+    return CoreApiResponse.success(result);
   }
 
-    // @Get(':id')
-    // public async findFolderById(@Param('folderId') folderId: string): Promise<Folder> {
-    //   return this.folderService.findById(id);
-    // }
-
-  @Post("")
-  public async createFolder(@Body()insertFolderDTO: InsertFolderDTO): Promise<Folder | string> {
-    const result = await this.folderService.createFolder(insertFolderDTO)
-    return result;
+  @Get("/getFolderId")
+  public async getFolderIdByMeetingId(@Param("meetingId") meetingId: string) : Promise<CoreApiResponse<string>>{
+    const result = await this.folderService.getFolderIdByMeetingId(meetingId)
+    return CoreApiResponse.success(result);
   }
 
   // @Put(':id')
@@ -39,5 +42,8 @@ export class FolderController {
   //   return this.folderService.deleteFolder(id);
   // }
 
-  
+  // @Get(':id')
+  // public async findFolderById(@Param('folderId') folderId: string): Promise<Folder> {
+  //   return this.folderService.findById(id);
+  // }
 }

@@ -77,8 +77,8 @@ export class ServerApplication {
   private buildCORS(): void {
     const originsStr: string = this.configService.get("API_CORS_ORIGIN") + "";
     const methodsStr: string = this.configService.get("API_CORS_METHOD") + "";
-
     const origin = originsStr.split(",").map((o) => o.trim());
+    console.log(origin[0], origin[1]);
     const methods = methodsStr.split(",").map((m) => m.trim());
 
     this.app.enableCors({ origin, methods, credentials: true });

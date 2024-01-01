@@ -1,5 +1,5 @@
 import { Body, Controller, Get, NotFoundException, Param, Post, StreamableFile, UploadedFile, UseInterceptors } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiTags } from "@nestjs/swagger";
 import { File } from "@prisma/client";
 
 import { createReadStream } from "fs";
@@ -7,6 +7,7 @@ import { createReadStream } from "fs";
 import { FileInterceptor } from '@nestjs/platform-express';
 import { InsertFileDTO } from "@core/domain/file/usecase/dto/FilerUseCaseDto";
 import { FileService } from "@application/services/FileService";
+import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
 
 @Controller("files")
 @ApiTags("files")
@@ -38,10 +39,10 @@ export class FileController {
   // Example for testing with postman: http://localhost:8080/files/a6737c75-7962-4de7-bf74-dc7dc8bc77d7
   // a6737c75-7962-4de7-bf74-dc7dc8bc77d7 is Folder Id
   @Get('a/:folderId')
-  public async getFiles(@Param('folderId') folderId: string): Promise<File[]> {
+  public async getFiles(@Param('folderId') folderId: string): Promise<CoreApiResponse<File[]>> {
     console.log(folderId)
     const files = await this.fileService.getAllFilesByFolderId(folderId);
     //console.log(files);
-    return files;
+    return CoreApiResponse.success(files);
   }
 }

@@ -2,7 +2,7 @@ import { UserMeetingService } from "@application/services/UserMeetingService";
 import { CoreApiResponse } from "@core/common/api/CoreApiResponse";
 
 import { Body, Controller, Get, Post } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiTags } from "@nestjs/swagger";
 import { UserMeeting } from "@prisma/client";
 
 @Controller("user-meetings")
@@ -19,7 +19,17 @@ export class UserMeetingController {
     // This end-point to create the connection between User And Subject
     // Example for testing with postman: http://localhost:8080/subjects/create-user-subject
     // Need to input value into 2 fields: userid, subjectId in Body Tag
+
+    
     @Post("")
+    @ApiBody({ 
+        schema: { 
+            properties: { 
+                userId: { type: 'string' },
+                meetingId: { type: 'string' },
+            },
+        },
+    })
     public async createUserMeeting(@Body() { userId, meetingId }: { userId: string, meetingId: string }) {
         const result = await this.userSubjectService.createUserMeeting(userId, meetingId);
         return CoreApiResponse.success(result);

@@ -56,3 +56,5 @@
     - **Kiểm Tra Biến Môi Trường:** Script kiểm tra xem biến môi trường đã được định nghĩa trong file **.env** có tồn tại trong các file **./livekit/livekit.yaml** và **./livekit/egress.yaml** hay không.
     - **Thay Thế Biến Môi Trường:** Nếu tất cả các biến môi trường đều tồn tại, script sẽ thay thế chúng trong các file gốc bằng các giá trị tương ứng của chúng, sử dụng lệnh **sed**.
     - **Chạy Docker Compose:** Script kiểm tra xem một mạng Docker có tên **proxy-network** có tồn tại hay không. Nếu không, nó sẽ tạo một. Sau đó, script chạy **docker-compose up --build -d** để tạo và khởi động các Docker containers theo cấu hình trong file **docker-compose.yml**.
+9 **Chạy Prisma Client:**
+$env:DB_URL="postgresql://postgres:123456@localhost:5433/mydb?schema=public"; npx prisma studio

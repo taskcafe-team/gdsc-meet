@@ -1,10 +1,11 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { Folder, Prisma, PrismaClient, UserFolder } from "@prisma/client";
 import { InsertFolderDTO } from "@core/domain/folder/usecase/dto/FolderUseCaseDto";
 import { UserMeetingService } from "./UserMeetingService";
 import { ParticipantService } from "./ParticipantService";
 import { MeetingService } from "./MeetingService";
 import { RoomType } from "@core/common/enums/RoomEnum";
+import { promises } from "dns";
 
 
 @Injectable()
@@ -18,7 +19,18 @@ export class FolderService {
     public async findAllFolder(): Promise<Folder[]> {
         return this.prismaClient.folder.findMany();
     }
-    
+    public async getFolderIdByMeetingId(meetingId: string) : Promise<string>{
+        const userFolders = await this.prismaClient.userFolder.findFirst({
+            where: {
+                userId: meetingId,
+            },
+        });
+        if(!userFolders) throw new NotFoundException("Meeting not found!");
+        const folder = await this.findFolderRootById(userFolders.id);
+        if (!folder) throw new NotFoundException("Folder not found!");
+
+        return folder.id;
+    }
     public async getAllFolderByUserId(userId: string): Promise<Folder[]> {
         console.log(userId)
         const userFolders = await this.prismaClient.userFolder.findMany({
@@ -28,7 +40,6 @@ export class FolderService {
         });
 
         const folderIds = userFolders.map((folder) => folder.folderId);
-        console.log(folderIds)
         const records = await this.prismaClient.folder.findMany({
             where: {
                 id: {
@@ -36,7 +47,6 @@ export class FolderService {
                 },
             },
         });
-        console.log(records)
         return records;
     }
 
@@ -68,7 +78,6 @@ export class FolderService {
         const userMeetingId = insertFolderDTO.userMeetingId;
         let folderName = insertFolderDTO.folderName;
         const parent_folder = insertFolderDTO.parentFolderId;
-        console.log(parent_folder)
         // Checking the permission to create folder of user
         const userMeeting = await this.userMeetingService.findUserMeetingById(userMeetingId);
         if (userMeeting === null) {

@@ -1,8 +1,11 @@
 import { GoogleAiService } from '@application/services/GoogleAiService';
 import { Controller, Get, Query, NotFoundException, InternalServerErrorException, Post, Body } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { ApiGenerateText } from '../auth/decorator/GeminiApiGenerateText';
 
 
 @Controller('googleAi')
+@ApiTags("googleAi")
 export class GoogleAiController {
   constructor(private readonly googleAiService: GoogleAiService) {}
 
@@ -19,8 +22,9 @@ export class GoogleAiController {
       throw new InternalServerErrorException('Internal server error');
     }
   }
-
+  
   @Post('generateGemini')
+  @ApiGenerateText()
   async generateGeminiPro(@Body('prompt') prompt: string): Promise<string> {
     try {
       const generatedGeminiProContent = await this.googleAiService.generateGeminiPro(prompt);
